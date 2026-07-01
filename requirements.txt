@@ -1,0 +1,17 @@
+# Core
+pyyaml>=6.0
+pydantic>=2.5
+loguru>=0.7
+httpx>=0.25
+
+# Dashboard
+streamlit>=1.28
+
+# Dev
+pytest>=7.4
+pytest-cov>=4.1
+
+# Semantic model (optional, install with: pip install -r requirements.txt[semantic])
+# torch>=2.0
+# transformers>=4.36
+# sentence-transformers>=2.2

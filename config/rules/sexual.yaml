@@ -1,0 +1,37 @@
+# 色情低俗规则
+# 注意：以下规则使用占位化表达，仅展示规则结构，实际部署时填充具体内容
+
+category: sexual
+label: "色情低俗"
+description: "检测色情、低俗、性暗示等违规内容"
+
+rules:
+  # === 关键词规则 ===
+  - id: sexual-kw-001
+    pattern: "[占位]性暗示词汇A"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "直接性暗示表达"
+
+  - id: sexual-kw-002
+    pattern: "[占位]低俗词汇B"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "低俗用词"
+
+  # === 正则规则 ===
+  - id: sexual-re-001
+    pattern: "[占位]正则表达式A"
+    pattern_type: regex
+    risk_level: high
+    enabled: true
+    description: "变体性暗示模式"
+
+  - id: sexual-re-002
+    pattern: "[占位]正则表达式B"
+    pattern_type: regex
+    risk_level: medium
+    enabled: true
+    description: "边界暧昧表达模式"

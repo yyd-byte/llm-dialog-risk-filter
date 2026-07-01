@@ -1,0 +1,28 @@
+# 暴力危险规则
+# 注意：以下规则使用占位化表达，仅展示规则结构
+
+category: violent
+label: "暴力危险"
+description: "检测暴力、威胁、自残、危险行为等违规内容"
+
+rules:
+  - id: violent-kw-001
+    pattern: "[占位]暴力威胁词汇A"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "直接暴力威胁"
+
+  - id: violent-kw-002
+    pattern: "[占位]危险行为词汇B"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "危险行为描述"
+
+  - id: violent-re-001
+    pattern: "[占位]暴力正则表达式A"
+    pattern_type: regex
+    risk_level: high
+    enabled: true
+    description: "暴力变体表达"

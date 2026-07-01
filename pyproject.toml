@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "llm-dialog-risk-filter"
+version = "0.1.0"
+description = "轻量级大模型对话内容风控系统"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "llm-dialog-risk-filter team"},
+]
+
+dependencies = [
+    "pyyaml>=6.0",
+    "streamlit>=1.28",
+    "loguru>=0.7",
+    "httpx>=0.25",
+    "pydantic>=2.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "black>=23.0",
+    "ruff>=0.1",
+]
+semantic = [
+    "torch>=2.0",
+    "transformers>=4.36",
+    "sentence-transformers>=2.2",
+]
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

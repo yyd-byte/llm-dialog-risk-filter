@@ -1,0 +1,35 @@
+# 广告引流规则
+# 注意：以下规则使用占位化表达，仅展示规则结构
+
+category: advertising
+label: "广告引流"
+description: "检测广告推广、联系方式引流、重复营销话术等违规内容"
+
+rules:
+  - id: ad-kw-001
+    pattern: "[占位]联系方式模式A"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "手机号/微信号引流"
+
+  - id: ad-kw-002
+    pattern: "[占位]营销话术B"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "重复营销话术"
+
+  - id: ad-re-001
+    pattern: "[占位]URL正则A"
+    pattern_type: regex
+    risk_level: medium
+    enabled: true
+    description: "外部链接引流"
+
+  - id: ad-re-002
+    pattern: "[占位]联系方式正则B"
+    pattern_type: regex
+    risk_level: medium
+    enabled: true
+    description: "手机号/邮箱正则"

@@ -1,0 +1,77 @@
+# =============================================================================
+# LLM Dialog Risk Filter — Default Configuration
+# =============================================================================
+
+# --- Text Normalization ---
+normalizer:
+  lowercase: true
+  full_to_half: true           # 全角 → 半角
+  normalize_whitespace: true    # 合并异常空格
+  reduce_repeated_chars: true   # 压缩重复字符
+  max_repeat: 3                 # 重复字符最大保留次数
+  normalize_symbols: true       # 变体符号标准化
+
+# --- Rule Detection ---
+rule_detection:
+  enabled: true
+  # 规则文件目录（相对于项目根目录）
+  rules_dir: "config/rules"
+
+# --- Semantic Detection ---
+semantic_detection:
+  enabled: true
+  # 模型名称或路径
+  model_name: "shibing624/text2vec-base-chinese"
+  # 置信度阈值：低于此值视为语义模型无法判断，回退到规则结果
+  confidence_threshold: 0.6
+  # 是否使用 GPU
+  device: "cpu"
+
+# --- Risk Fusion ---
+risk_fusion:
+  # 高风险阈值：综合置信度 >= 此值 → HIGH
+  high_threshold: 0.8
+  # 中风险阈值：综合置信度 >= 此值 → MEDIUM
+  medium_threshold: 0.4
+  # 低于 medium_threshold → LOW
+  # 规则命中权重（与语义模型权重相对）
+  rule_weight: 0.5
+  semantic_weight: 0.5
+
+# --- Desensitization ---
+desensitization:
+  # 脱敏替换字符
+  replacement_char: "*"
+  # 是否保留首尾字符
+  keep_first_last: true
+
+# --- Output Check ---
+output_check:
+  enabled: true
+  # 合规提示话术
+  block_message: "抱歉，您的请求包含不适宜内容，无法处理。"
+  output_block_message: "抱歉，系统在处理您的请求时生成了不适宜内容，已被安全拦截。"
+
+# --- LLM Client ---
+llm:
+  # API 类型: "ollama" | "openai"
+  provider: "ollama"
+  base_url: "http://localhost:11434"
+  model: "qwen2.5:7b"
+  api_key: ""  # Ollama 不需要
+  timeout: 30
+  max_tokens: 2048
+
+# --- Audit Logging ---
+audit:
+  enabled: true
+  log_dir: "data/logs"
+  # 日志文件轮转大小（MB）
+  max_file_size_mb: 10
+  # 保留最近 N 个日志文件
+  backup_count: 5
+
+# --- Dashboard ---
+dashboard:
+  title: "内容风控运营看板"
+  port: 8501

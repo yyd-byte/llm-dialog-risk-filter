@@ -1,0 +1,35 @@
+# 敏感话术规则
+# 注意：以下规则使用占位化表达，仅展示规则结构
+
+category: sensitive
+label: "敏感话术"
+description: "检测政治敏感、违法违规、谣言等敏感话术"
+
+rules:
+  - id: sens-kw-001
+    pattern: "[占位]敏感话题词汇A"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "政治敏感话题"
+
+  - id: sens-kw-002
+    pattern: "[占位]违法违规词汇B"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "违法内容引导"
+
+  - id: sens-re-001
+    pattern: "[占位]敏感正则表达式A"
+    pattern_type: regex
+    risk_level: high
+    enabled: true
+    description: "敏感变体表达"
+
+  - id: sens-re-002
+    pattern: "[占位]敏感正则表达式B"
+    pattern_type: regex
+    risk_level: medium
+    enabled: true
+    description: "边界敏感内容"
