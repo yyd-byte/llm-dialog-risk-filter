@@ -13,9 +13,9 @@ from src.utils.exceptions import LLMServiceError
 class LLMConfig:
     """Configuration for LLM client."""
 
-    provider: str = "ollama"  # "ollama" | "openai"
-    base_url: str = "http://localhost:11434"
-    model: str = "qwen2.5:7b"
+    provider: str = "openai"  # "openai" | "ollama"
+    base_url: str = "https://api.deepseek.com"
+    model: str = "deepseek-chat"
     api_key: str = ""
     timeout: int = 30
     max_tokens: int = 2048

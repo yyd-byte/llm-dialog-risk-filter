@@ -17,4 +17,27 @@ pnpm dev
 http://127.0.0.1:5173/
 ```
 
-当前后端接口未完成，前端通过 mock adapter 占位，后续联调时主要替换 `frontend/src/api.ts` 和 `frontend/src/data.ts`。
+## 后端 API
+
+```bash
+python -m uvicorn src.api.server:app --reload --port 8000
+```
+
+API 文档：启动后访问 `http://127.0.0.1:8000/docs`
+
+| 端点 | 说明 |
+|------|------|
+| `POST /api/pipeline/check` | 完整风控流水线 |
+| `GET /api/stats/overview` | 运营统计 |
+| `GET /api/rules` | 规则词库 |
+| `GET /api/audit` | 审计日志 |
+| `POST /api/feedback` | 误判反馈 |
+
+## 模型
+
+| 用途 | 模型 | 来源 |
+|------|------|------|
+| 语义检测 | BAAI/bge-small-zh-v1.5 | 本地（HuggingFace 镜像） |
+| 对话生成 | deepseek-chat | DeepSeek API |
+
+LLM 支持切换其他 OpenAI 兼容服务（通义千问、智谱、Ollama 等），修改 `config/default.yaml` 即可。
