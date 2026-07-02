@@ -14,8 +14,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 语言：Python 3.10+
 - 配置：YAML
 - 看板：Streamlit
-- 语义模型：sentence-transformers / transformers
-- LLM 调用：Ollama / OpenAI 兼容 API
+- 语义模型：sentence-transformers / BAAI/bge-small-zh-v1.5（本地）
+- LLM 调用：DeepSeek API（OpenAI 兼容，可切换 Ollama / 通义千问 / 智谱等）
 - 平台：Windows 11，Git Bash shell
 
 ## 项目结构
@@ -29,15 +29,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │       ├── advertising.yaml  # 广告引流
 │       └── sensitive.yaml    # 敏感话术
 ├── src/
+│   ├── api/                  # FastAPI 后端服务（RESTful 接口）
 │   ├── detection/            # 检测层：normalizer + rule_detector + semantic_detector
 │   ├── rules/                # 规则管理：models + repository(YAML读写) + manager(CRUD)
 │   ├── decision/             # 决策层：models(RiskLevel/RiskResult) + fusion(规则+语义融合)
 │   ├── desensitization/      # 脱敏：片段级替换，保留语义
 │   ├── output_check/         # 输出复检：LLM 回复二次校验+安全兜底
 │   ├── audit/                # 审计：logger(JSONL) + statistics(聚合统计)
-│   ├── llm/                  # LLM 客户端：Ollama / OpenAI 兼容
+│   ├── llm/                  # LLM 客户端：DeepSeek / OpenAI 兼容
 │   ├── dashboard/            # Streamlit 运营看板
 │   └── utils/                # 自定义异常
+├── frontend/                 # React + TypeScript 前端（Vite）
+│   ├── src/
+│   │   ├── api.ts            # 后端 API 调用
+│   │   ├── App.tsx           # 主页面（链路演示/看板/规则/审计/反馈）
+│   │   └── types.ts          # TypeScript 类型定义
 ├── demo/
 │   ├── cli_demo.py           # 命令行演示入口（--interactive / --scenario N）
 │   └── scenarios.py          # 预设演示场景
@@ -88,6 +94,9 @@ python -m pytest tests/ -v
 # 启动 API 服务（后端）
 python -m uvicorn src.api.server:app --reload --port 8000
 
+# 启动前端开发服务器
+cd frontend && pnpm dev
+
 # 启动看板
 streamlit run src/dashboard/app.py
 
@@ -108,7 +117,7 @@ python scripts/init_rules.py
 - `config/default.yaml` 是全局配置文件
 - 规则文件在 `config/rules/`，每个类别一个 YAML，支持 `keywords` 和 `regex` 两种模式
 - 规则可动态启停，无需重启系统
-- 语义模型默认使用 `shibing624/text2vec-base-chinese`，未加载时自动回退到纯规则模式
+- 语义模型默认使用 `BAAI/bge-small-zh-v1.5`（通过 HuggingFace 镜像下载），未加载时自动回退到纯规则模式
 - 审计日志以 JSONL 格式写入 `data/logs/`，原始文本脱敏后存储
 
 ## 风险等级
