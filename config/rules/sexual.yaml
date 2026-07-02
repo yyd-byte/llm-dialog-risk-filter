@@ -1,6 +1,4 @@
 # 色情低俗规则
-# 注意：以下规则使用占位化表达，仅展示规则结构，实际部署时填充具体内容
-
 category: sexual
 label: "色情低俗"
 description: "检测色情、低俗、性暗示等违规内容"
@@ -8,30 +6,135 @@ description: "检测色情、低俗、性暗示等违规内容"
 rules:
   # === 关键词规则 ===
   - id: sexual-kw-001
-    pattern: "[占位]性暗示词汇A"
+    pattern: "裸聊"
     pattern_type: keyword
     risk_level: high
     enabled: true
-    description: "直接性暗示表达"
+    description: "裸聊邀请"
 
   - id: sexual-kw-002
-    pattern: "[占位]低俗词汇B"
+    pattern: "约炮"
     pattern_type: keyword
     risk_level: high
     enabled: true
-    description: "低俗用词"
+    description: "约炮"
+
+  - id: sexual-kw-003
+    pattern: "性爱"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "性行为直接描述"
+
+  - id: sexual-kw-004
+    pattern: "做爱"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "性行为直接描述"
+
+  - id: sexual-kw-005
+    pattern: "上床"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "性暗示"
+
+  - id: sexual-kw-006
+    pattern: "一夜情"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "一夜情"
+
+  - id: sexual-kw-007
+    pattern: "嫖娼"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "嫖娼"
+
+  - id: sexual-kw-008
+    pattern: "小姐"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "涉黄称呼"
+
+  - id: sexual-kw-009
+    pattern: "打飞机"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "低俗表达"
+
+  - id: sexual-kw-010
+    pattern: "操你"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "侮辱性脏话"
+
+  - id: sexual-kw-011
+    pattern: "他妈"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "脏话"
+
+  - id: sexual-kw-012
+    pattern: "色情"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "色情关键词"
+
+  - id: sexual-kw-013
+    pattern: "黄片"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "色情资源"
+
+  - id: sexual-kw-014
+    pattern: "AV"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "色情影片"
+
+  - id: sexual-kw-015
+    pattern: "包养"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "包养暗示"
+
+  - id: sexual-kw-016
+    pattern: "援交"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "援交"
 
   # === 正则规则 ===
   - id: sexual-re-001
-    pattern: "[占位]正则表达式A"
-    pattern_type: regex
-    risk_level: high
-    enabled: true
-    description: "变体性暗示模式"
-
-  - id: sexual-re-002
-    pattern: "[占位]正则表达式B"
+    pattern: '[色性][爱交情欲]'
     pattern_type: regex
     risk_level: medium
     enabled: true
-    description: "边界暧昧表达模式"
+    description: "色情组合词"
+
+  - id: sexual-re-002
+    pattern: '[操草日][你妳死他妈]'
+    pattern_type: regex
+    risk_level: high
+    enabled: true
+    description: "侮辱性脏话组合"
+
+  - id: sexual-re-003
+    pattern: '[裸漏露]+\s*[体聊出]'
+    pattern_type: regex
+    risk_level: medium
+    enabled: true
+    description: "裸体相关变体"

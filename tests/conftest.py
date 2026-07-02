@@ -91,6 +91,47 @@ def semantic_detector():
 
 
 @pytest.fixture
+def semantic_detector_with_model():
+    """Create a SemanticDetector with a mock model loaded.
+
+    Simulates having a real embedding model by setting _is_loaded and
+    pre-populating _category_embeddings with random vectors.
+    Uses a lightweight mock for _st_model that returns random embeddings.
+    """
+    try:
+        import numpy as np
+    except ImportError:
+        pytest.skip("numpy not installed")
+
+    detector = SemanticDetector()
+    detector._is_loaded = True
+
+    # Mock the SentenceTransformer with a simple encode that returns
+    # a random normalized vector for any input
+    class _MockEncoder:
+        def encode(self, text, normalize_embeddings=True):
+            vec = np.random.default_rng(hash(str(text)) % (2**32)).random(512).astype(np.float32)
+            if normalize_embeddings:
+                vec = vec / np.linalg.norm(vec)
+            return vec
+
+    detector._st_model = _MockEncoder()
+
+    rng = np.random.default_rng(42)
+    detector._category_embeddings = {
+        "sexual": rng.random(512).astype(np.float32),
+        "violent": rng.random(512).astype(np.float32),
+        "advertising": rng.random(512).astype(np.float32),
+        "sensitive": rng.random(512).astype(np.float32),
+    }
+    # Normalize the random vectors
+    for key in detector._category_embeddings:
+        vec = detector._category_embeddings[key]
+        detector._category_embeddings[key] = vec / np.linalg.norm(vec)
+    return detector
+
+
+@pytest.fixture
 def fusion():
     """Create a RiskFusion with default config."""
     return RiskFusion()

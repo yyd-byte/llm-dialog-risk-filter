@@ -115,7 +115,7 @@ def run_pipeline(text: str, scenario_name: str,
             llm_output = f"[LLM Error: {llm_resp.error}]"
     else:
         # Simulate LLM response for demo
-        llm_output = f"[模拟大模型回复] 针对您的问题"{text[:30]}..."，这是一个示例回答。"
+        llm_output = f'[模拟大模型回复] 针对您的问题“{text[:30]}”，这是一个示例回答。'
         record.llm_called = False
         record.llm_model = "demo-simulation"
 
@@ -240,6 +240,13 @@ def main():
     """Main entry point."""
     import argparse
 
+    # 确保 Windows 控制台使用 UTF-8 编码，支持 emoji 输出
+    if sys.platform == "win32":
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+
     parser = argparse.ArgumentParser(
         description="LLM Dialog Risk Filter — CLI Demo"
     )
@@ -254,6 +261,10 @@ def main():
     parser.add_argument(
         "--no-llm", action="store_true",
         help="不连接 LLM，使用模拟回复"
+    )
+    parser.add_argument(
+        "--load-model", action="store_true",
+        help="加载语义模型（默认不加载，使用纯规则模式）"
     )
     args = parser.parse_args()
 
@@ -282,7 +293,22 @@ def main():
         model_name=sem_cfg["model_name"],
         confidence_threshold=sem_cfg["confidence_threshold"],
         device=sem_cfg["device"],
+        category_references=sem_cfg.get("category_references"),
     )
+
+    # Try to load semantic model if requested
+    if args.load_model:
+        try:
+            print("  加载语义模型...")
+            # 国内网络环境使用 HuggingFace 镜像加速
+            import os as _os
+            if not _os.environ.get("HF_ENDPOINT"):
+                _os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+            semantic_detector.load_model()
+            print(f"  语义模型: {sem_cfg['model_name']} [OK]")
+        except Exception as e:
+            print(f"  语义模型加载失败: {e}")
+            print("  将回退到纯规则模式")
 
     # Fusion
     fusion_cfg = config["risk_fusion"]
@@ -320,7 +346,7 @@ def main():
         print("  LLM: 模拟模式")
 
     print(f"  规则: {sum(1 for r in manager.get_enabled_rules())} 条已启用")
-    print("  初始化完成 ✓\n")
+    print("  初始化完成 [OK]\n")
 
     # ---- Run ----
     if args.interactive:

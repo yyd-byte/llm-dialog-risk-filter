@@ -22,20 +22,15 @@ import {
   ToggleLeft,
   ToggleRight,
 } from "lucide-react";
-import { useMemo, useState } from "react";
-import { runPipeline } from "./api";
+import { useEffect, useMemo, useState } from "react";
+import { fetchAuditLogs, fetchRules, fetchStats, runPipeline, submitFeedback } from "./api";
 import {
   actionLabels,
-  auditRecords,
   categoryLabels,
-  categoryStats,
-  dailyStats,
   defaultResult,
-  feedbackItems,
   riskLevelLabels,
-  rules,
 } from "./data";
-import type { AuditRecord, PipelineResult, RiskAction, RiskLevel } from "./types";
+import type { AuditRecord, CategoryStat, DailyStat, PipelineResult, RiskAction, RiskLevel, RuleItem } from "./types";
 
 type View = "console" | "dashboard" | "rules" | "audit" | "feedback";
 
@@ -49,10 +44,10 @@ const navItems: Array<{ id: View; label: string; icon: typeof MessageSquareText 
 
 const examples = [
   "请帮我写一段客服欢迎语，语气自然一点。",
-  "这个边界投诉场景是否需要转人工处理？",
-  "包含联系方式的广告引流占位样本，请触发脱敏流程。",
-  "高风险违规占位样本，用于演示输入侧直接拦截。",
-  "正常输入，但请演示输出复检安全兜底。",
+  "今天天气真好，适合出去散步。",
+  "加我微信abc123456了解详情",
+  "美女裸聊一对一私密直播",
+  "我知道你家地址，再惹我杀了你全家",
 ];
 
 function App() {
@@ -92,8 +87,8 @@ function App() {
         <div className="backend-card">
           <span className="status-dot" />
           <div>
-            <strong>后端占位模式</strong>
-            <span>API adapter: mock</span>
+            <strong>后端已连接</strong>
+            <span>API: localhost:8000</span>
           </div>
         </div>
       </aside>
@@ -118,7 +113,7 @@ function Topbar() {
         <h1>面向对话场景的大模型输入输出违规内容过滤系统</h1>
       </div>
       <div className="topbar-actions">
-        <button className="icon-button" title="刷新 mock 数据" type="button">
+        <button className="icon-button" title="刷新数据" type="button" onClick={() => window.location.reload()}>
           <RefreshCcw size={18} />
         </button>
         <button className="icon-button" title="导出审计摘要" type="button">
@@ -136,8 +131,12 @@ function ConsoleView() {
 
   async function handleRun() {
     setLoading(true);
-    const next = await runPipeline(input);
-    setResult(next);
+    try {
+      const next = await runPipeline(input);
+      setResult(next);
+    } catch (err) {
+      setResult({ ...defaultResult, originalInput: input, finalOutput: `请求失败: ${err}` });
+    }
     setLoading(false);
   }
 
@@ -145,7 +144,7 @@ function ConsoleView() {
     <section className="view-stack">
       <div className="console-grid">
         <section className="panel input-panel">
-          <PanelHeader icon={Send} title="输入检测台" meta="mock /api/pipeline/check" />
+          <PanelHeader icon={Send} title="输入检测台" meta="POST /api/pipeline/check" />
           <textarea
             aria-label="待检测输入"
             value={input}
@@ -208,7 +207,7 @@ function ConsoleView() {
         <PanelHeader icon={FileText} title="可解释证据链" meta={`${result.durationMs} ms`} />
         <div className="evidence-list">
           {result.evidenceChain.length === 0 ? (
-            <EmptyState icon={CheckCircle2} title="暂无风险证据" text="本次输入按低风险链路放行，已生成审计记录占位。" />
+            <EmptyState icon={CheckCircle2} title="暂无风险证据" text="本次输入按低风险链路放行，已生成审计记录。" />
           ) : (
             result.evidenceChain.map((item, index) => (
               <article className="evidence-item" key={`${item.source}-${index}`}>
@@ -230,31 +229,66 @@ function ConsoleView() {
 }
 
 function DashboardView() {
-  const totals = useMemo(() => {
-    const total = dailyStats.reduce((sum, item) => sum + item.blocked + item.desensitized + item.passed, 0);
-    const blocked = dailyStats.reduce((sum, item) => sum + item.blocked, 0);
-    const outputBlocked = dailyStats.reduce((sum, item) => sum + item.outputBlocked, 0);
-    return { total, blocked, outputBlocked, blockRate: blocked / total };
+  const [stats, setStats] = useState<{
+    totalRequests: number;
+    blockRate: number;
+    falsePositiveRate: number;
+    totalLlmCalls: number;
+    outputBlockRate: number;
+    dailyStats: DailyStat[];
+    categoryStats: CategoryStat[];
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats(7)
+      .then(setStats)
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) {
+    return <section className="view-stack"><div className="panel"><p style={{ padding: 40, textAlign: "center" }}>加载中...</p></div></section>;
+  }
+
+  if (!stats) {
+    return <section className="view-stack"><div className="panel"><p style={{ padding: 40, textAlign: "center" }}>数据加载失败，请确认后端已启动</p></div></section>;
+  }
+
+  const totals = {
+    total: stats.totalRequests,
+    blocked: stats.dailyStats.reduce((sum, d) => sum + d.blocked, 0),
+    outputBlocked: stats.dailyStats.reduce((sum, d) => sum + d.outputBlocked, 0),
+    desensitized: stats.dailyStats.reduce((sum, d) => sum + d.desensitized, 0),
+  };
 
   return (
     <section className="view-stack">
       <div className="metric-grid">
-        <MetricCard icon={Gauge} label="总请求数" value={totals.total.toLocaleString()} trend="+12.4%" />
-        <MetricCard icon={ShieldX} label="明显违规拦截率" value={`${(totals.blockRate * 100).toFixed(1)}%`} trend="-1.8%" danger />
-        <MetricCard icon={Sparkles} label="脱敏放行" value="172" trend="+7.1%" />
-        <MetricCard icon={AlertTriangle} label="输出复检拦截" value={totals.outputBlocked.toString()} trend="+3" warning />
+        <MetricCard icon={Gauge} label="总请求数" value={totals.total.toLocaleString()} trend="" />
+        <MetricCard icon={ShieldX} label="拦截率" value={`${(stats.blockRate * 100).toFixed(1)}%`} trend="" danger />
+        <MetricCard icon={Sparkles} label="脱敏放行" value={totals.desensitized.toString()} trend="" />
+        <MetricCard icon={AlertTriangle} label="输出复检拦截" value={totals.outputBlocked.toString()} trend="" warning />
       </div>
 
       <div className="dashboard-grid">
         <section className="panel trend-panel">
           <PanelHeader icon={BarChart3} title="每日请求趋势" meta="最近 7 天" />
           <div className="stacked-chart">
-            {dailyStats.map((day) => {
+            {stats.dailyStats.map((day) => {
               const total = day.blocked + day.desensitized + day.passed;
+              if (total === 0) {
+                return (
+                  <div className="chart-row" key={day.date}>
+                    <span>{day.date.slice(5)}</span>
+                    <div className="chart-track"><i className="passed" style={{ width: "100%" }} /></div>
+                    <strong>0</strong>
+                  </div>
+                );
+              }
               return (
                 <div className="chart-row" key={day.date}>
-                  <span>{day.date}</span>
+                  <span>{day.date.slice(5)}</span>
                   <div className="chart-track">
                     <i className="passed" style={{ width: `${(day.passed / total) * 100}%` }} />
                     <i className="desensitized" style={{ width: `${(day.desensitized / total) * 100}%` }} />
@@ -271,16 +305,20 @@ function DashboardView() {
         <section className="panel category-panel">
           <PanelHeader icon={SlidersHorizontal} title="违规类型占比" meta="四类知识体系" />
           <div className="category-list">
-            {categoryStats.map((item) => (
-              <div className="category-row" key={item.category}>
-                <span className="category-swatch" style={{ backgroundColor: item.color }} />
-                <span>{item.label}</span>
-                <div className="mini-track">
-                  <i style={{ width: `${item.count}%`, backgroundColor: item.color }} />
+            {stats.categoryStats.length === 0 ? (
+              <p style={{ padding: 20, textAlign: "center", color: "#94a3b8" }}>暂无数据</p>
+            ) : (
+              stats.categoryStats.map((item) => (
+                <div className="category-row" key={item.category}>
+                  <span className="category-swatch" style={{ backgroundColor: item.color }} />
+                  <span>{item.label}</span>
+                  <div className="mini-track">
+                    <i style={{ width: `${Math.min(item.count, 100)}%`, backgroundColor: item.color }} />
+                  </div>
+                  <strong>{item.count}</strong>
                 </div>
-                <strong>{item.count}</strong>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </section>
       </div>
@@ -289,15 +327,29 @@ function DashboardView() {
 }
 
 function RulesView() {
+  const [rules, setRules] = useState<RuleItem[]>([]);
   const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchRules()
+      .then(setRules)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
   const filtered = rules.filter((rule) => {
     const haystack = `${rule.id}${rule.pattern}${rule.description}${categoryLabels[rule.category]}`;
     return haystack.toLowerCase().includes(query.toLowerCase());
   });
 
+  if (loading) {
+    return <section className="panel"><p style={{ padding: 40, textAlign: "center" }}>加载中...</p></section>;
+  }
+
   return (
     <section className="panel">
-      <PanelHeader icon={Database} title="规则词库管理" meta="CRUD endpoint placeholder" />
+      <PanelHeader icon={Database} title="规则词库管理" meta={`${rules.length} 条规则 · GET /api/rules`} />
       <div className="table-toolbar">
         <label className="search-box">
           <Search size={17} />
@@ -337,39 +389,99 @@ function RulesView() {
 }
 
 function AuditView() {
+  const [records, setRecords] = useState<AuditRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAuditLogs(50)
+      .then(setRecords)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <section className="panel"><p style={{ padding: 40, textAlign: "center" }}>加载中...</p></section>;
+  }
+
   return (
     <section className="panel">
-      <PanelHeader icon={History} title="审计日志" meta="data/logs/audit-*.jsonl" />
-      <AuditTable records={auditRecords} />
+      <PanelHeader icon={History} title="审计日志" meta={`${records.length} 条记录 · data/logs/audit-*.jsonl`} />
+      {records.length === 0 ? (
+        <EmptyState icon={FileText} title="暂无审计记录" text="运行链路演示后，记录将显示在此处" />
+      ) : (
+        <AuditTable records={records} />
+      )}
     </section>
   );
 }
 
 function FeedbackView() {
+  const [type, setType] = useState("false_positive");
+  const [sample, setSample] = useState("");
+  const [suggestion, setSuggestion] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit() {
+    if (!sample.trim()) return;
+    setSubmitting(true);
+    try {
+      await submitFeedback({ type, sample, suggestion });
+      setSubmitted(true);
+      setSample("");
+      setSuggestion("");
+    } catch (err) {
+      console.error(err);
+    }
+    setSubmitting(false);
+  }
+
   return (
     <section className="view-stack">
       <section className="panel">
-        <PanelHeader icon={ClipboardList} title="误判反馈闭环" meta="待接入 data/feedback" />
-        <div className="feedback-grid">
-          {feedbackItems.map((item) => (
-            <article className="feedback-item" key={item.id}>
-              <div>
-                <strong>{item.id}</strong>
-                <span className={`status-chip ${item.status}`}>{feedbackStatus(item.status)}</span>
-              </div>
-              <p>{item.sample}</p>
-              <span>{item.suggestion}</span>
-              <small>{item.timestamp}</small>
-            </article>
-          ))}
+        <PanelHeader icon={ClipboardList} title="误判反馈" meta="POST /api/feedback" />
+        <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12, maxWidth: 500 }}>
+          <label>
+            <strong>反馈类型</strong>
+            <select value={type} onChange={(e) => setType(e.target.value)} style={{ width: "100%", marginTop: 4, padding: "6px 10px" }}>
+              <option value="false_positive">误判（正常被判为违规）</option>
+              <option value="false_negative">漏判（违规被判为正常）</option>
+              <option value="wrong_category">分类错误</option>
+            </select>
+          </label>
+          <label>
+            <strong>样本内容</strong>
+            <textarea
+              value={sample}
+              onChange={(e) => setSample(e.target.value)}
+              placeholder="输入被误判/漏判的文本"
+              style={{ width: "100%", marginTop: 4, minHeight: 80 }}
+            />
+          </label>
+          <label>
+            <strong>建议</strong>
+            <input
+              value={suggestion}
+              onChange={(e) => setSuggestion(e.target.value)}
+              placeholder="你的修改建议（可选）"
+              style={{ width: "100%", marginTop: 4, padding: "6px 10px" }}
+            />
+          </label>
+          <button className="primary-button" onClick={handleSubmit} disabled={submitting || !sample.trim()} type="button">
+            <Send size={18} />
+            <span>{submitting ? "提交中..." : "提交反馈"}</span>
+          </button>
+          {submitted && <p style={{ color: "#16a34a" }}>反馈已提交，感谢！</p>}
         </div>
       </section>
+
       <section className="panel api-panel">
-        <PanelHeader icon={Database} title="后端接口占位" meta="联调清单" />
+        <PanelHeader icon={Database} title="后端接口" meta="联调清单" />
         <div className="endpoint-list">
           <Endpoint method="POST" path="/api/pipeline/check" text="执行输入检测、脱敏、LLM 调用、输出复检" />
           <Endpoint method="GET" path="/api/stats/overview" text="获取请求量、拦截率、类型占比、趋势数据" />
           <Endpoint method="GET" path="/api/rules" text="读取规则词库、启停状态、规则来源" />
+          <Endpoint method="GET" path="/api/audit" text="读取审计日志" />
           <Endpoint method="POST" path="/api/feedback" text="提交误判、漏判、分类错误反馈" />
         </div>
       </section>
@@ -409,7 +521,7 @@ function MetricCard({
       <Icon size={22} />
       <span>{label}</span>
       <strong>{value}</strong>
-      <small>{trend}</small>
+      {trend && <small>{trend}</small>}
     </article>
   );
 }
@@ -495,15 +607,6 @@ function Endpoint({ method, path, text }: { method: string; path: string; text: 
       <p>{text}</p>
     </article>
   );
-}
-
-function feedbackStatus(status: "pending" | "reviewed" | "resolved") {
-  const map = {
-    pending: "待处理",
-    reviewed: "已复核",
-    resolved: "已解决",
-  };
-  return map[status];
 }
 
 export default App;

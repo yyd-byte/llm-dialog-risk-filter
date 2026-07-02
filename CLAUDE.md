@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 面向聊天/问答/客服场景的轻量级大模型内容风控系统，采用 **规则 + 语义双层过滤**，实现输入拦截、片段脱敏、输出复检、日志统计全闭环，支持风险分级与可解释审计。
 
 - GitHub 仓库：`https://github.com/yyd-byte/llm-dialog-risk-filter`
-- 队长：`yyd-byte`，当前用户：`Grayy9`（协作者）
+- 队长：`yyd-byte`，协作者：`Grayy9` `MyDear7251`（当前用户：`Grayy9`）
 
 ## 技术栈
 
@@ -65,6 +65,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # 安装依赖
 pip install -r requirements.txt
 
+# 代码质量检查（提交前运行）
+python -m pytest tests/ -v
+ruff check src/ tests/ demo/ scripts/   # lint
+ruff format --check src/ tests/ demo/ scripts/  # 格式检查
+
 # 运行演示（所有预设场景）
 python demo/cli_demo.py
 
@@ -80,6 +85,9 @@ python demo/cli_demo.py --no-llm
 # 运行测试
 python -m pytest tests/ -v
 
+# 启动 API 服务（后端）
+python -m uvicorn src.api.server:app --reload --port 8000
+
 # 启动看板
 streamlit run src/dashboard/app.py
 
@@ -89,6 +97,11 @@ python scripts/download_model.py
 # 初始化规则库
 python scripts/init_rules.py
 ```
+
+## 编码规范
+
+- **后端**：参见 `BACKEND_CONVENTIONS.md`，所有 Python 代码必须遵守
+- **前端**：参见 `frontend/README.md`，TypeScript + React 约定
 
 ## 配置要点
 

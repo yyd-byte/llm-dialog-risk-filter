@@ -20,12 +20,19 @@ rule_detection:
 # --- Semantic Detection ---
 semantic_detection:
   enabled: true
-  # 模型名称或路径
-  model_name: "shibing624/text2vec-base-chinese"
-  # 置信度阈值：低于此值视为语义模型无法判断，回退到规则结果
+  # 模型名称（HuggingFace model ID）
+  model_name: "BAAI/bge-small-zh-v1.5"
+  # 相似度阈值：低于此值视为语义模型无法判断，回退到规则结果
   confidence_threshold: 0.6
   # 是否使用 GPU
   device: "cpu"
+  # 四类风险的参考描述，用于向量相似度匹配
+  # 描述越具体，分类越准确；可按需调整措辞
+  category_references:
+    sexual: "色情内容、低俗表达、性暗示、性挑逗、不雅词汇、色情服务、裸体"
+    violent: "暴力威胁、人身攻击、自残自杀、恐怖主义、危险行为、伤害他人、杀人"
+    advertising: "广告推广、微信号引流、手机号、外部链接、刷屏营销、拉人加群、加微信"
+    sensitive: "政治敏感、违法信息、谣言传播、破坏社会稳定、危害国家安全、反动"
 
 # --- Risk Fusion ---
 risk_fusion:
@@ -55,10 +62,10 @@ output_check:
 # --- LLM Client ---
 llm:
   # API 类型: "ollama" | "openai"
-  provider: "ollama"
-  base_url: "http://localhost:11434"
-  model: "qwen2.5:7b"
-  api_key: ""  # Ollama 不需要
+  provider: "openai"
+  base_url: "https://api.deepseek.com"
+  model: "deepseek-chat"
+  api_key: "sk-8021cff849f042f5aa41bb9762fac06f"
   timeout: 30
   max_tokens: 2048
 

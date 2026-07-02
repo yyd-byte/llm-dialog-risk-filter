@@ -53,14 +53,20 @@ class RiskFusion:
                 evidence_chain=[],
             )
 
-        # Calculate weighted confidence
+        # Calculate weighted confidence.
+        # When semantic evidence is absent, rule evidence dominates.
+        # When both are present, they contribute equally.
         rule_conf = self._max_confidence(rule_evidence)
         sem_conf = self._max_confidence(semantic_evidence)
 
-        weighted_conf = (
-            self.config.rule_weight * rule_conf
-            + self.config.semantic_weight * sem_conf
-        )
+        if sem_conf > 0:
+            rule_w = self.config.rule_weight
+            sem_w = self.config.semantic_weight
+        else:
+            rule_w = 1.0
+            sem_w = 0.0
+
+        weighted_conf = rule_w * rule_conf + sem_w * sem_conf
 
         # Determine risk level
         if weighted_conf >= self.config.high_threshold:

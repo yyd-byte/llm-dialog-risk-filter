@@ -1,28 +1,140 @@
 # 暴力危险规则
-# 注意：以下规则使用占位化表达，仅展示规则结构
-
 category: violent
 label: "暴力危险"
 description: "检测暴力、威胁、自残、危险行为等违规内容"
 
 rules:
+  # === 关键词规则 ===
   - id: violent-kw-001
-    pattern: "[占位]暴力威胁词汇A"
+    pattern: "杀了你"
     pattern_type: keyword
     risk_level: high
     enabled: true
-    description: "直接暴力威胁"
+    description: "死亡威胁"
 
   - id: violent-kw-002
-    pattern: "[占位]危险行为词汇B"
+    pattern: "砍死你"
     pattern_type: keyword
     risk_level: high
     enabled: true
-    description: "危险行为描述"
+    description: "暴力威胁"
 
+  - id: violent-kw-003
+    pattern: "弄死你"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "死亡威胁"
+
+  - id: violent-kw-004
+    pattern: "打死你"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "暴力威胁"
+
+  - id: violent-kw-005
+    pattern: "自杀"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "自杀倾向"
+
+  - id: violent-kw-006
+    pattern: "自残"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "自残行为"
+
+  - id: violent-kw-007
+    pattern: "跳楼"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "跳楼自杀"
+
+  - id: violent-kw-008
+    pattern: "割腕"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "割腕自残"
+
+  - id: violent-kw-009
+    pattern: "恐怖袭击"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "恐怖主义"
+
+  - id: violent-kw-010
+    pattern: "炸弹"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "爆炸物"
+
+  - id: violent-kw-011
+    pattern: "人肉搜索"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "网络暴力"
+
+  - id: violent-kw-012
+    pattern: "你死定了"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "威胁恐吓"
+
+  - id: violent-kw-013
+    pattern: "废了你"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "人身威胁"
+
+  - id: violent-kw-014
+    pattern: "想死"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "自杀倾向暗示"
+
+  - id: violent-kw-015
+    pattern: "活不下去"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "自杀倾向暗示"
+
+  - id: violent-kw-016
+    pattern: "同归于尽"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "极端暴力"
+
+  # === 正则规则 ===
   - id: violent-re-001
-    pattern: "[占位]暴力正则表达式A"
+    pattern: '[杀砍打弄废揍][死了死你]'
     pattern_type: regex
     risk_level: high
     enabled: true
-    description: "暴力变体表达"
+    description: "暴力威胁组合"
+
+  - id: violent-re-002
+    pattern: '我?[要去想]死'
+    pattern_type: regex
+    risk_level: medium
+    enabled: true
+    description: "自杀倾向表达"
+
+  - id: violent-re-003
+    pattern: '[炸爆][弹死你]'
+    pattern_type: regex
+    risk_level: high
+    enabled: true
+    description: "爆炸威胁"

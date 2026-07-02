@@ -1,35 +1,168 @@
 # 敏感话术规则
-# 注意：以下规则使用占位化表达，仅展示规则结构
-
 category: sensitive
 label: "敏感话术"
 description: "检测政治敏感、违法违规、谣言等敏感话术"
 
 rules:
+  # === 关键词规则 ===
   - id: sens-kw-001
-    pattern: "[占位]敏感话题词汇A"
+    pattern: "翻墙"
     pattern_type: keyword
     risk_level: high
     enabled: true
-    description: "政治敏感话题"
+    description: "网络违法"
 
   - id: sens-kw-002
-    pattern: "[占位]违法违规词汇B"
+    pattern: "VPN"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "VPN提及"
+
+  - id: sens-kw-003
+    pattern: "贩卖毒品"
     pattern_type: keyword
     risk_level: high
     enabled: true
-    description: "违法内容引导"
+    description: "毒品违法"
 
+  - id: sens-kw-004
+    pattern: "吸毒"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "毒品"
+
+  - id: sens-kw-005
+    pattern: "贩毒"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "贩毒"
+
+  - id: sens-kw-006
+    pattern: "赌博"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "赌博"
+
+  - id: sens-kw-007
+    pattern: "赌场"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "赌博场所"
+
+  - id: sens-kw-008
+    pattern: "高利贷"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "非法借贷"
+
+  - id: sens-kw-009
+    pattern: "枪支"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "武器"
+
+  - id: sens-kw-010
+    pattern: "买枪"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "非法武器交易"
+
+  - id: sens-kw-011
+    pattern: "假钞"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "假币"
+
+  - id: sens-kw-012
+    pattern: "假币"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "假币"
+
+  - id: sens-kw-013
+    pattern: "黑客"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "黑客行为"
+
+  - id: sens-kw-014
+    pattern: "盗号"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "账号盗取"
+
+  - id: sens-kw-015
+    pattern: "洗钱"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "洗钱"
+
+  - id: sens-kw-016
+    pattern: "传销"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "传销"
+
+  - id: sens-kw-017
+    pattern: "裸贷"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "裸贷"
+
+  - id: sens-kw-018
+    pattern: "套现"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "非法套现"
+
+  - id: sens-kw-019
+    pattern: "代孕"
+    pattern_type: keyword
+    risk_level: medium
+    enabled: true
+    description: "代孕"
+
+  - id: sens-kw-020
+    pattern: "器官买卖"
+    pattern_type: keyword
+    risk_level: high
+    enabled: true
+    description: "器官买卖"
+
+  # === 正则规则 ===
   - id: sens-re-001
-    pattern: "[占位]敏感正则表达式A"
+    pattern: '[贩买吸]毒'
     pattern_type: regex
     risk_level: high
     enabled: true
-    description: "敏感变体表达"
+    description: "毒品相关"
 
   - id: sens-re-002
-    pattern: "[占位]敏感正则表达式B"
+    pattern: '[赌博彩][场博]'
+    pattern_type: regex
+    risk_level: high
+    enabled: true
+    description: "赌博相关"
+
+  - id: sens-re-003
+    pattern: '[一-鿿]{2,}[一-鿿]{0,}代[办考发]'
     pattern_type: regex
     risk_level: medium
     enabled: true
-    description: "边界敏感内容"
+    description: "代办/代考等违法服务"
