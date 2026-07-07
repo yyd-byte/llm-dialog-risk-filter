@@ -14,6 +14,8 @@ class NormalizerConfig:
     reduce_repeated_chars: bool = True
     max_repeat: int = 3
     normalize_symbols: bool = True
+    normalize_bypass: bool = True
+    bypass_map: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -30,7 +32,9 @@ class TextNormalizer:
     """Pre-processes text before detection to handle evasion techniques.
 
     Handles: full/half-width conversion, case normalization, whitespace
-    normalization, repeated character compression, and symbol normalization.
+    normalization, bypass variant normalization (homophones, similar-looking
+    characters, pinyin, etc.), repeated character compression, and symbol
+    normalization.
     """
 
     def __init__(self, config: NormalizerConfig | None = None):
@@ -41,6 +45,7 @@ class TextNormalizer:
         result = text
         for step in [
             self._normalize_full_to_half,
+            self._normalize_bypass_variants,
             self._normalize_case,
             self._normalize_whitespace,
             self._reduce_repeats,
@@ -56,6 +61,7 @@ class TextNormalizer:
             "_normalize_full_to_half": self.config.full_to_half,
             "_normalize_case": self.config.lowercase,
             "_normalize_whitespace": self.config.normalize_whitespace,
+            "_normalize_bypass_variants": self.config.normalize_bypass,
             "_reduce_repeats": self.config.reduce_repeated_chars,
             "_normalize_symbols": self.config.normalize_symbols,
         }
@@ -87,6 +93,25 @@ class TextNormalizer:
     def _normalize_whitespace(self, text: str) -> str:
         """Collapse multiple whitespace characters into single space."""
         return re.sub(r"\s+", " ", text).strip()
+
+    def _normalize_bypass_variants(self, text: str) -> str:
+        """Replace known bypass variants with their standard forms.
+
+        Handles: homophones (薇信→微信), similar-looking chars (草你→操你),
+        pinyin (weixin→微信), symbol variants (+V→加微信), number codes (419→一夜情).
+
+        Only replaces multi-character phrases to avoid false positives from
+        single-character substitutions.
+        """
+        if not self.config.bypass_map:
+            return text
+        # Sort by key length descending to match longer phrases first
+        # Ensure all keys are strings (YAML may parse numeric keys as int)
+        str_map = {str(k): str(v) for k, v in self.config.bypass_map.items()}
+        for variant in sorted(str_map, key=len, reverse=True):
+            if variant in text:
+                text = text.replace(variant, str_map[variant])
+        return text
 
     def _reduce_repeats(self, text: str) -> str:
         """Reduce consecutive repeated characters.

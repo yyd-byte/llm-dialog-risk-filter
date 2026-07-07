@@ -31,7 +31,7 @@ from src.audit.statistics import StatisticsEngine
 from src.decision.fusion import RiskFusion
 from src.decision.models import RiskLevel, RiskCategory
 from src.desensitization.desensitizer import Desensitizer
-from src.detection.normalizer import TextNormalizer
+from src.detection.normalizer import TextNormalizer, NormalizerConfig
 from src.detection.rule_detector import RuleDetector
 from src.detection.semantic_detector import SemanticDetector
 from src.llm.client import LLMClient, LLMConfig
@@ -129,7 +129,12 @@ def startup():
         _config["semantic_detection"]["api"]["api_key"] = _os.environ["SILICONFLOW_API_KEY"]
 
     # Normalizer
-    _normalizer = TextNormalizer()
+    bypass_map: dict[str, str] = {}
+    bypass_path = project_root / "config" / "bypass_variants.yaml"
+    if bypass_path.exists():
+        with open(bypass_path, "r", encoding="utf-8") as f:
+            bypass_map = yaml.safe_load(f) or {}
+    _normalizer = TextNormalizer(NormalizerConfig(bypass_map=bypass_map))
 
     # Rules
     rules_dir = project_root / _config["rule_detection"]["rules_dir"]
@@ -168,6 +173,7 @@ def startup():
     _output_checker = OutputChecker(
         _rule_detector, _semantic_detector, _fusion,
         block_message=_config["output_check"]["output_block_message"],
+        desensitizer=_desensitizer,
     )
 
     # Audit logger

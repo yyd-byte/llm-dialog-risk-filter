@@ -14,7 +14,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.detection.normalizer import TextNormalizer
+from src.detection.normalizer import TextNormalizer, NormalizerConfig
 from src.detection.rule_detector import RuleDetector
 from src.detection.semantic_detector import SemanticDetector
 from src.rules.repository import RuleRepository
@@ -296,7 +296,12 @@ def main():
         config["semantic_detection"]["api"]["api_key"] = _os.environ["SILICONFLOW_API_KEY"]
 
     # Normalizer
-    normalizer = TextNormalizer()
+    bypass_map: dict[str, str] = {}
+    bypass_path = Path(__file__).resolve().parent.parent / "config" / "bypass_variants.yaml"
+    if bypass_path.exists():
+        with open(bypass_path, "r", encoding="utf-8") as f:
+            bypass_map = yaml.safe_load(f) or {}
+    normalizer = TextNormalizer(NormalizerConfig(bypass_map=bypass_map))
 
     # Rules
     rules_dir = Path(__file__).resolve().parent.parent / config["rule_detection"]["rules_dir"]
@@ -341,6 +346,7 @@ def main():
     output_checker = OutputChecker(
         rule_detector, semantic_detector, fusion,
         block_message=config["output_check"]["output_block_message"],
+        desensitizer=desensitizer,
     )
 
     # Audit logger
