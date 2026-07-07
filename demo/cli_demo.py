@@ -278,6 +278,23 @@ def main():
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
+    # 从环境变量注入敏感密钥
+    # 优先从 .env 文件加载，其次从系统环境变量
+    import os as _os
+    _env_file = Path(__file__).resolve().parent.parent / ".env"
+    if _env_file.exists():
+        with open(_env_file, "r", encoding="utf-8") as _f:
+            for _line in _f:
+                _line = _line.strip()
+                if _line and not _line.startswith("#") and "=" in _line:
+                    _key, _val = _line.split("=", 1)
+                    _os.environ.setdefault(_key.strip(), _val.strip())
+    if _os.environ.get("DEEPSEEK_API_KEY"):
+        config["llm"]["api_key"] = _os.environ["DEEPSEEK_API_KEY"]
+    if _os.environ.get("SILICONFLOW_API_KEY"):
+        config.setdefault("semantic_detection", {}).setdefault("api", {})
+        config["semantic_detection"]["api"]["api_key"] = _os.environ["SILICONFLOW_API_KEY"]
+
     # Normalizer
     normalizer = TextNormalizer()
 

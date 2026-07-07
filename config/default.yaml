@@ -32,7 +32,7 @@ semantic_detection:
     provider: "siliconflow"
     base_url: "https://api.siliconflow.cn/v1"
     model: "BAAI/bge-large-zh-v1.5"
-    api_key: ""  # 填写你的 SiliconFlow API Key
+    api_key: ""  # 通过环境变量 SILICONFLOW_API_KEY 设置
   # 相似度阈值：低于此值视为语义模型无法判断，回退到规则结果
   confidence_threshold: 0.6
   # 四类风险的参考描述，用于向量相似度匹配
@@ -74,7 +74,7 @@ llm:
   provider: "openai"
   base_url: "https://api.deepseek.com"
   model: "deepseek-chat"
-  api_key: "sk-8021cff849f042f5aa41bb9762fac06f"
+  api_key: ""  # 通过环境变量 DEEPSEEK_API_KEY 设置
   timeout: 30
   max_tokens: 2048
 
