@@ -20,12 +20,21 @@ rule_detection:
 # --- Semantic Detection ---
 semantic_detection:
   enabled: true
-  # 模型名称（HuggingFace model ID）
+  # 模式: "local" 使用本地模型 | "api" 使用云端 Embedding API
+  mode: "local"
+  # 本地模型（mode=local 时生效）
   model_name: "BAAI/bge-small-zh-v1.5"
-  # 相似度阈值：低于此值视为语义模型无法判断，回退到规则结果
-  confidence_threshold: 0.6
   # 是否使用 GPU
   device: "cpu"
+  # 云端 API（mode=api 时生效）
+  api:
+    # SiliconFlow 免费额度，OpenAI 兼容
+    provider: "siliconflow"
+    base_url: "https://api.siliconflow.cn/v1"
+    model: "BAAI/bge-large-zh-v1.5"
+    api_key: ""  # 填写你的 SiliconFlow API Key
+  # 相似度阈值：低于此值视为语义模型无法判断，回退到规则结果
+  confidence_threshold: 0.6
   # 四类风险的参考描述，用于向量相似度匹配
   # 描述越具体，分类越准确；可按需调整措辞
   category_references:

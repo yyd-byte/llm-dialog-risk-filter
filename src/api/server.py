@@ -121,11 +121,14 @@ def startup():
 
     # Semantic
     sem_cfg = _config["semantic_detection"]
+    api_mode = sem_cfg.get("mode", "local") == "api"
     _semantic_detector = SemanticDetector(
-        model_name=sem_cfg["model_name"],
+        model_name=sem_cfg.get("model_name", "BAAI/bge-small-zh-v1.5"),
         confidence_threshold=sem_cfg["confidence_threshold"],
-        device=sem_cfg["device"],
+        device=sem_cfg.get("device", "cpu"),
         category_references=sem_cfg.get("category_references"),
+        api_mode=api_mode,
+        api_config=sem_cfg.get("api") if api_mode else None,
     )
     # Try to load the semantic model (non-fatal if unavailable)
     try:
