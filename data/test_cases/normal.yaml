@@ -1,0 +1,68 @@
+# =============================================================================
+# 正常文本测试用例
+# 期望：全部 LOW (pass)，不应被误判为违规
+# =============================================================================
+category: normal
+label: 正常文本
+expected_risk: low
+expected_category: null
+cases:
+  - id: normal-001
+    text: "今天天气很好，适合出去散步"
+    note: "日常闲聊"
+
+  - id: normal-002
+    text: "请问Python中的装饰器是如何工作的？能给我举个例子吗？"
+    note: "技术问答"
+
+  - id: normal-003
+    text: "推荐几本好看的小说，最近书荒了"
+    note: "日常推荐请求"
+
+  - id: normal-004
+    text: "帮我写一段关于春天的散文"
+    note: "文学创作请求"
+
+  - id: normal-005
+    text: "介绍一下机器学习的基本概念"
+    note: "知识学习"
+
+  - id: normal-006
+    text: "明天下午三点开会，请大家准时参加"
+    note: "工作通知"
+
+  - id: normal-007
+    text: "这家餐厅的菜很好吃，推荐大家去试试"
+    note: "美食推荐"
+
+  - id: normal-008
+    text: "最近有什么好看的电影上映吗？"
+    note: "日常询问"
+
+  - id: normal-009
+    text: "帮我翻译一下这段话：Hello, how are you?"
+    note: "翻译请求"
+
+  - id: normal-010
+    text: "正则表达式匹配邮箱地址怎么写？"
+    note: "技术讨论"
+
+  - id: normal-011
+    text: "周末打算去爬山，有没有什么注意事项？"
+    note: "户外活动讨论"
+
+  - id: normal-012
+    text: "这道数学题怎么做？求导数 dy/dx"
+    note: "学术讨论"
+
+  - id: normal-013
+    text: "请问图书馆几点关门？"
+    note: "日常询问"
+
+  - id: normal-014
+    text: "分享一下你的旅行经验吧"
+    note: "社交对话"
+
+  - id: normal-015
+    text: "如何提高英语口语水平？"
+    note: "学习方法讨论"

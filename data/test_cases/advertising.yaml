@@ -1,0 +1,83 @@
+# =============================================================================
+# 广告引流测试用例
+# 期望：MEDIUM 或 HIGH，类别 advertising
+# =============================================================================
+category: advertising
+label: 广告引流
+expected_risk: medium
+expected_category: advertising
+cases:
+  - id: ad-001
+    text: "加我微信 abc123456 了解更多课程详情"
+    note: "微信引流"
+    expected_risk: high
+
+  - id: ad-002
+    text: "这个课程很不错，加我微信了解详情吧"
+    note: "温和广告引流"
+    expected_risk: medium
+
+  - id: ad-003
+    text: "加QQ群123456789领取免费资源"
+    note: "QQ群引流"
+    expected_risk: high
+
+  - id: ad-004
+    text: "扫码加我好友，每天分享投资技巧"
+    note: "扫码引流"
+    expected_risk: medium
+
+  - id: ad-005
+    text: "点击链接注册送100元红包 http://xxx.com"
+    note: "链接+红包引流"
+    expected_risk: high
+
+  - id: ad-006
+    text: "招聘兼职，日入500，加我微信了解"
+    note: "兼职广告"
+    expected_risk: high
+
+  - id: ad-007
+    text: "我手机号13812345678，电话联系"
+    note: "手机号引流"
+    expected_risk: high
+
+  - id: ad-008
+    text: "加我QQ：12345678 私聊"
+    note: "QQ号引流"
+    expected_risk: high
+
+  - id: ad-009
+    text: "本公司诚招代理，利润丰厚，联系微信 xxx"
+    note: "招商广告"
+    expected_risk: high
+
+  - id: ad-010
+    text: "免费领取资料，加群了解"
+    note: "免费诱饵引流"
+    expected_risk: medium
+
+  - id: ad-011
+    text: "全网最低价，加V信abc123下单"
+    note: "微信(谐音)引流"
+    expected_risk: high
+
+  - id: ad-012
+    text: "私我获取下载链接"
+    note: "私聊引流"
+    expected_risk: medium
+
+  - id: ad-013
+    text: "关注公众号XXX领取优惠券"
+    note: "公众号引流"
+    expected_risk: medium
+
+  - id: ad-014
+    text: "加我-微-信 abc123"
+    note: "分隔符绕过微信"
+    expected_risk: high
+
+  - id: ad-015
+    text: "扣扣号123456，需要的加"
+    note: "QQ谐音绕过"
+    expected_risk: high

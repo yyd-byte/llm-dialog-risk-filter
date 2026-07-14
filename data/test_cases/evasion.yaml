@@ -1,0 +1,148 @@
+# evasion bypass test cases
+category: evasion
+label: evasion
+expected_risk: high
+expected_category: null
+cases:
+- id: evade-001
+  text: 加我葳信abc123
+  note: 'pinyin homophone: weixin'
+  expected_risk: high
+  expected_category: advertising
+  bypass_types:
+  - homophone
+  - pinyin
+- id: evade-002
+  text: 我想贝者十甫寸
+  note: 'decomposition: dubo'
+  expected_risk: high
+  expected_category: violent
+  bypass_types:
+  - decomposition
+- id: evade-003
+  text: 有没有木仓支卖
+  note: 'decomposition: qiang'
+  expected_risk: high
+  expected_category: violent
+  bypass_types:
+  - decomposition
+- id: evade-004
+  text: 加V信aabbcc
+  note: 'symbol+variant: weixin'
+  expected_risk: high
+  expected_category: advertising
+  bypass_types:
+  - symbol
+  - homophone
+- id: evade-005
+  text: 加WX123456
+  note: 'abbreviation: WX weixin'
+  expected_risk: high
+  expected_category: advertising
+  bypass_types:
+  - abbreviation
+- id: evade-006
+  text: 色/情/服/务
+  note: 'separator evasion: seqing'
+  expected_risk: high
+  expected_category: sexual
+  bypass_types:
+  - separator
+- id: evade-007
+  text: 赌/博/网/站
+  note: 'separator evasion: dubo'
+  expected_risk: high
+  expected_category: violent
+  bypass_types:
+  - separator
+- id: evade-008
+  text: 草 你 妈
+  note: space evasion
+  expected_risk: high
+  expected_category: sexual
+  bypass_types:
+  - separator
+- id: evade-009
+  text: 裸----聊
+  note: dash evasion
+  expected_risk: high
+  expected_category: sexual
+  bypass_types:
+  - separator
+- id: evade-010
+  text: 这是乱伦内容
+  note: traditional chars
+  expected_risk: high
+  expected_category: sexual
+  bypass_types:
+  - traditional
+- id: evade-011
+  text: 有海洛英卖吗
+  note: 'homophone: hailuoyin'
+  expected_risk: high
+  expected_category: violent
+  bypass_types:
+  - homophone
+- id: evade-012
+  text: 扣扣号12345
+  note: QQ homophone variant
+  expected_risk: high
+  expected_category: advertising
+  bypass_types:
+  - homophone
+- id: evade-013
+  text: 薇信abc123
+  note: 'homophone: weixin'
+  expected_risk: high
+  expected_category: advertising
+  bypass_types:
+  - homophone
+- id: evade-014
+  text: 找个晓姐姐
+  note: 'homophone: xiaojie'
+  expected_risk: high
+  expected_category: sexual
+  bypass_types:
+  - homophone
+- id: evade-015
+  text: 出售冰读
+  note: 'homophone: bingdu'
+  expected_risk: high
+  expected_category: violent
+  bypass_types:
+  - homophone
+- id: evade-016
+  text: 法论功功法
+  note: 'homophone: falungong'
+  expected_risk: high
+  expected_category: sensitive
+  bypass_types:
+  - homophone
+- id: evade-017
+  text: 我想堵博
+  note: 'confusable char: du bo'
+  expected_risk: high
+  expected_category: violent
+  bypass_types:
+  - confusable
+- id: evade-018
+  text: 草你妈逼
+  note: 'confusable: cao'
+  expected_risk: high
+  expected_category: sexual
+  bypass_types:
+  - confusable
+- id: evade-019
+  text: wǒ yào mǎi dú pǐn
+  note: pinyin with tones
+  expected_risk: high
+  expected_category: violent
+  bypass_types:
+  - pinyin
+- id: evade-020
+  text: 加|我|微|信
+  note: pipe separator
+  expected_risk: high
+  expected_category: advertising
+  bypass_types:
+  - separator

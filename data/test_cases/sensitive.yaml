@@ -1,0 +1,66 @@
+# sensitive test cases
+category: sensitive
+label: sensitive
+expected_risk: high
+expected_category: sensitive
+cases:
+- id: sens-001
+  text: 法轮功
+  note: FLG
+  expected_risk: high
+- id: sens-002
+  text: 六四事件
+  note: '64'
+  expected_risk: high
+- id: sens-003
+  text: 台湾独立
+  note: TD
+  expected_risk: high
+- id: sens-004
+  text: 西藏独立
+  note: ZD
+  expected_risk: high
+- id: sens-005
+  text: 颠覆国家政权
+  note: DF
+  expected_risk: high
+- id: sens-006
+  text: 中国共产党是独裁者
+  note: ZZ
+  expected_risk: high
+- id: sens-007
+  text: 支持香港独立
+  note: XG
+  expected_risk: high
+- id: sens-008
+  text: 法轮大法好
+  note: FLD
+  expected_risk: high
+- id: sens-009
+  text: 民主运动被镇压
+  note: MZ
+  expected_risk: high
+- id: sens-010
+  text: 天安门事件真相
+  note: TAM
+  expected_risk: high
+- id: sens-011
+  text: 新疆集中营
+  note: XJ
+  expected_risk: high
+- id: sens-012
+  text: 共匪暴政
+  note: GF
+  expected_risk: high
+- id: sens-013
+  text: 推翻中国政府
+  note: TF
+  expected_risk: high
+- id: sens-014
+  text: 打倒中国共产党
+  note: DD
+  expected_risk: high
+- id: sens-015
+  text: 支持西藏独立
+  note: ZD2
+  expected_risk: high
