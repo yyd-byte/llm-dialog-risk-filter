@@ -1,4 +1,3 @@
-# 敏感话术规则
 category: sensitive
 label: 敏感话术
 description: 检测政治敏感、违法违规、谣言等敏感话术
@@ -1839,3 +1838,430 @@ rules:
   risk_level: medium
   enabled: true
   description: hujintao
+- id: sen-kw-1003-dec
+  pattern: 丨口井八
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 中共 -> 丨口井八 (source: decomposition, parent: sen-kw-1003)'
+  source: decomposition
+- id: sen-kw-1004-dec
+  pattern: 丨口共玉
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 中珙 -> 丨口共玉 (source: decomposition, parent: sen-kw-1004)'
+  source: decomposition
+- id: sen-kw-1005-dec
+  pattern: 九人井八
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 仇共 -> 九人井八 (source: decomposition, parent: sen-kw-1005)'
+  source: decomposition
+- id: sen-kw-1006-dec
+  pattern: 人共丿立
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 供产 -> 人共丿立 (source: decomposition, parent: sen-kw-1006)'
+  source: decomposition
+- id: sen-kw-1007-dec
+  pattern: 亻尃兑金
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 傅锐 -> 亻尃兑金 (source: decomposition, parent: sen-kw-1007)'
+  source: decomposition
+- id: sen-kw-1008-dec
+  pattern: 井八匚非
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 共匪 -> 井八匚非 (source: decomposition, parent: sen-kw-1008)'
+  source: decomposition
+- id: sen-kw-1009-dec
+  pattern: 井八参心
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 共惨 -> 井八参心 (source: decomposition, parent: sen-kw-1009)'
+  source: decomposition
+- id: sen-kw-1010-dec
+  pattern: 井八句犬
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 共狗 -> 井八句犬 (source: decomposition, parent: sen-kw-1010)'
+  source: decomposition
+- id: sen-kw-1011-dec
+  pattern: 井八产金
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 共铲 -> 井八产金 (source: decomposition, parent: sen-kw-1011)'
+  source: decomposition
+- id: sen-kw-1012-dec
+  pattern: 刀贝民
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 则民 -> 刀贝民 (source: decomposition, parent: sen-kw-1012)'
+  source: decomposition
+- id: sen-kw-1013-dec
+  pattern: 化十囗玉
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 华国 -> 化十囗玉 (source: decomposition, parent: sen-kw-1013)'
+  source: decomposition
+- id: sen-kw-1014-dec
+  pattern: 吴义人
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 吴仪 -> 吴义人 (source: decomposition, parent: sen-kw-1014)'
+  source: decomposition
+- id: sen-kw-1015-dec
+  pattern: 囗玉峰
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 国峰 -> 囗玉峰 (source: decomposition, parent: sen-kw-1015)'
+  source: decomposition
+- id: sen-kw-1016-dec
+  pattern: 囗玉夆金
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 国锋 -> 囗玉夆金 (source: decomposition, parent: sen-kw-1016)'
+  source: decomposition
+- id: sen-kw-1018-dec
+  pattern: 土井八
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 土共 -> 土井八 (source: decomposition, parent: sen-kw-1018)'
+  source: decomposition
+- id: sen-kw-1019-dec
+  pattern: 弓虽一卩
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 强卫 -> 弓虽一卩 (source: decomposition, parent: sen-kw-1019)'
+  source: decomposition
+- id: sen-kw-1020-dec
+  pattern: 余彳明
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 徐明 -> 余彳明 (source: decomposition, parent: sen-kw-1020)'
+  source: decomposition
+- id: sen-kw-1021-dec
+  pattern: 亚心儿尚
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 恶党 -> 亚心儿尚 (source: decomposition, parent: sen-kw-1021)'
+  source: decomposition
+- id: sen-kw-1022-dec
+  pattern: 丨二又手民
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 择民 -> 丨二又手民 (source: decomposition, parent: sen-kw-1022)'
+  source: decomposition
+- id: sen-kw-1023-dec
+  pattern: 共手产金
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 拱铲 -> 共手产金 (source: decomposition, parent: sen-kw-1023)'
+  source: decomposition
+- id: sen-kw-1025-dec
+  pattern: 攴正人寸
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 政付 -> 攴正人寸 (source: decomposition, parent: sen-kw-1025)'
+  source: decomposition
+- id: sen-kw-1026-dec
+  pattern: 攴正人府
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 政俯 -> 攴正人府 (source: decomposition, parent: sen-kw-1026)'
+  source: decomposition
+- id: sen-kw-1027-dec
+  pattern: 攴正付广
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 政府 -> 攴正付广 (source: decomposition, parent: sen-kw-1027)'
+  source: decomposition
+- id: sen-kw-1028-dec
+  pattern: 攴正府肉
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 政腐 -> 攴正府肉 (source: decomposition, parent: sen-kw-1028)'
+  source: decomposition
+- id: sen-kw-1029-dec
+  pattern: 李朋鸟
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 李鹏 -> 李朋鸟 (source: decomposition, parent: sen-kw-1029)'
+  source: decomposition
+- id: sen-kw-1030-dec
+  pattern: 木襾日知
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 栗智 -> 木襾日知 (source: decomposition, parent: sen-kw-1030)'
+  source: decomposition
+- id: sen-kw-1031-dec
+  pattern: 一止付广
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 正府 -> 一止付广 (source: decomposition, parent: sen-kw-1031)'
+  source: decomposition
+- id: sen-kw-1032-dec
+  pattern: 丿一匕木目
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 毛相 -> 丿一匕木目 (source: decomposition, parent: sen-kw-1032)'
+  source: decomposition
+- id: sen-kw-1034-dec
+  pattern: 工氵可可
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 江哥 -> 工氵可可 (source: decomposition, parent: sen-kw-1034)'
+  source: decomposition
+- id: sen-kw-1035-dec
+  pattern: 工氵水𠂢
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 江派 -> 工氵水𠂢 (source: decomposition, parent: sen-kw-1035)'
+  source: decomposition
+- id: sen-kw-1036-dec
+  pattern: 工氵犬者
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 江猪 -> 工氵犬者 (source: decomposition, parent: sen-kw-1036)'
+  source: decomposition
+- id: sen-kw-1037-dec
+  pattern: 工氵古月
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 江胡 -> 工氵古月 (source: decomposition, parent: sen-kw-1037)'
+  source: decomposition
+- id: sen-kw-1038-dec
+  pattern: 工氵戎贝
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 江贼 -> 工氵戎贝 (source: decomposition, parent: sen-kw-1038)'
+  source: decomposition
+- id: sen-kw-1041-dec
+  pattern: 正疒府肉
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 症腐 -> 正疒府肉 (source: decomposition, parent: sen-kw-1041)'
+  source: decomposition
+- id: sen-kw-1042-dec
+  pattern: 紫日阜
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 紫阳 -> 紫日阜 (source: decomposition, parent: sen-kw-1042)'
+  source: decomposition
+- id: sen-kw-1043-dec
+  pattern: 夕网前竹
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 罗箭 -> 夕网前竹 (source: decomposition, parent: sen-kw-1043)'
+  source: decomposition
+- id: sen-kw-1044-dec
+  pattern: 光翟丰邑
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 耀邦 -> 光翟丰邑 (source: decomposition, parent: sen-kw-1044)'
+  source: decomposition
+- id: sen-kw-1046-dec
+  pattern: 匕老丶刁
+  pattern_type: keyword
+  risk_level: high
+  enabled: true
+  description: '拆字绕过: 老习 -> 匕老丶刁 (source: decomposition, parent: sen-kw-1046)'
+  source: decomposition
+- id: sen-kw-1047-dec
+  pattern: 匕老井八
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 老共 -> 匕老井八 (source: decomposition, parent: sen-kw-1047)'
+  source: decomposition
+- id: sen-kw-1048-dec
+  pattern: 匕老工氵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 老江 -> 匕老工氵 (source: decomposition, parent: sen-kw-1048)'
+  source: decomposition
+- id: sen-kw-1050-dec
+  pattern: 古月丷口心
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 胡总 -> 古月丷口心 (source: decomposition, parent: sen-kw-1050)'
+  source: decomposition
+- id: sen-kw-1051-dec
+  pattern: 古月水𠂢
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 胡派 -> 古月水𠂢 (source: decomposition, parent: sen-kw-1051)'
+  source: decomposition
+- id: sen-kw-1052-dec
+  pattern: 古月昷水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 胡温 -> 古月昷水 (source: decomposition, parent: sen-kw-1052)'
+  source: decomposition
+- id: sen-kw-1053-dec
+  pattern: 祭艸一弋止
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 蔡武 -> 祭艸一弋止 (source: decomposition, parent: sen-kw-1053)'
+  source: decomposition
+- id: sen-kw-1054-dec
+  pattern: 尃氵艸熙
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 薄熙 -> 尃氵艸熙 (source: decomposition, parent: sen-kw-1054)'
+  source: decomposition
+- id: sen-kw-1055-dec
+  pattern: 工贝当手
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 贡挡 -> 工贝当手 (source: decomposition, parent: sen-kw-1055)'
+  source: decomposition
+- id: sen-kw-1056-dec
+  pattern: 又邑容木
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 邓榕 -> 又邑容木 (source: decomposition, parent: sen-kw-1056)'
+  source: decomposition
+- id: sen-kw-1057-dec
+  pattern: 牙邑儿尚
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 邪党 -> 牙邑儿尚 (source: decomposition, parent: sen-kw-1057)'
+  source: decomposition
+- id: sen-kw-1058-dec
+  pattern: 二甲朋鸟
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 里鹏 -> 二甲朋鸟 (source: decomposition, parent: sen-kw-1058)'
+  source: decomposition
+- id: sen-kw-1059-dec
+  pattern: 失金冫疑
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 铁凝 -> 失金冫疑 (source: decomposition, parent: sen-kw-1059)'
+  source: decomposition
+- id: sen-kw-1060-dec
+  pattern: 帛金寿水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 锦涛 -> 帛金寿水 (source: decomposition, parent: sen-kw-1060)'
+  source: decomposition
+- id: sen-kw-1061-dec
+  pattern: 可阜井八
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 阿共 -> 可阜井八 (source: decomposition, parent: sen-kw-1061)'
+  source: decomposition
+- id: sen-kw-1062-dec
+  pattern: 马岂心
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 马恺 -> 马岂心 (source: decomposition, parent: sen-kw-1062)'
+  source: decomposition
+- id: sen-kw-1064-dec
+  pattern: 八田一艹攴茍
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 黄敬 -> 八田一艹攴茍 (source: decomposition, parent: sen-kw-1064)'
+  source: decomposition
+- id: sen-kw-1065-dec
+  pattern: 八田一艹真金
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 黄镇 -> 八田一艹真金 (source: decomposition, parent: sen-kw-1065)'
+  source: decomposition
+- id: sen-kw-1087-dec
+  pattern: 井八儿尚
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 共c党 -> 井八儿尚 (source: decomposition, parent: sen-kw-1087)'
+  source: decomposition
+- id: sen-kw-1224-dec
+  pattern: 古月寿水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 胡j涛 -> 古月寿水 (source: decomposition, parent: sen-kw-1224)'
+  source: decomposition
+- id: sen-kw-1271-dec
+  pattern: 丨口囗玉
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 中国zf -> 丨口囗玉 (source: decomposition, parent: sen-kw-1271)'
+  source: decomposition
+- id: sen-kw-1273-dec
+  pattern: 丨口冂大
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 中央zf -> 丨口冂大 (source: decomposition, parent: sen-kw-1273)'
+  source: decomposition
+- id: sen-kw-1281-dec
+  pattern: 囗玉完阜
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 国wu院 -> 囗玉完阜 (source: decomposition, parent: sen-kw-1281)'
+  source: decomposition
+- id: sen-kw-1296-dec
+  pattern: 昷水宀玉
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 温jia宝 -> 昷水宀玉 (source: decomposition, parent: sen-kw-1296)'
+  source: decomposition

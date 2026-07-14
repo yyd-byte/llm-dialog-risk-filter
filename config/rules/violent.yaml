@@ -1,4 +1,3 @@
-# 暴力危险规则
 category: violent
 label: 暴力危险
 description: 检测暴力、威胁、自残、危险行为等违规内容
@@ -2625,3 +2624,31 @@ rules:
   risk_level: medium
   enabled: true
   description: 销售/专卖/买卖77式手枪
+- id: vio-kw-1000-dec
+  pattern: 一乞仓木
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 气枪 -> 一乞仓木 (source: decomposition, parent: vio-kw-1000)'
+  source: decomposition
+- id: vio-kw-1001-dec
+  pattern: 乍火约艸
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 炸药 -> 乍火约艸 (source: decomposition, parent: vio-kw-1001)'
+  source: decomposition
+- id: vio-kw-1045-dec
+  pattern: 亥木单弓
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: DIY核弹 -> 亥木单弓 (source: decomposition, parent: vio-kw-1045)'
+  source: decomposition
+- id: vio-kw-1242-dec
+  pattern: 凵山口隹
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 出售M1911 -> 凵山口隹 (source: decomposition, parent: vio-kw-1242)'
+  source: decomposition

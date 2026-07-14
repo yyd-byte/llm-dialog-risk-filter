@@ -1,4 +1,3 @@
-# 广告引流规则
 category: advertising
 label: 广告引流
 description: 检测广告推广、联系方式引流、重复营销话术等违规内容
@@ -717,3 +716,241 @@ rules:
   risk_level: medium
   enabled: true
   description: 腾讯客服电话
+- id: adv-kw-1006-dec
+  pattern: 乙孚亠刀
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 乳方 -> 乙孚亠刀 (source: decomposition, parent: adv-kw-1006)'
+  source: decomposition
+- id: adv-kw-1007-dec
+  pattern: 人弋玉里
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 代理 -> 人弋玉里 (source: decomposition, parent: adv-kw-1007)'
+  source: decomposition
+- id: adv-kw-1008-dec
+  pattern: 人弋勾贝
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 代购 -> 人弋勾贝 (source: decomposition, parent: adv-kw-1008)'
+  source: decomposition
+- id: adv-kw-1009-dec
+  pattern: 全大镸
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 全套 -> 全大镸 (source: decomposition, parent: adv-kw-1009)'
+  source: decomposition
+- id: adv-kw-1010-dec
+  pattern: 全只耳
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 全职 -> 全只耳 (source: decomposition, parent: adv-kw-1010)'
+  source: decomposition
+- id: adv-kw-1011-dec
+  pattern: 丷一彐丨丨八值
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 兼值 -> 丷一彐丨丨八值 (source: decomposition, parent: adv-kw-1011)'
+  source: decomposition
+- id: adv-kw-1012-dec
+  pattern: 丷一彐丨丨八只耳
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 兼职 -> 丷一彐丨丨八只耳 (source: decomposition, parent: adv-kw-1012)'
+  source: decomposition
+- id: adv-kw-1013-dec
+  pattern: 刀至化贝
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 到货 -> 刀至化贝 (source: decomposition, parent: adv-kw-1013)'
+  source: decomposition
+- id: adv-kw-1014-dec
+  pattern: 勹己丶夕人亠
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 包夜 -> 勹己丶夕人亠 (source: decomposition, parent: adv-kw-1014)'
+  source: decomposition
+- id: adv-kw-1015-dec
+  pattern: 一冂恭日
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 口暴 -> 一冂恭日 (source: decomposition, parent: adv-kw-1015)'
+  source: decomposition
+- id: adv-kw-1016-dec
+  pattern: 口天米青
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 吞精 -> 口天米青 (source: decomposition, parent: adv-kw-1016)'
+  source: decomposition
+- id: adv-kw-1017-dec
+  pattern: 口米口米
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 咪咪 -> 口米口米 (source: decomposition, parent: adv-kw-1017)'
+  source: decomposition
+- id: adv-kw-1018-dec
+  pattern: 口隹丨丨又月
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 售肾 -> 口隹丨丨又月 (source: decomposition, parent: adv-kw-1018)'
+  source: decomposition
+- id: adv-kw-1019-dec
+  pattern: 女表一了
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 婊子 -> 女表一了 (source: decomposition, parent: adv-kw-1019)'
+  source: decomposition
+- id: adv-kw-1020-dec
+  pattern: 乙子一丶冂
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 孔丹 -> 乙子一丶冂 (source: decomposition, parent: adv-kw-1020)'
+  source: decomposition
+- id: adv-kw-1021-dec
+  pattern: 各宀又卩月
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 客服 -> 各宀又卩月 (source: decomposition, parent: adv-kw-1021)'
+  source: decomposition
+- id: adv-kw-1022-dec
+  pattern: 亅八且女
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 小姐 -> 亅八且女 (source: decomposition, parent: adv-kw-1022)'
+  source: decomposition
+- id: adv-kw-1023-dec
+  pattern: 山朋皿舟
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 崩盘 -> 山朋皿舟 (source: decomposition, parent: adv-kw-1023)'
+  source: decomposition
+- id: adv-kw-1024-dec
+  pattern: 彳山兀攴占广
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 微店 -> 彳山兀攴占广 (source: decomposition, parent: adv-kw-1024)'
+  source: decomposition
+- id: adv-kw-1025-dec
+  pattern: 口手口手
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 扣扣 -> 口手口手 (source: decomposition, parent: adv-kw-1025)'
+  source: decomposition
+- id: adv-kw-1026-dec
+  pattern: 手支丨丿帀
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 技师 -> 手支丨丿帀 (source: decomposition, parent: adv-kw-1026)'
+  source: decomposition
+- id: adv-kw-1027-dec
+  pattern: 召手甹耳
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 招聘 -> 召手甹耳 (source: decomposition, parent: adv-kw-1027)'
+  source: decomposition
+- id: adv-kw-1028-dec
+  pattern: 攴求亠巾
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 救市 -> 攴求亠巾 (source: decomposition, parent: adv-kw-1028)'
+  source: decomposition
+- id: adv-kw-1029-dec
+  pattern: 本占广
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 本店 -> 本占广 (source: decomposition, parent: adv-kw-1029)'
+  source: decomposition
+- id: adv-kw-1030-dec
+  pattern: 叒木拿
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 桑拿 -> 叒木拿 (source: decomposition, parent: adv-kw-1030)'
+  source: decomposition
+- id: adv-kw-1031-dec
+  pattern: 娄木凤
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 楼凤 -> 娄木凤 (source: decomposition, parent: adv-kw-1031)'
+  source: decomposition
+- id: adv-kw-1032-dec
+  pattern: 丰毋丿尤
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 毒龙 -> 丰毋丿尤 (source: decomposition, parent: adv-kw-1032)'
+  source: decomposition
+- id: adv-kw-1033-dec
+  pattern: 匋水宀玉
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淘宝 -> 匋水宀玉 (source: decomposition, parent: adv-kw-1033)'
+  source: decomposition
+- id: adv-kw-1034-dec
+  pattern: 乂乂冂丝各
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 网络 -> 乂乂冂丝各 (source: decomposition, parent: adv-kw-1034)'
+  source: decomposition
+- id: adv-kw-1035-dec
+  pattern: 乂乂冂勾贝
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 网购 -> 乂乂冂勾贝 (source: decomposition, parent: adv-kw-1035)'
+  source: decomposition
+- id: adv-kw-1036-dec
+  pattern: 人卜口亠父
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 足交 -> 人卜口亠父 (source: decomposition, parent: adv-kw-1036)'
+  source: decomposition
+- id: adv-kw-1062-dec
+  pattern: 人立勺白
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 位的qq -> 人立勺白 (source: decomposition, parent: adv-kw-1062)'
+  source: decomposition
+- id: adv-kw-1068-dec
+  pattern: 亠八人立
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 六位qq -> 亠八人立 (source: decomposition, parent: adv-kw-1068)'
+  source: decomposition
+- id: adv-kw-1099-dec
+  pattern: 一卜车𢦏
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: txt下载 -> 一卜车𢦏 (source: decomposition, parent: adv-kw-1099)'
+  source: decomposition

@@ -1,4 +1,3 @@
-# 色情低俗规则
 category: sexual
 label: 色情低俗
 description: 检测色情、低俗、性暗示等违规内容
@@ -1827,3 +1826,1704 @@ rules:
   risk_level: medium
   enabled: true
   description: 淫荡自慰器
+- id: sex-kw-1002-dec
+  pattern: 丝丝末衣
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 丝袜 -> 丝丝末衣 (source: decomposition, parent: sex-kw-1002)'
+  source: decomposition
+- id: sex-kw-1003-dec
+  pattern: 丝丝秀言
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 丝诱 -> 丝丝秀言 (source: decomposition, parent: sex-kw-1003)'
+  source: decomposition
+- id: sex-kw-1004-dec
+  pattern: 乛头日龹
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 买春 -> 乛头日龹 (source: decomposition, parent: sex-kw-1004)'
+  source: decomposition
+- id: sex-kw-1005-dec
+  pattern: 乙舌亠父
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 乱交 -> 乙舌亠父 (source: decomposition, parent: sex-kw-1005)'
+  source: decomposition
+- id: sex-kw-1006-dec
+  pattern: 乙舌人仑
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 乱伦 -> 乙舌人仑 (source: decomposition, parent: sex-kw-1006)'
+  source: decomposition
+- id: sex-kw-1007-dec
+  pattern: 乙孚亠父
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 乳交 -> 乙孚亠父 (source: decomposition, parent: sex-kw-1007)'
+  source: decomposition
+- id: sex-kw-1008-dec
+  pattern: 乙孚丶丶大
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 乳头 -> 乙孚丶丶大 (source: decomposition, parent: sex-kw-1008)'
+  source: decomposition
+- id: sex-kw-1009-dec
+  pattern: 乙孚戶方
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 乳房 -> 乙孚戶方 (source: decomposition, parent: sex-kw-1009)'
+  source: decomposition
+- id: sex-kw-1010-dec
+  pattern: 乙孚勾水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 乳沟 -> 乙孚勾水 (source: decomposition, parent: sex-kw-1010)'
+  source: decomposition
+- id: sex-kw-1011-dec
+  pattern: 乙孚暴火
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 乳爆 -> 乙孚暴火 (source: decomposition, parent: sex-kw-1011)'
+  source: decomposition
+- id: sex-kw-1012-dec
+  pattern: 一业心青
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 亚情 -> 一业心青 (source: decomposition, parent: sex-kw-1012)'
+  source: decomposition
+- id: sex-kw-1013-dec
+  pattern: 人丷田一口
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 人兽 -> 人丷田一口 (source: decomposition, parent: sex-kw-1013)'
+  source: decomposition
+- id: sex-kw-1014-dec
+  pattern: 人一聿女
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 人妻 -> 人一聿女 (source: decomposition, parent: sex-kw-1014)'
+  source: decomposition
+- id: sex-kw-1015-dec
+  pattern: 人本人立
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 体位 -> 人本人立 (source: decomposition, parent: sex-kw-1015)'
+  source: decomposition
+- id: sex-kw-1016-dec
+  pattern: 人本女干
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 体奸 -> 人本女干 (source: decomposition, parent: sex-kw-1016)'
+  source: decomposition
+- id: sex-kw-1017-dec
+  pattern: 乍人友冖爪
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 作爱 -> 乍人友冖爪 (source: decomposition, parent: sex-kw-1017)'
+  source: decomposition
+- id: sex-kw-1018-dec
+  pattern: 人俞又欠
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 偷欢 -> 人俞又欠 (source: decomposition, parent: sex-kw-1018)'
+  source: decomposition
+- id: sex-kw-1019-dec
+  pattern: 全果衣
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 全裸 -> 全果衣 (source: decomposition, parent: sex-kw-1019)'
+  source: decomposition
+- id: sex-kw-1020-dec
+  pattern: 丷田一口亠父
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 兽交 -> 丷田一口亠父 (source: decomposition, parent: sex-kw-1020)'
+  source: decomposition
+- id: sex-kw-1021-dec
+  pattern: 丷田一口女干
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 兽奸 -> 丷田一口女干 (source: decomposition, parent: sex-kw-1021)'
+  source: decomposition
+- id: sex-kw-1022-dec
+  pattern: 丷田一口欠谷
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 兽欲 -> 丷田一口欠谷 (source: decomposition, parent: sex-kw-1022)'
+  source: decomposition
+- id: sex-kw-1023-dec
+  pattern: 人冂寸身
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 内射 -> 人冂寸身 (source: decomposition, parent: sex-kw-1023)'
+  source: decomposition
+- id: sex-kw-1024-dec
+  pattern: 冫夌寸辰
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 凌辱 -> 冫夌寸辰 (source: decomposition, parent: sex-kw-1024)'
+  source: decomposition
+- id: sex-kw-1025-dec
+  pattern: 丿一乚口巴
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 几吧 -> 丿一乚口巴 (source: decomposition, parent: sex-kw-1025)'
+  source: decomposition
+- id: sex-kw-1026-dec
+  pattern: 则厂又女
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 厕奴 -> 则厂又女 (source: decomposition, parent: sex-kw-1026)'
+  source: decomposition
+- id: sex-kw-1027-dec
+  pattern: 又又月殿
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 双臀 -> 又又月殿 (source: decomposition, parent: sex-kw-1027)'
+  source: decomposition
+- id: sex-kw-1028-dec
+  pattern: 丿犮水良
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 发浪 -> 丿犮水良 (source: decomposition, parent: sex-kw-1028)'
+  source: decomposition
+- id: sex-kw-1029-dec
+  pattern: 一冂亠父
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 口交 -> 一冂亠父 (source: decomposition, parent: sex-kw-1029)'
+  source: decomposition
+- id: sex-kw-1030-dec
+  pattern: 一冂寸身
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 口射 -> 一冂寸身 (source: decomposition, parent: sex-kw-1030)'
+  source: decomposition
+- id: sex-kw-1031-dec
+  pattern: 一冂水舌
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 口活 -> 一冂水舌 (source: decomposition, parent: sex-kw-1031)'
+  source: decomposition
+- id: sex-kw-1032-dec
+  pattern: 一冂壬爪水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 口淫 -> 一冂壬爪水 (source: decomposition, parent: sex-kw-1032)'
+  source: decomposition
+- id: sex-kw-1033-dec
+  pattern: 一冂暴火
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 口爆 -> 一冂暴火 (source: decomposition, parent: sex-kw-1033)'
+  source: decomposition
+- id: sex-kw-1034-dec
+  pattern: 丩口广木
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 叫床 -> 丩口广木 (source: decomposition, parent: sex-kw-1034)'
+  source: decomposition
+- id: sex-kw-1035-dec
+  pattern: 乞口米青
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 吃精 -> 乞口米青 (source: decomposition, parent: sex-kw-1035)'
+  source: decomposition
+- id: sex-kw-1036-dec
+  pattern: 厂一口广廷
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 后庭 -> 厂一口广廷 (source: decomposition, parent: sex-kw-1036)'
+  source: decomposition
+- id: sex-kw-1037-dec
+  pattern: 厂一口八宀
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 后穴 -> 厂一口八宀 (source: decomposition, parent: sex-kw-1037)'
+  source: decomposition
+- id: sex-kw-1038-dec
+  pattern: 及口米青
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 吸精 -> 及口米青 (source: decomposition, parent: sex-kw-1038)'
+  source: decomposition
+- id: sex-kw-1039-dec
+  pattern: 口贲米青
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 喷精 -> 口贲米青 (source: decomposition, parent: sex-kw-1039)'
+  source: decomposition
+- id: sex-kw-1040-dec
+  pattern: 大乙孚
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 大乳 -> 大乙孚 (source: decomposition, parent: sex-kw-1040)'
+  source: decomposition
+- id: sex-kw-1041-dec
+  pattern: 大水皮
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 大波 -> 大水皮 (source: decomposition, parent: sex-kw-1041)'
+  source: decomposition
+- id: sex-kw-1042-dec
+  pattern: 大示美
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 奈美 -> 大示美 (source: decomposition, parent: sex-kw-1042)'
+  source: decomposition
+- id: sex-kw-1043-dec
+  pattern: 大镸廾王
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 套弄 -> 大镸廾王 (source: decomposition, parent: sex-kw-1043)'
+  source: decomposition
+- id: sex-kw-1044-dec
+  pattern: 丿一𠃊人尤
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 女优 -> 丿一𠃊人尤 (source: decomposition, parent: sex-kw-1044)'
+  source: decomposition
+- id: sex-kw-1045-dec
+  pattern: 乃女一了
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 奶子 -> 乃女一了 (source: decomposition, parent: sex-kw-1045)'
+  source: decomposition
+- id: sex-kw-1046-dec
+  pattern: 女干心青
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 奸情 -> 女干心青 (source: decomposition, parent: sex-kw-1046)'
+  source: decomposition
+- id: sex-kw-1047-dec
+  pattern: 女子女敕
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 好嫩 -> 女子女敕 (source: decomposition, parent: sex-kw-1047)'
+  source: decomposition
+- id: sex-kw-1048-dec
+  pattern: 女支丿一𠃊
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 妓女 -> 女支丿一𠃊 (source: decomposition, parent: sex-kw-1048)'
+  source: decomposition
+- id: sex-kw-1049-dec
+  pattern: 女敕丿一𠃊
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 嫩女 -> 女敕丿一𠃊 (source: decomposition, parent: sex-kw-1049)'
+  source: decomposition
+- id: sex-kw-1050-dec
+  pattern: 女敕八宀
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 嫩穴 -> 女敕八宀 (source: decomposition, parent: sex-kw-1050)'
+  source: decomposition
+- id: sex-kw-1051-dec
+  pattern: 女敕畐辵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 嫩逼 -> 女敕畐辵 (source: decomposition, parent: sex-kw-1051)'
+  source: decomposition
+- id: sex-kw-1052-dec
+  pattern: 宓山八宀
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 密穴 -> 宓山八宀 (source: decomposition, parent: sex-kw-1052)'
+  source: decomposition
+- id: sex-kw-1053-dec
+  pattern: 寸身大爻爻
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 射爽 -> 寸身大爻爻 (source: decomposition, parent: sex-kw-1053)'
+  source: decomposition
+- id: sex-kw-1054-dec
+  pattern: 寸身彦页
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 射颜 -> 寸身彦页 (source: decomposition, parent: sex-kw-1054)'
+  source: decomposition
+- id: sex-kw-1055-dec
+  pattern: 亅八八宀
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 小穴 -> 亅八八宀 (source: decomposition, parent: sex-kw-1055)'
+  source: decomposition
+- id: sex-kw-1056-dec
+  pattern: 亅八畐辵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 小逼 -> 亅八畐辵 (source: decomposition, parent: sex-kw-1056)'
+  source: decomposition
+- id: sex-kw-1057-dec
+  pattern: 尸比目艮
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 屁眼 -> 尸比目艮 (source: decomposition, parent: sex-kw-1057)'
+  source: decomposition
+- id: sex-kw-1058-dec
+  pattern: 一㇆匸乙孚
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 巨乳 -> 一㇆匸乙孚 (source: decomposition, parent: sex-kw-1058)'
+  source: decomposition
+- id: sex-kw-1059-dec
+  pattern: 一㇆匸乃女
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 巨奶 -> 一㇆匸乃女 (source: decomposition, parent: sex-kw-1059)'
+  source: decomposition
+- id: sex-kw-1060-dec
+  pattern: 一㇆匸吊尸
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 巨屌 -> 一㇆匸吊尸 (source: decomposition, parent: sex-kw-1060)'
+  source: decomposition
+- id: sex-kw-1061-dec
+  pattern: 一十八宀
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 干穴 -> 一十八宀 (source: decomposition, parent: sex-kw-1061)'
+  source: decomposition
+- id: sex-kw-1062-dec
+  pattern: 力幺亠父
+  pattern_type: keyword
+  risk_level: high
+  enabled: true
+  description: '拆字绕过: 幼交 -> 力幺亠父 (source: decomposition, parent: sex-kw-1062)'
+  source: decomposition
+- id: sex-kw-1063-dec
+  pattern: 一小广召
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 应召 -> 一小广召 (source: decomposition, parent: sex-kw-1063)'
+  source: decomposition
+- id: sex-kw-1064-dec
+  pattern: 一廾包艸
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 开苞 -> 一廾包艸 (source: decomposition, parent: sex-kw-1064)'
+  source: decomposition
+- id: sex-kw-1065-dec
+  pattern: 弓虽恭日
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 强暴 -> 弓虽恭日 (source: decomposition, parent: sex-kw-1065)'
+  source: decomposition
+- id: sex-kw-1066-dec
+  pattern: 心生亠父
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 性交 -> 心生亠父 (source: decomposition, parent: sex-kw-1066)'
+  source: decomposition
+- id: sex-kw-1067-dec
+  pattern: 心生又女
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 性奴 -> 心生又女 (source: decomposition, parent: sex-kw-1067)'
+  source: decomposition
+- id: sex-kw-1068-dec
+  pattern: 心生心自
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 性息 -> 心生心自 (source: decomposition, parent: sex-kw-1068)'
+  source: decomposition
+- id: sex-kw-1069-dec
+  pattern: 心生欠谷
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 性欲 -> 心生欠谷 (source: decomposition, parent: sex-kw-1069)'
+  source: decomposition
+- id: sex-kw-1070-dec
+  pattern: 心生儿虍
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 性虎 -> 心生儿虍 (source: decomposition, parent: sex-kw-1070)'
+  source: decomposition
+- id: sex-kw-1071-dec
+  pattern: 心生一匸虍
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 性虐 -> 心生一匸虍 (source: decomposition, parent: sex-kw-1071)'
+  source: decomposition
+- id: sex-kw-1072-dec
+  pattern: 心青刀巴
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 情色 -> 心青刀巴 (source: decomposition, parent: sex-kw-1072)'
+  source: decomposition
+- id: sex-kw-1073-dec
+  pattern: 丿二亅壬爪水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 手淫 -> 丿二亅壬爪水 (source: decomposition, parent: sex-kw-1073)'
+  source: decomposition
+- id: sex-kw-1074-dec
+  pattern: 手爪胸
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 抓胸 -> 手爪胸 (source: decomposition, parent: sex-kw-1074)'
+  source: decomposition
+- id: sex-kw-1075-dec
+  pattern: 手由手臿
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 抽插 -> 手由手臿 (source: decomposition, parent: sex-kw-1075)'
+  source: decomposition
+- id: sex-kw-1076-dec
+  pattern: 召手女支
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 招妓 -> 召手女支 (source: decomposition, parent: sex-kw-1076)'
+  source: decomposition
+- id: sex-kw-1077-dec
+  pattern: 召手又鸟
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 招鸡 -> 召手又鸟 (source: decomposition, parent: sex-kw-1077)'
+  source: decomposition
+- id: sex-kw-1078-dec
+  pattern: 手𠔉亠父
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 拳交 -> 手𠔉亠父 (source: decomposition, parent: sex-kw-1078)'
+  source: decomposition
+- id: sex-kw-1079-dec
+  pattern: 圼手廾王
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 捏弄 -> 圼手廾王 (source: decomposition, parent: sex-kw-1079)'
+  source: decomposition
+- id: sex-kw-1080-dec
+  pattern: 手隹水由
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 推油 -> 手隹水由 (source: decomposition, parent: sex-kw-1080)'
+  source: decomposition
+- id: sex-kw-1081-dec
+  pattern: 手柔乙孚
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 揉乳 -> 手柔乙孚 (source: decomposition, parent: sex-kw-1081)'
+  source: decomposition
+- id: sex-kw-1083-dec
+  pattern: 手臿人尔
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 插你 -> 手臿人尔 (source: decomposition, parent: sex-kw-1083)'
+  source: decomposition
+- id: sex-kw-1084-dec
+  pattern: 手臿戈手
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 插我 -> 手臿戈手 (source: decomposition, parent: sex-kw-1084)'
+  source: decomposition
+- id: sex-kw-1085-dec
+  pattern: 手臿恭日
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 插暴 -> 手臿恭日 (source: decomposition, parent: sex-kw-1085)'
+  source: decomposition
+- id: sex-kw-1086-dec
+  pattern: 手臿匕匕
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 插比 -> 手臿匕匕 (source: decomposition, parent: sex-kw-1086)'
+  source: decomposition
+- id: sex-kw-1087-dec
+  pattern: 手臿井辵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 插进 -> 手臿井辵 (source: decomposition, parent: sex-kw-1087)'
+  source: decomposition
+- id: sex-kw-1088-dec
+  pattern: 手臿畐辵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 插逼 -> 手臿畐辵 (source: decomposition, parent: sex-kw-1088)'
+  source: decomposition
+- id: sex-kw-1089-dec
+  pattern: 手臿月阜
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 插阴 -> 手臿月阜 (source: decomposition, parent: sex-kw-1089)'
+  source: decomposition
+- id: sex-kw-1091-dec
+  pattern: 手莫乃女
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 摸奶 -> 手莫乃女 (source: decomposition, parent: sex-kw-1091)'
+  source: decomposition
+- id: sex-kw-1092-dec
+  pattern: 手莫胸
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 摸胸 -> 手莫胸 (source: decomposition, parent: sex-kw-1092)'
+  source: decomposition
+- id: sex-kw-1093-dec
+  pattern: 喿扌戈手
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 操我 -> 喿扌戈手 (source: decomposition, parent: sex-kw-1093)'
+  source: decomposition
+- id: sex-kw-1094-dec
+  pattern: 喿扌匕歹
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 操死 -> 喿扌匕歹 (source: decomposition, parent: sex-kw-1094)'
+  source: decomposition
+- id: sex-kw-1095-dec
+  pattern: 喿扌兰火
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 操烂 -> 喿扌兰火 (source: decomposition, parent: sex-kw-1095)'
+  source: decomposition
+- id: sex-kw-1096-dec
+  pattern: 喿扌畐辵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 操逼 -> 喿扌畐辵 (source: decomposition, parent: sex-kw-1096)'
+  source: decomposition
+- id: sex-kw-1097-dec
+  pattern: 喿扌火丷里
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 操黑 -> 喿扌火丷里 (source: decomposition, parent: sex-kw-1097)'
+  source: decomposition
+- id: sex-kw-1098-dec
+  pattern: 攴方尸水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 放尿 -> 攴方尸水 (source: decomposition, parent: sex-kw-1098)'
+  source: decomposition
+- id: sex-kw-1099-dec
+  pattern: 乂亠人故
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 文做 -> 乂亠人故 (source: decomposition, parent: sex-kw-1099)'
+  source: decomposition
+- id: sex-kw-1100-dec
+  pattern: 一口兰火
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 日烂 -> 一口兰火 (source: decomposition, parent: sex-kw-1100)'
+  source: decomposition
+- id: sex-kw-1101-dec
+  pattern: 一口畐辵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 日逼 -> 一口畐辵 (source: decomposition, parent: sex-kw-1101)'
+  source: decomposition
+- id: sex-kw-1102-dec
+  pattern: 日龹约艸
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 春药 -> 日龹约艸 (source: decomposition, parent: sex-kw-1102)'
+  source: decomposition
+- id: sex-kw-1103-dec
+  pattern: 恭日乙孚
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 暴乳 -> 恭日乙孚 (source: decomposition, parent: sex-kw-1103)'
+  source: decomposition
+- id: sex-kw-1104-dec
+  pattern: 恭日女干
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 暴奸 -> 恭日女干 (source: decomposition, parent: sex-kw-1104)'
+  source: decomposition
+- id: sex-kw-1105-dec
+  pattern: 恭日一十
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 暴干 -> 恭日一十 (source: decomposition, parent: sex-kw-1105)'
+  source: decomposition
+- id: sex-kw-1106-dec
+  pattern: 恭日壬爪水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 暴淫 -> 恭日壬爪水 (source: decomposition, parent: sex-kw-1106)'
+  source: decomposition
+- id: sex-kw-1107-dec
+  pattern: 交木又鸟
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 校鸡 -> 交木又鸟 (source: decomposition, parent: sex-kw-1107)'
+  source: decomposition
+- id: sex-kw-1108-dec
+  pattern: 欠谷丿一𠃊
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 欲女 -> 欠谷丿一𠃊 (source: decomposition, parent: sex-kw-1108)'
+  source: decomposition
+- id: sex-kw-1109-dec
+  pattern: 欠谷丷人
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 欲火 -> 欠谷丷人 (source: decomposition, parent: sex-kw-1109)'
+  source: decomposition
+- id: sex-kw-1110-dec
+  pattern: 匕歹畐辵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 死逼 -> 匕歹畐辵 (source: decomposition, parent: sex-kw-1110)'
+  source: decomposition
+- id: sex-kw-1111-dec
+  pattern: 丨一二丶丶亅女干
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 母奸 -> 丨一二丶丶亅女干 (source: decomposition, parent: sex-kw-1111)'
+  source: decomposition
+- id: sex-kw-1112-dec
+  pattern: 水良丩口
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 浪叫 -> 水良丩口 (source: decomposition, parent: sex-kw-1112)'
+  source: decomposition
+- id: sex-kw-1113-dec
+  pattern: 水良丿一𠃊
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 浪女 -> 水良丿一𠃊 (source: decomposition, parent: sex-kw-1113)'
+  source: decomposition
+- id: sex-kw-1114-dec
+  pattern: 水良女彐
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 浪妇 -> 水良女彐 (source: decomposition, parent: sex-kw-1114)'
+  source: decomposition
+- id: sex-kw-1115-dec
+  pattern: 水良畐辵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 浪逼 -> 水良畐辵 (source: decomposition, parent: sex-kw-1115)'
+  source: decomposition
+- id: sex-kw-1116-dec
+  pattern: 壬爪水㇆㇆丨丶
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫书 -> 壬爪水㇆㇆丨丶 (source: decomposition, parent: sex-kw-1116)'
+  source: decomposition
+- id: sex-kw-1117-dec
+  pattern: 壬爪水亵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫亵 -> 壬爪水亵 (source: decomposition, parent: sex-kw-1117)'
+  source: decomposition
+- id: sex-kw-1118-dec
+  pattern: 壬爪水丩口
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫叫 -> 壬爪水丩口 (source: decomposition, parent: sex-kw-1118)'
+  source: decomposition
+- id: sex-kw-1119-dec
+  pattern: 壬爪水丿一𠃊
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫女 -> 壬爪水丿一𠃊 (source: decomposition, parent: sex-kw-1119)'
+  source: decomposition
+- id: sex-kw-1120-dec
+  pattern: 壬爪水女彐
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫妇 -> 壬爪水女彐 (source: decomposition, parent: sex-kw-1120)'
+  source: decomposition
+- id: sex-kw-1121-dec
+  pattern: 壬爪水一聿女
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫妻 -> 壬爪水一聿女 (source: decomposition, parent: sex-kw-1121)'
+  source: decomposition
+- id: sex-kw-1122-dec
+  pattern: 壬爪水女一戊
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫威 -> 壬爪水女一戊 (source: decomposition, parent: sex-kw-1122)'
+  source: decomposition
+- id: sex-kw-1123-dec
+  pattern: 壬爪水圭女
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫娃 -> 壬爪水圭女 (source: decomposition, parent: sex-kw-1123)'
+  source: decomposition
+- id: sex-kw-1124-dec
+  pattern: 壬爪水女眉
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫媚 -> 壬爪水女眉 (source: decomposition, parent: sex-kw-1124)'
+  source: decomposition
+- id: sex-kw-1125-dec
+  pattern: 壬爪水心青
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫情 -> 壬爪水心青 (source: decomposition, parent: sex-kw-1125)'
+  source: decomposition
+- id: sex-kw-1126-dec
+  pattern: 壬爪水木羊
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫样 -> 壬爪水木羊 (source: decomposition, parent: sex-kw-1126)'
+  source: decomposition
+- id: sex-kw-1127-dec
+  pattern: 壬爪水丨一二丶丶亅
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫母 -> 壬爪水丨一二丶丶亅 (source: decomposition, parent: sex-kw-1127)'
+  source: decomposition
+- id: sex-kw-1128-dec
+  pattern: 壬爪水乀丶亅乛
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫水 -> 壬爪水乀丶亅乛 (source: decomposition, parent: sex-kw-1128)'
+  source: decomposition
+- id: sex-kw-1129-dec
+  pattern: 壬爪水可水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫河 -> 壬爪水可水 (source: decomposition, parent: sex-kw-1129)'
+  source: decomposition
+- id: sex-kw-1130-dec
+  pattern: 壬爪水水良
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫浪 -> 壬爪水水良 (source: decomposition, parent: sex-kw-1130)'
+  source: decomposition
+- id: sex-kw-1131-dec
+  pattern: 壬爪水夜水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫液 -> 壬爪水夜水 (source: decomposition, parent: sex-kw-1131)'
+  source: decomposition
+- id: sex-kw-1132-dec
+  pattern: 壬爪水日召火
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫照 -> 壬爪水日召火 (source: decomposition, parent: sex-kw-1132)'
+  source: decomposition
+- id: sex-kw-1133-dec
+  pattern: 壬爪水米麻
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫糜 -> 壬爪水米麻 (source: decomposition, parent: sex-kw-1133)'
+  source: decomposition
+- id: sex-kw-1134-dec
+  pattern: 壬爪水刀巴
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫色 -> 壬爪水刀巴 (source: decomposition, parent: sex-kw-1134)'
+  source: decomposition
+- id: sex-kw-1135-dec
+  pattern: 壬爪水汤艸
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫荡 -> 壬爪水汤艸 (source: decomposition, parent: sex-kw-1135)'
+  source: decomposition
+- id: sex-kw-1136-dec
+  pattern: 壬爪水一匸虍
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫虐 -> 壬爪水一匸虍 (source: decomposition, parent: sex-kw-1136)'
+  source: decomposition
+- id: sex-kw-1137-dec
+  pattern: 壬爪水虫
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫虫 -> 壬爪水虫 (source: decomposition, parent: sex-kw-1137)'
+  source: decomposition
+- id: sex-kw-1138-dec
+  pattern: 壬爪水戋贝
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫贱 -> 壬爪水戋贝 (source: decomposition, parent: sex-kw-1138)'
+  source: decomposition
+- id: sex-kw-1139-dec
+  pattern: 壬爪水鬼麻
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 淫魔 -> 壬爪水鬼麻 (source: decomposition, parent: sex-kw-1139)'
+  source: decomposition
+- id: sex-kw-1140-dec
+  pattern: 屚水乙孚
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 漏乳 -> 屚水乙孚 (source: decomposition, parent: sex-kw-1140)'
+  source: decomposition
+- id: sex-kw-1141-dec
+  pattern: 朝水口欠
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 潮吹 -> 朝水口欠 (source: decomposition, parent: sex-kw-1141)'
+  source: decomposition
+- id: sex-kw-1142-dec
+  pattern: 朝水口贲
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 潮喷 -> 朝水口贲 (source: decomposition, parent: sex-kw-1142)'
+  source: decomposition
+- id: sex-kw-1143-dec
+  pattern: 包火一丿又
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 炮友 -> 包火一丿又 (source: decomposition, parent: sex-kw-1143)'
+  source: decomposition
+- id: sex-kw-1144-dec
+  pattern: 孰火丿一𠃊
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 熟女 -> 孰火丿一𠃊 (source: decomposition, parent: sex-kw-1144)'
+  source: decomposition
+- id: sex-kw-1145-dec
+  pattern: 孰火女彐
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 熟妇 -> 孰火女彐 (source: decomposition, parent: sex-kw-1145)'
+  source: decomposition
+- id: sex-kw-1146-dec
+  pattern: 孰火丨一二丶丶亅
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 熟母 -> 孰火丨一二丶丶亅 (source: decomposition, parent: sex-kw-1146)'
+  source: decomposition
+- id: sex-kw-1147-dec
+  pattern: 暴火乙孚
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 爆乳 -> 暴火乙孚 (source: decomposition, parent: sex-kw-1147)'
+  source: decomposition
+- id: sex-kw-1148-dec
+  pattern: 暴火早艸
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 爆草 -> 暴火早艸 (source: decomposition, parent: sex-kw-1148)'
+  source: decomposition
+- id: sex-kw-1149-dec
+  pattern: 友冖爪夜水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 爱液 -> 友冖爪夜水 (source: decomposition, parent: sex-kw-1149)'
+  source: decomposition
+- id: sex-kw-1150-dec
+  pattern: 大爻爻㇆丿丄
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 爽片 -> 大爻爻㇆丿丄 (source: decomposition, parent: sex-kw-1150)'
+  source: decomposition
+- id: sex-kw-1151-dec
+  pattern: 犬王手臿
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 狂插 -> 犬王手臿 (source: decomposition, parent: sex-kw-1151)'
+  source: decomposition
+- id: sex-kw-1152-dec
+  pattern: 犬王喿扌
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 狂操 -> 犬王喿扌 (source: decomposition, parent: sex-kw-1152)'
+  source: decomposition
+- id: sex-kw-1153-dec
+  pattern: 犬良一丿又
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 狼友 -> 犬良一丿又 (source: decomposition, parent: sex-kw-1153)'
+  source: decomposition
+- id: sex-kw-1154-dec
+  pattern: 玉乙孚
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 玉乳 -> 玉乙孚 (source: decomposition, parent: sex-kw-1154)'
+  source: decomposition
+- id: sex-kw-1155-dec
+  pattern: 玉八宀
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 玉穴 -> 玉八宀 (source: decomposition, parent: sex-kw-1155)'
+  source: decomposition
+- id: sex-kw-1156-dec
+  pattern: 力田又女
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 男奴 -> 力田又女 (source: decomposition, parent: sex-kw-1156)'
+  source: decomposition
+- id: sex-kw-1157-dec
+  pattern: 次皿手最
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 盗撮 -> 次皿手最 (source: decomposition, parent: sex-kw-1157)'
+  source: decomposition
+- id: sex-kw-1158-dec
+  pattern: 木目女干
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 相奸 -> 木目女干 (source: decomposition, parent: sex-kw-1158)'
+  source: decomposition
+- id: sex-kw-1159-dec
+  pattern: 包石一丿又
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 砲友 -> 包石一丿又 (source: decomposition, parent: sex-kw-1159)'
+  source: decomposition
+- id: sex-kw-1160-dec
+  pattern: 必禾口辰
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 秘唇 -> 必禾口辰 (source: decomposition, parent: sex-kw-1160)'
+  source: decomposition
+- id: sex-kw-1161-dec
+  pattern: 八宀一冂
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 穴口 -> 八宀一冂 (source: decomposition, parent: sex-kw-1161)'
+  source: decomposition
+- id: sex-kw-1162-dec
+  pattern: 八宀冬囗
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 穴图 -> 八宀冬囗 (source: decomposition, parent: sex-kw-1162)'
+  source: decomposition
+- id: sex-kw-1163-dec
+  pattern: 分米八宀
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 粉穴 -> 分米八宀 (source: decomposition, parent: sex-kw-1163)'
+  source: decomposition
+- id: sex-kw-1164-dec
+  pattern: 米青夜水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 精液 -> 米青夜水 (source: decomposition, parent: sex-kw-1164)'
+  source: decomposition
+- id: sex-kw-1165-dec
+  pattern: 美乙孚
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 美乳 -> 美乙孚 (source: decomposition, parent: sex-kw-1165)'
+  source: decomposition
+- id: sex-kw-1166-dec
+  pattern: 美力幺
+  pattern_type: keyword
+  risk_level: high
+  enabled: true
+  description: '拆字绕过: 美幼 -> 美力幺 (source: decomposition, parent: sex-kw-1166)'
+  source: decomposition
+- id: sex-kw-1167-dec
+  pattern: 美八宀
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 美穴 -> 美八宀 (source: decomposition, parent: sex-kw-1167)'
+  source: decomposition
+- id: sex-kw-1168-dec
+  pattern: 美月退
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 美腿 -> 美月退 (source: decomposition, parent: sex-kw-1168)'
+  source: decomposition
+- id: sex-kw-1169-dec
+  pattern: 美畐辵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 美逼 -> 美畐辵 (source: decomposition, parent: sex-kw-1169)'
+  source: decomposition
+- id: sex-kw-1170-dec
+  pattern: 群亠父
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 群交 -> 群亠父 (source: decomposition, parent: sex-kw-1170)'
+  source: decomposition
+- id: sex-kw-1171-dec
+  pattern: 卯耳心生
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 聊性 -> 卯耳心生 (source: decomposition, parent: sex-kw-1171)'
+  source: decomposition
+- id: sex-kw-1172-dec
+  pattern: 人人冂八一目
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肉具 -> 人人冂八一目 (source: decomposition, parent: sex-kw-1172)'
+  source: decomposition
+- id: sex-kw-1173-dec
+  pattern: 人人冂口辰
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肉唇 -> 人人冂口辰 (source: decomposition, parent: sex-kw-1173)'
+  source: decomposition
+- id: sex-kw-1174-dec
+  pattern: 人人冂昆木
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肉棍 -> 人人冂昆木 (source: decomposition, parent: sex-kw-1174)'
+  source: decomposition
+- id: sex-kw-1175-dec
+  pattern: 人人冂奉木
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肉棒 -> 人人冂奉木 (source: decomposition, parent: sex-kw-1175)'
+  source: decomposition
+- id: sex-kw-1176-dec
+  pattern: 人人冂欠谷
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肉欲 -> 人人冂欠谷 (source: decomposition, parent: sex-kw-1176)'
+  source: decomposition
+- id: sex-kw-1177-dec
+  pattern: 人人冂同水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肉洞 -> 人人冂同水 (source: decomposition, parent: sex-kw-1177)'
+  source: decomposition
+- id: sex-kw-1178-dec
+  pattern: 人人冂八宀
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肉穴 -> 人人冂八宀 (source: decomposition, parent: sex-kw-1178)'
+  source: decomposition
+- id: sex-kw-1179-dec
+  pattern: 人人冂丝逢
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肉缝 -> 人人冂丝逢 (source: decomposition, parent: sex-kw-1179)'
+  source: decomposition
+- id: sex-kw-1180-dec
+  pattern: 人人冂圣艸
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肉茎 -> 人人冂圣艸 (source: decomposition, parent: sex-kw-1180)'
+  source: decomposition
+- id: sex-kw-1181-dec
+  pattern: 人人冂畐辵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肉逼 -> 人人冂畐辵 (source: decomposition, parent: sex-kw-1181)'
+  source: decomposition
+- id: sex-kw-1182-dec
+  pattern: 入肉人尔
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肏你 -> 入肉人尔 (source: decomposition, parent: sex-kw-1182)'
+  source: decomposition
+- id: sex-kw-1183-dec
+  pattern: 入肉匕歹
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肏死 -> 入肉匕歹 (source: decomposition, parent: sex-kw-1183)'
+  source: decomposition
+- id: sex-kw-1184-dec
+  pattern: 工月亠父
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肛交 -> 工月亠父 (source: decomposition, parent: sex-kw-1184)'
+  source: decomposition
+- id: sex-kw-1185-dec
+  pattern: 工月㇆丨丶
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肛门 -> 工月㇆丨丶 (source: decomposition, parent: sex-kw-1185)'
+  source: decomposition
+- id: sex-kw-1186-dec
+  pattern: 巴月畐辵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 肥逼 -> 巴月畐辵 (source: decomposition, parent: sex-kw-1186)'
+  source: decomposition
+- id: sex-kw-1187-dec
+  pattern: 胸手隹
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 胸推 -> 胸手隹 (source: decomposition, parent: sex-kw-1187)'
+  source: decomposition
+- id: sex-kw-1188-dec
+  pattern: 却月亠父
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 脚交 -> 却月亠父 (source: decomposition, parent: sex-kw-1188)'
+  source: decomposition
+- id: sex-kw-1189-dec
+  pattern: 丶目尉心
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 自慰 -> 丶目尉心 (source: decomposition, parent: sex-kw-1189)'
+  source: decomposition
+- id: sex-kw-1190-dec
+  pattern: 忝舌却月
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 舔脚 -> 忝舌却月 (source: decomposition, parent: sex-kw-1190)'
+  source: decomposition
+- id: sex-kw-1191-dec
+  pattern: 忝舌月阜
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 舔阴 -> 忝舌月阜 (source: decomposition, parent: sex-kw-1191)'
+  source: decomposition
+- id: sex-kw-1192-dec
+  pattern: 丿一卌一舛丿一𠃊
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 舞女 -> 丿一卌一舛丿一𠃊 (source: decomposition, parent: sex-kw-1192)'
+  source: decomposition
+- id: sex-kw-1194-dec
+  pattern: 刀巴乂匚
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 色区 -> 刀巴乂匚 (source: decomposition, parent: sex-kw-1194)'
+  source: decomposition
+- id: sex-kw-1195-dec
+  pattern: 刀巴欠谷
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 色欲 -> 刀巴欠谷 (source: decomposition, parent: sex-kw-1195)'
+  source: decomposition
+- id: sex-kw-1196-dec
+  pattern: 刀巴犬苗
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 色猫 -> 刀巴犬苗 (source: decomposition, parent: sex-kw-1196)'
+  source: decomposition
+- id: sex-kw-1197-dec
+  pattern: 刀巴介田
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 色界 -> 刀巴介田 (source: decomposition, parent: sex-kw-1197)'
+  source: decomposition
+- id: sex-kw-1198-dec
+  pattern: 刀巴明皿
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 色盟 -> 刀巴明皿 (source: decomposition, parent: sex-kw-1198)'
+  source: decomposition
+- id: sex-kw-1199-dec
+  pattern: 刀巴刀巴
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 色色 -> 刀巴刀巴 (source: decomposition, parent: sex-kw-1199)'
+  source: decomposition
+- id: sex-kw-1200-dec
+  pattern: 刀巴秀言
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 色诱 -> 刀巴秀言 (source: decomposition, parent: sex-kw-1200)'
+  source: decomposition
+- id: sex-kw-1201-dec
+  pattern: 刀巴畐辵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 色逼 -> 刀巴畐辵 (source: decomposition, parent: sex-kw-1201)'
+  source: decomposition
+- id: sex-kw-1202-dec
+  pattern: 汤艸丿一𠃊
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 荡女 -> 汤艸丿一𠃊 (source: decomposition, parent: sex-kw-1202)'
+  source: decomposition
+- id: sex-kw-1203-dec
+  pattern: 汤艸女彐
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 荡妇 -> 汤艸女彐 (source: decomposition, parent: sex-kw-1203)'
+  source: decomposition
+- id: sex-kw-1204-dec
+  pattern: 匊艸八宀
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 菊穴 -> 匊艸八宀 (source: decomposition, parent: sex-kw-1204)'
+  source: decomposition
+- id: sex-kw-1205-dec
+  pattern: 匊艸㇆丨丶
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 菊门 -> 匊艸㇆丨丶 (source: decomposition, parent: sex-kw-1205)'
+  source: decomposition
+- id: sex-kw-1206-dec
+  pattern: 儿虍奇马
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 虎骑 -> 儿虍奇马 (source: decomposition, parent: sex-kw-1206)'
+  source: decomposition
+- id: sex-kw-1207-dec
+  pattern: 宓虫夜水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 蜜液 -> 宓虫夜水 (source: decomposition, parent: sex-kw-1207)'
+  source: decomposition
+- id: sex-kw-1208-dec
+  pattern: 宓虫八宀
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 蜜穴 -> 宓虫八宀 (source: decomposition, parent: sex-kw-1208)'
+  source: decomposition
+- id: sex-kw-1209-dec
+  pattern: 皮衣一十
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 被干 -> 皮衣一十 (source: decomposition, parent: sex-kw-1209)'
+  source: decomposition
+- id: sex-kw-1210-dec
+  pattern: 皮衣手臿
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 被插 -> 皮衣手臿 (source: decomposition, parent: sex-kw-1210)'
+  source: decomposition
+- id: sex-kw-1211-dec
+  pattern: 皮衣喿扌
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 被操 -> 皮衣喿扌 (source: decomposition, parent: sex-kw-1211)'
+  source: decomposition
+- id: sex-kw-1212-dec
+  pattern: 库衣末衣
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 裤袜 -> 库衣末衣 (source: decomposition, parent: sex-kw-1212)'
+  source: decomposition
+- id: sex-kw-1213-dec
+  pattern: 果衣咅阜
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 裸陪 -> 果衣咅阜 (source: decomposition, parent: sex-kw-1213)'
+  source: decomposition
+- id: sex-kw-1215-dec
+  pattern: 周言孝攴
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 调教 -> 周言孝攴 (source: decomposition, parent: sex-kw-1215)'
+  source: decomposition
+- id: sex-kw-1216-dec
+  pattern: 亠口冖豕乙孚
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 豪乳 -> 亠口冖豕乙孚 (source: decomposition, parent: sex-kw-1216)'
+  source: decomposition
+- id: sex-kw-1217-dec
+  pattern: 仑车女干
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 轮奸 -> 仑车女干 (source: decomposition, parent: sex-kw-1217)'
+  source: decomposition
+- id: sex-kw-1218-dec
+  pattern: 仑车喿扌
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 轮操 -> 仑车喿扌 (source: decomposition, parent: sex-kw-1218)'
+  source: decomposition
+- id: sex-kw-1219-dec
+  pattern: 仑车恭日
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 轮暴 -> 仑车恭日 (source: decomposition, parent: sex-kw-1219)'
+  source: decomposition
+- id: sex-kw-1220-dec
+  pattern: 米辵女干
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 迷奸 -> 米辵女干 (source: decomposition, parent: sex-kw-1220)'
+  source: decomposition
+- id: sex-kw-1221-dec
+  pattern: 畐辵女干
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 逼奸 -> 畐辵女干 (source: decomposition, parent: sex-kw-1221)'
+  source: decomposition
+- id: sex-kw-1222-dec
+  pattern: 禾酉疒羊
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 酥痒 -> 禾酉疒羊 (source: decomposition, parent: sex-kw-1222)'
+  source: decomposition
+- id: sex-kw-1223-dec
+  pattern: 丨二又釆欠谷
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 释欲 -> 丨二又釆欠谷 (source: decomposition, parent: sex-kw-1223)'
+  source: decomposition
+- id: sex-kw-1224-dec
+  pattern: 日阜八一目
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 阳具 -> 日阜八一目 (source: decomposition, parent: sex-kw-1224)'
+  source: decomposition
+- id: sex-kw-1226-dec
+  pattern: 月阜口辰
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 阴唇 -> 月阜口辰 (source: decomposition, parent: sex-kw-1226)'
+  source: decomposition
+- id: sex-kw-1227-dec
+  pattern: 月阜丶尸
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 阴户 -> 月阜丶尸 (source: decomposition, parent: sex-kw-1227)'
+  source: decomposition
+- id: sex-kw-1228-dec
+  pattern: 月阜亥木
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 阴核 -> 月阜亥木 (source: decomposition, parent: sex-kw-1228)'
+  source: decomposition
+- id: sex-kw-1229-dec
+  pattern: 月阜米青
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 阴精 -> 月阜米青 (source: decomposition, parent: sex-kw-1229)'
+  source: decomposition
+- id: sex-kw-1230-dec
+  pattern: 月阜圣艸
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 阴茎 -> 月阜圣艸 (source: decomposition, parent: sex-kw-1230)'
+  source: decomposition
+- id: sex-kw-1231-dec
+  pattern: 月阜辵首
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 阴道 -> 月阜辵首 (source: decomposition, parent: sex-kw-1231)'
+  source: decomposition
+- id: sex-kw-1232-dec
+  pattern: 月阜咅邑
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 阴部 -> 月阜咅邑 (source: decomposition, parent: sex-kw-1232)'
+  source: decomposition
+- id: sex-kw-1233-dec
+  pattern: 月阜阜
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 阴阜 -> 月阜阜 (source: decomposition, parent: sex-kw-1233)'
+  source: decomposition
+- id: sex-kw-1235-dec
+  pattern: 彦页寸身
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 颜射 -> 彦页寸身 (source: decomposition, parent: sex-kw-1235)'
+  source: decomposition
+- id: sex-kw-1236-dec
+  pattern: 食米青
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 食精 -> 食米青 (source: decomposition, parent: sex-kw-1236)'
+  source: decomposition
+- id: sex-kw-1237-dec
+  pattern: 蚤马丿一𠃊
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 骚女 -> 蚤马丿一𠃊 (source: decomposition, parent: sex-kw-1237)'
+  source: decomposition
+- id: sex-kw-1238-dec
+  pattern: 蚤马匕匕
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 骚比 -> 蚤马匕匕 (source: decomposition, parent: sex-kw-1238)'
+  source: decomposition
+- id: sex-kw-1239-dec
+  pattern: 蚤马乀丶亅乛
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 骚水 -> 蚤马乀丶亅乛 (source: decomposition, parent: sex-kw-1239)'
+  source: decomposition
+- id: sex-kw-1240-dec
+  pattern: 蚤马八宀
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 骚穴 -> 蚤马八宀 (source: decomposition, parent: sex-kw-1240)'
+  source: decomposition
+- id: sex-kw-1241-dec
+  pattern: 蚤马畐辵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 骚逼 -> 蚤马畐辵 (source: decomposition, parent: sex-kw-1241)'
+  source: decomposition
+- id: sex-kw-1242-dec
+  pattern: 又鸟口巴
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 鸡吧 -> 又鸟口巴 (source: decomposition, parent: sex-kw-1242)'
+  source: decomposition
+- id: sex-kw-1243-dec
+  pattern: 又鸟女干
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 鸡奸 -> 又鸟女干 (source: decomposition, parent: sex-kw-1243)'
+  source: decomposition
+- id: sex-kw-1244-dec
+  pattern: 又鸟丨巳
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 鸡巴 -> 又鸟丨巳 (source: decomposition, parent: sex-kw-1244)'
+  source: decomposition
+- id: sex-kw-1246-dec
+  pattern: 火丷里畐辵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 黑逼 -> 火丷里畐辵 (source: decomposition, parent: sex-kw-1246)'
+  source: decomposition
+- id: sex-kw-1247-dec
+  pattern: 刀电丶丶大
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 龟头 -> 刀电丶丶大 (source: decomposition, parent: sex-kw-1247)'
+  source: decomposition
+- id: sex-kw-1248-dec
+  pattern: 云力曼水
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: h动漫 -> 云力曼水 (source: decomposition, parent: sex-kw-1248)'
+  source: decomposition
+- id: sex-kw-1249-dec
+  pattern: 云力一由凵
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: h动画 -> 云力一由凵 (source: decomposition, parent: sex-kw-1249)'
+  source: decomposition
+- id: sex-kw-1275-dec
+  pattern: 一心青
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 一ye情 -> 一心青 (source: decomposition, parent: sex-kw-1275)'
+  source: decomposition
+- id: sex-kw-1278-dec
+  pattern: 囗玉丿立
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+  description: '拆字绕过: 国产av -> 囗玉丿立 (source: decomposition, parent: sex-kw-1278)'
+  source: decomposition
