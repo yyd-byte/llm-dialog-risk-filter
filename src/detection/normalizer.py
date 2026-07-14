@@ -113,8 +113,8 @@ class TextNormalizer:
             self._normalize_traditional_chinese,
             self._normalize_abbreviations,
             self._normalize_decomposition,
-            self._normalize_confusable_chars,
             self._normalize_bypass_variants,
+            self._normalize_confusable_chars,
             self._normalize_pinyin_variants,
             self._normalize_case,
             self._strip_evasion_separators,
@@ -191,9 +191,17 @@ class TextNormalizer:
                 if variant in text:
                     text = text.replace(variant, replacement)
             else:
-                # ASCII variant: use word-boundary matching to avoid
-                # matching substrings inside longer alphanumeric tokens
-                text = _replace_ascii_boundary(text, variant, replacement)
+                if len(variant) <= 3:
+                    # Short ASCII keys (vx, wx, VX etc.): use plain
+                    # substring matching so they match adjacent digits
+                    # (e.g. "vx123") which boundary matching would miss.
+                    if variant in text:
+                        text = text.replace(variant, replacement)
+                else:
+                    # Longer ASCII variant: use word-boundary matching to
+                    # avoid matching substrings inside longer alphanumeric
+                    # tokens (e.g. "bc" inside "abc123").
+                    text = _replace_ascii_boundary(text, variant, replacement)
         return text
 
     def _normalize_pinyin_variants(self, text: str) -> str:
@@ -352,8 +360,10 @@ class TextNormalizer:
             _known_words: frozenset[str] = frozenset(
                 w for w in jieba.dt.FREQ if len(w) >= 2
             )
+            _has_dict = True
         except (ImportError, AttributeError):
             _known_words = frozenset()
+            _has_dict = False
 
         result = list(text)
         n = len(text)
@@ -363,22 +373,31 @@ class TextNormalizer:
             if n - i < 2:   # remaining text too short for any decomposition
                 break
             matched = False
+            candidate_len = 1  # default advance when no match
             for window in range(min(5, n - i), 1, -1):
                 candidate = text[i:i + window]
                 if candidate not in str_map:
                     continue
                 original_char = str_map[candidate]
 
-                if _known_words and candidate in _known_words:
+                if _has_dict and candidate in _known_words:
                     # This is a real dictionary word — don't restore
-                    # (e.g., "女子" = woman, not "好")
+                    # (e.g., "女子" = woman, not "好").
+                    # Advance past the entire candidate so we don't
+                    # re-process its tail as a false decomposition.
                     matched = False
+                    candidate_len = len(candidate)
+                elif not _has_dict and len(candidate) == 2:
+                    # No dictionary available: 2-char combos are too
+                    # risky (most real Chinese words are 2 chars).
+                    matched = False
+                    candidate_len = len(candidate)
                 else:
                     # Not a known word → likely decomposition → restore
                     result[i:i + window] = [original_char]
                     matched = True
                 break
-            i += window if matched else 1
+            i += window if matched else candidate_len
 
         return "".join(result)
 
