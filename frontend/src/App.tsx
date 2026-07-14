@@ -29,6 +29,8 @@ import {
   categoryLabels,
   defaultResult,
   riskLevelLabels,
+  stepLabels,
+  stepIcons,
 } from "./data";
 import type { AuditRecord, CategoryStat, DailyStat, PipelineResult, RiskAction, RiskLevel, RuleItem } from "./types";
 
@@ -205,21 +207,66 @@ function ConsoleView() {
 
       <section className="panel">
         <PanelHeader icon={FileText} title="可解释证据链" meta={`${result.durationMs} ms`} />
-        <div className="evidence-list">
+        <div className="evidence-timeline">
           {result.evidenceChain.length === 0 ? (
             <EmptyState icon={CheckCircle2} title="暂无风险证据" text="本次输入按低风险链路放行，已生成审计记录。" />
           ) : (
             result.evidenceChain.map((item, index) => (
-              <article className="evidence-item" key={`${item.source}-${index}`}>
-                <div>
-                  <span className="source-pill">{item.source === "rule" ? "规则层" : "语义层"}</span>
-                  <strong>{categoryLabels[item.category]}</strong>
+              <div className="evidence-step" key={`${item.step}-${index}`}>
+                <div className="step-indicator">
+                  <span className={`step-dot step-${item.step} ${item.confidence > 0 ? "hit" : ""}`}>
+                    {stepIcons[item.step] || "○"}
+                  </span>
+                  {index < result.evidenceChain.length - 1 && <span className="step-line" />}
                 </div>
-                <p>{item.explanation}</p>
-                <span className="muted">
-                  {item.matchedPattern} · 置信度 {Math.round(item.confidence * 100)}%
-                </span>
-              </article>
+                <div className={`step-body ${item.confidence > 0 ? "has-hit" : ""}`}>
+                  <div className="step-header">
+                    <span className={`step-badge badge-${item.step}`}>
+                      {stepLabels[item.step] || item.step}
+                    </span>
+                    <span className={`category-tag cat-${item.category}`}>
+                      {categoryLabels[item.category] || item.category}
+                    </span>
+                    {item.confidence > 0 && (
+                      <span className="confidence-badge">
+                        {Math.round(item.confidence * 100)}%
+                      </span>
+                    )}
+                  </div>
+                  <p className="step-explain">{item.explanation}</p>
+                  <div className="step-detail">
+                    {item.matchedPattern && (
+                      <span className="detail-chip" title="命中模式">
+                        📋 {item.matchedPattern.length > 60
+                          ? item.matchedPattern.slice(0, 60) + "..."
+                          : item.matchedPattern}
+                      </span>
+                    )}
+                    {item.matchedText && (
+                      <span className="detail-chip" title="命中原文">
+                        📝 &ldquo;{item.matchedText.length > 40
+                          ? item.matchedText.slice(0, 40) + "..."
+                          : item.matchedText}&rdquo;
+                      </span>
+                    )}
+                    {item.metadata && item.metadata.rule_count !== undefined && (
+                      <span className="detail-chip">
+                        📊 规则{String(item.metadata.rule_count)}条 + 语义{String(item.metadata.semantic_count)}条
+                      </span>
+                    )}
+                    {item.metadata && item.metadata.changes && Array.isArray(item.metadata.changes) && (item.metadata.changes as string[]).length > 0 && (
+                      <span className="detail-chip">
+                        🔧 {(item.metadata.changes as string[]).join(" · ")}
+                      </span>
+                    )}
+                    {item.metadata && item.metadata.original_fragment && (
+                      <span className="detail-chip">
+                        🔒 &ldquo;{String(item.metadata.original_fragment)}&rdquo; → &ldquo;{String(item.metadata.replacement)}&rdquo;
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
             ))
           )}
         </div>

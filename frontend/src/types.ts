@@ -10,6 +10,8 @@ export interface Evidence {
   matchedPattern: string;
   matchedText: string;
   explanation: string;
+  step: string;           // normalize | rule | semantic | fusion | desensitize
+  metadata?: Record<string, unknown>;
 }
 
 export interface PipelineResult {

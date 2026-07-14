@@ -5,11 +5,14 @@
 # --- Text Normalization ---
 normalizer:
   lowercase: true
-  full_to_half: true           # 全角 → 半角
-  normalize_whitespace: true    # 合并异常空格
-  reduce_repeated_chars: true   # 压缩重复字符
-  max_repeat: 3                 # 重复字符最大保留次数
-  normalize_symbols: true       # 变体符号标准化
+  full_to_half: true              # 全角 → 半角
+  normalize_whitespace: true      # 合并异常空格
+  reduce_repeated_chars: true     # 压缩重复字符
+  max_repeat: 3                   # 重复字符最大保留次数
+  normalize_symbols: true         # 变体符号标准化
+  strip_evasion_separators: true  # 剥离绕过分隔符（/ | - 等）
+  normalize_confusable_chars: true # 混淆字还原（形近字/同音字）
+  normalize_pinyin: true           # 拼音感知绕过检测（需 pypinyin）
 
 # --- Rule Detection ---
 rule_detection:
@@ -56,10 +59,35 @@ risk_fusion:
 
 # --- Desensitization ---
 desensitization:
-  # 脱敏替换字符
+  # 模式: "mask" = ***替换 | "semantic" = 类别标签替换 | "rewrite" = LLM 语义重写（推荐，安全）
+  mode: "semantic"
+  # mask 模式下的配置
   replacement_char: "*"
-  # 是否保留首尾字符
   keep_first_last: true
+  # semantic 模式下的类别标签
+  category_labels:
+    sexual: "[不雅用语]"
+    violent: "[暴力用语]"
+    advertising: "[联系方式]"
+    sensitive: "[敏感信息]"
+  fallback_label: "[违规内容]"
+  # rewrite 模式下的 LLM 重写提示词（mode=rewrite 时生效）
+  rewrite_prompt: |
+    改写以下文本。方括号（如 [联系方式]）标记了需要替换的敏感词。
+    将每个方括号替换为一个简短的中性词，不要删除，不要改变其他内容。
+
+    示例：
+    - "加我[联系方式]" → "加我联系方式"（保留"加我"的意图，"联系方式"是中性替换）
+    - "[不雅用语]吧" → "来聊聊吧"（中性替代）
+
+    严格规则：
+    1. 每个方括号必须被替换为一个中性词语，不能直接删除
+    2. 替换后的句子应与原句意思一致（只是去除了不良性质）
+    3. 不要添加建议、提醒或额外信息
+    4. 只输出改写后的一句话
+
+    文本：{text}
+    改写：
 
 # --- Output Check ---
 output_check:

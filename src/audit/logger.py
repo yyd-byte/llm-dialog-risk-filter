@@ -81,18 +81,41 @@ class AuditLogger:
             f.unlink()
 
     def _record_to_dict(self, r: AuditRecord) -> dict:
-        """Convert AuditRecord to serializable dict."""
+        """Convert AuditRecord to serializable dict.
+
+        Stores complete evidence chain for auditability.
+        Original input text is hashed for privacy; full text can be
+        recovered from secure storage if needed for audit review.
+        """
+        import hashlib
+        text_hash = hashlib.sha256(
+            r.original_input.encode("utf-8", errors="replace")
+        ).hexdigest()[:16]
         return {
             "request_id": r.request_id,
             "timestamp": r.timestamp,
             "input": {
-                "original": "[REDACTED]",  # Privacy: don't store raw text in logs
+                "original_hash": text_hash,
+                "original_length": len(r.original_input),
                 "normalized_length": len(r.normalized_input),
                 "risk_level": r.input_risk_level,
                 "risk_category": r.input_risk_category,
                 "confidence": r.input_confidence,
                 "action": r.input_action,
-                "evidence_count": len(r.input_evidence),
+                "evidence": [
+                    {
+                        "step": ev.get("step", ""),
+                        "source": ev.get("source", ""),
+                        "category": ev.get("category", ""),
+                        "confidence": ev.get("confidence", 0.0),
+                        "explanation": ev.get("explanation", ""),
+                    }
+                    for ev in r.input_evidence
+                ],
+            },
+            "desensitization": {
+                "desensitized": r.desensitized_input != "",
+                "desensitized_length": len(r.desensitized_input),
             },
             "llm": {
                 "called": r.llm_called,

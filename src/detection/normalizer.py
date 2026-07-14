@@ -351,6 +351,8 @@ class TextNormalizer:
 
         i = 0
         while i < n:
+            if n - i < 2:   # remaining text too short for any decomposition
+                break
             matched = False
             for window in range(min(5, n - i), 1, -1):
                 candidate = text[i:i + window]

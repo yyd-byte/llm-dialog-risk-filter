@@ -1,0 +1,152 @@
+# =============================================================================
+# 拼音绕过变体映射表
+# 将敏感词的拼音形式还原为标准汉字形式
+# 格式: "拼音": "标准形式"
+#
+# 用途：当检测到用户输入中存在疑似敏感词拼音时，
+#       自动替换为标准形式再进行规则匹配。
+#
+# 本表已预计算常见敏感词的所有拼音形式。
+# 如需动态拼音转换，安装 pypinyin 后启用 normalizer 的
+# normalize_pinyin 选项即可。
+# =============================================================================
+
+# === 色情低俗 ===
+cao: 操
+caoni: 操你
+caonima: 操你妈
+caonimabi: 操你妈逼
+caonimade: 操你妈的
+shabi: 傻逼
+shadiao: 傻屌
+wocao: 我操
+woricao: 我日操
+nima: 你妈
+nimabi: 你妈逼
+nimade: 你妈的
+tama: 他妈
+tamade: 他妈的
+fuck: fuck
+fuckyou: fuck you
+bitch: 婊子
+biaozi: 婊子
+shaque: 傻缺
+naocan: 脑残
+shenjingbing: 神经病
+gun: 滚
+gunyuan: 滚远
+gundan: 滚蛋
+qusi: 去死
+rini: 日你
+rinima: 日你妈
+rinixianren: 日你仙人
+gouri: 狗日
+gouride: 狗日的
+jianren: 贱人
+jianhuo: 贱货
+saojian: 骚贱
+saohuo: 骚货
+saobi: 骚逼
+bichi: 婊子
+laji: 垃圾
+feiwu: 废物
+chunhuo: 蠢货
+baichi: 白痴
+ruozhi: 弱智
+zhizhang: 智障
+meiyong: 没用
+
+# === 联系方式/广告 ===
+weixin: 微信
+weixinhao: 微信号
+weixinn: 微信
+jiaweixin: 加微信
+jiawo: 加我
+jiawoqq: 加我QQ
+jiawoQQ: 加我QQ
+QQ: QQ
+qq: QQ
+qqhao: QQ号
+QQhao: QQ号
+shouji: 手机
+shoujihao: 手机号
+dianhua: 电话
+dianhuahaoma: 电话号码
+lianxi: 联系
+lianxiwo: 联系我
+siren: 私人
+silia: 私聊
+siwo: 私我
+didi: 私聊
+
+# === 赌博 ===
+dubo: 赌博
+duqiu: 赌球
+baijiale: 百家乐
+wangdu: 网赌
+xianjin: 现金
+xianjinwang: 现金网
+caipiao: 彩票
+heicai: 黑彩
+shishicai: 时时彩
+liuhecai: 六合彩
+bodun: 博彩
+bocai: 博彩
+zhenqian: 真钱
+zhenren: 真人
+zhenrendubo: 真人赌博
+yinhangzhuanzhang: 银行转账
+
+# === 毒品 ===
+xidu: 吸毒
+dupin: 毒品
+bingdu: 冰毒
+hailuoyin: 海洛因
+hailouyin: 海洛因
+hailuoying: 海洛因
+hailouying: 海洛因
+kekayin: 可卡因
+kekaying: 可卡因
+da ma: 大麻
+dama: 大麻
+datouwan: 摇头丸
+yaotouwan: 摇头丸
+mafei: 吗啡
+ma gu: 麻古
+magu: 麻古
+Kfen: K粉
+kfen: K粉
+lvdanketong: 氯胺酮
+lüanketong: 氯胺酮
+
+# === 政治敏感 ===
+fandong: 反动
+baodong: 暴动
+dianfu: 颠覆
+falungong: 法轮功
+falundafa: 法轮大法
+faluen: 法轮
+taidu: 台独
+zangdu: 藏独
+jiangdu: 疆独
+liusi: 六四
+lusi: 六四
+liusi shijian: 六四事件
+minyun: 民运
+minzhu: 民主
+ziyou: 自由
+renquan: 人权
+dalu: 大陆
+zhina: 支那
+
+# === 枪支暴力 ===
+qiangzhi: 枪支
+shouqiang: 手枪
+buqiang: 步枪
+zidan: 炸弹
+zhayao: 炸药
+baopo: 爆破
+sharen: 杀人
+fanghuo: 放火
+kongbu: 恐怖
+kongbufenzi: 恐怖分子

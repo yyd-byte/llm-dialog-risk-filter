@@ -30,6 +30,8 @@ class EvidenceItem(BaseModel):
     matchedPattern: str
     matchedText: str
     explanation: str
+    step: str = ""          # normalize | rule | semantic | fusion | desensitize
+    metadata: dict = {}     # structured extra data for rich visualization
 
 
 class PipelineResult(BaseModel):

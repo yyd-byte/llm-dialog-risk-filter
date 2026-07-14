@@ -20,7 +20,7 @@ from src.detection.semantic_detector import SemanticDetector
 from src.rules.repository import RuleRepository
 from src.rules.manager import RuleManager
 from src.decision.fusion import RiskFusion
-from src.desensitization.desensitizer import Desensitizer
+from src.desensitization.desensitizer import Desensitizer, DesensitizeConfig
 from src.output_check.checker import OutputChecker
 from src.audit.logger import AuditLogger, AuditRecord
 from src.llm.client import LLMClient, LLMConfig
@@ -97,8 +97,14 @@ def run_pipeline(text: str, scenario_name: str,
         return record
 
     elif risk_result.risk_level.value == "medium":
-        # Desensitize
-        des_result = desensitizer.desensitize(text, risk_result)
+        # Desensitize (with LLM rewrite if mode="rewrite")
+        llm_rewrite = None
+        if desensitizer.config.mode == "rewrite" and llm_client:
+            def _rewrite(prompt: str) -> str:
+                resp = llm_client.chat(prompt)
+                return resp.text if resp.success else ""
+            llm_rewrite = _rewrite
+        des_result = desensitizer.desensitize(text, risk_result, llm_call=llm_rewrite)
         safe_input = des_result.desensitized
         record.desensitized_input = safe_input
     else:
@@ -301,7 +307,24 @@ def main():
     if bypass_path.exists():
         with open(bypass_path, "r", encoding="utf-8") as f:
             bypass_map = yaml.safe_load(f) or {}
-    normalizer = TextNormalizer(NormalizerConfig(bypass_map=bypass_map))
+
+    confusable_map: dict[str, str] = {}
+    confusable_path = Path(__file__).resolve().parent.parent / "config" / "confusable_chars.yaml"
+    if confusable_path.exists():
+        with open(confusable_path, "r", encoding="utf-8") as f:
+            confusable_map = yaml.safe_load(f) or {}
+
+    pinyin_map: dict[str, str] = {}
+    pinyin_path = Path(__file__).resolve().parent.parent / "config" / "pinyin_variants.yaml"
+    if pinyin_path.exists():
+        with open(pinyin_path, "r", encoding="utf-8") as f:
+            pinyin_map = yaml.safe_load(f) or {}
+
+    normalizer = TextNormalizer(NormalizerConfig(
+        bypass_map=bypass_map,
+        confusable_map=confusable_map,
+        pinyin_map=pinyin_map,
+    ))
 
     # Rules
     rules_dir = Path(__file__).resolve().parent.parent / config["rule_detection"]["rules_dir"]
@@ -340,7 +363,15 @@ def main():
     fusion = RiskFusion()
 
     # Desensitizer
-    desensitizer = Desensitizer()
+    ds_cfg = config.get("desensitization", {})
+    desensitizer = Desensitizer(DesensitizeConfig(
+        mode=ds_cfg.get("mode", "semantic"),
+        replacement_char=ds_cfg.get("replacement_char", "*"),
+        keep_first_last=ds_cfg.get("keep_first_last", True),
+        category_labels=ds_cfg.get("category_labels", {}),
+        fallback_label=ds_cfg.get("fallback_label", "[违规内容]"),
+        rewrite_prompt=ds_cfg.get("rewrite_prompt", ""),
+    ))
 
     # Output checker
     output_checker = OutputChecker(

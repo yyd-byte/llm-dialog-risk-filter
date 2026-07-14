@@ -31,7 +31,11 @@ class DetectionSource(str, Enum):
 
 @dataclass
 class Evidence:
-    """A single piece of evidence for a risk decision."""
+    """A single piece of evidence for a risk decision.
+
+    Tracks which pipeline step produced the evidence, along with
+    the matched content, confidence, and human-readable explanation.
+    """
 
     source: DetectionSource
     category: RiskCategory
@@ -39,6 +43,11 @@ class Evidence:
     matched_pattern: str = ""     # 命中的关键词/正则
     matched_text: str = ""        # 命中的原文片段
     explanation: str = ""         # 可解释的说明
+    # Pipeline step that generated this evidence:
+    # "normalize" | "rule" | "semantic" | "fusion" | "desensitize"
+    step: str = ""
+    # Extra structured data for rich visualization
+    metadata: dict = field(default_factory=dict)
 
 
 @dataclass

@@ -30,7 +30,7 @@ from src.audit.logger import AuditLogger, AuditRecord
 from src.audit.statistics import StatisticsEngine
 from src.decision.fusion import RiskFusion
 from src.decision.models import RiskLevel, RiskCategory
-from src.desensitization.desensitizer import Desensitizer
+from src.desensitization.desensitizer import Desensitizer, DesensitizeConfig
 from src.detection.normalizer import TextNormalizer, NormalizerConfig
 from src.detection.rule_detector import RuleDetector
 from src.detection.semantic_detector import SemanticDetector
@@ -134,7 +134,24 @@ def startup():
     if bypass_path.exists():
         with open(bypass_path, "r", encoding="utf-8") as f:
             bypass_map = yaml.safe_load(f) or {}
-    _normalizer = TextNormalizer(NormalizerConfig(bypass_map=bypass_map))
+
+    confusable_map: dict[str, str] = {}
+    confusable_path = project_root / "config" / "confusable_chars.yaml"
+    if confusable_path.exists():
+        with open(confusable_path, "r", encoding="utf-8") as f:
+            confusable_map = yaml.safe_load(f) or {}
+
+    pinyin_map: dict[str, str] = {}
+    pinyin_path = project_root / "config" / "pinyin_variants.yaml"
+    if pinyin_path.exists():
+        with open(pinyin_path, "r", encoding="utf-8") as f:
+            pinyin_map = yaml.safe_load(f) or {}
+
+    _normalizer = TextNormalizer(NormalizerConfig(
+        bypass_map=bypass_map,
+        confusable_map=confusable_map,
+        pinyin_map=pinyin_map,
+    ))
 
     # Rules
     rules_dir = project_root / _config["rule_detection"]["rules_dir"]
@@ -167,8 +184,15 @@ def startup():
     _fusion = RiskFusion()
 
     # Desensitizer
-    _desensitizer = Desensitizer()
-
+    ds_cfg = _config.get("desensitization", {})
+    _desensitizer = Desensitizer(DesensitizeConfig(
+        mode=ds_cfg.get("mode", "semantic"),
+        replacement_char=ds_cfg.get("replacement_char", "*"),
+        keep_first_last=ds_cfg.get("keep_first_last", True),
+        category_labels=ds_cfg.get("category_labels", {}),
+        fallback_label=ds_cfg.get("fallback_label", "[违规内容]"),
+        rewrite_prompt=ds_cfg.get("rewrite_prompt", ""),
+    ))
     # Output checker
     _output_checker = OutputChecker(
         _rule_detector, _semantic_detector, _fusion,
@@ -235,6 +259,18 @@ def pipeline_check(req: PipelineRequest):
     # Step 1: Normalize
     normalized = _normalizer.normalize(text)
     record.normalized_input = normalized.normalized
+    # Build normalize evidence: detect what changed
+    normalize_changes = []
+    if text != normalized.normalized:
+        if text.lower() != normalized.normalized:
+            normalize_changes.append("大小写转换")
+        if len(text) != len(normalized.normalized):
+            normalize_changes.append("分隔符剥离/空格合并")
+        # Check for confusable char changes
+        changed_chars = sum(1 for a, b in zip(text, normalized.normalized) if a != b)
+        if changed_chars > 0:
+            normalize_changes.append(f"{changed_chars}处字符已规范化")
+    norm_explanation = "、".join(normalize_changes) if normalize_changes else "无需规范化"
 
     # Step 2: Rule detection
     rule_evidence = _rule_detector.detect(normalized.normalized)
@@ -250,15 +286,63 @@ def pipeline_check(req: PipelineRequest):
     )
     record.input_confidence = risk_result.confidence
     record.input_action = risk_result.action
-    record.input_evidence = [
-        {
+
+    # Build evidence chain: normalize → rule matches → semantic matches → fusion decision
+    evidence_chain = []
+
+    # 1. Normalize evidence
+    evidence_chain.append({
+        "source": "rule",
+        "category": risk_result.risk_category.value if risk_result.risk_category else "sensitive",
+        "confidence": 0.0,
+        "matched_pattern": "",
+        "matched_text": "",
+        "explanation": f"文本规范化: {norm_explanation}",
+        "step": "normalize",
+        "metadata": {
+            "original_length": len(text),
+            "normalized_length": len(normalized.normalized),
+            "changes": normalize_changes,
+        },
+    })
+
+    # 2. Detection evidence (rule + semantic)
+    for e in risk_result.evidence_chain:
+        evidence_chain.append({
             "source": e.source.value,
             "category": e.category.value if e.category else "",
             "confidence": e.confidence,
+            "matched_pattern": e.matched_pattern,
+            "matched_text": e.matched_text,
             "explanation": e.explanation,
-        }
-        for e in risk_result.evidence_chain
-    ]
+            "step": e.step or ("rule" if e.source.value == "rule" else "semantic"),
+            "metadata": e.metadata,
+        })
+
+    # 3. Fusion decision evidence
+    evidence_chain.append({
+        "source": "semantic",
+        "category": risk_result.risk_category.value if risk_result.risk_category else "",
+        "confidence": risk_result.confidence,
+        "matched_pattern": "",
+        "matched_text": "",
+        "explanation": (
+            f"融合决策: 规则层({len(rule_evidence)}条) + 语义层({len(semantic_evidence)}条) "
+            f"→ 综合置信度 {risk_result.confidence:.0%} → "
+            f"风险等级 {risk_result.risk_level.value.upper()}"
+        ),
+        "step": "fusion",
+        "metadata": {
+            "rule_count": len(rule_evidence),
+            "semantic_count": len(semantic_evidence),
+            "rule_weight": _fusion.config.rule_weight,
+            "semantic_weight": _fusion.config.semantic_weight,
+            "high_threshold": _fusion.config.high_threshold,
+            "medium_threshold": _fusion.config.medium_threshold,
+        },
+    })
+
+    record.input_evidence = evidence_chain
 
     # Step 5: Act on risk level
     if risk_result.risk_level == RiskLevel.HIGH:
@@ -269,10 +353,32 @@ def pipeline_check(req: PipelineRequest):
         return _build_pipeline_result(record)
 
     elif risk_result.risk_level == RiskLevel.MEDIUM:
-        # Desensitize
-        des_result = _desensitizer.desensitize(text, risk_result)
+        # Desensitize (with LLM rewrite if mode="rewrite")
+        llm_rewrite = None
+        if _desensitizer.config.mode == "rewrite" and _llm_client:
+            def _rewrite(prompt: str) -> str:
+                resp = _llm_client.chat(prompt)
+                return resp.text if resp.success else ""
+            llm_rewrite = _rewrite
+        des_result = _desensitizer.desensitize(text, risk_result, llm_call=llm_rewrite)
         safe_input = des_result.desensitized
         record.desensitized_input = safe_input
+        # Add desensitization evidence
+        for frag in des_result.replaced_fragments:
+            record.input_evidence.append({
+                "source": "rule",
+                "category": frag.get("category", ""),
+                "confidence": 1.0,
+                "matched_pattern": frag.get("original", ""),
+                "matched_text": frag.get("original", ""),
+                "explanation": f"片段脱敏: '{frag.get('original', '')}' → '{frag.get('replacement', '')}' ({frag.get('reason', '')})",
+                "step": "desensitize",
+                "metadata": {
+                    "original_fragment": frag.get("original", ""),
+                    "replacement": frag.get("replacement", ""),
+                    "was_rewritten": des_result.was_rewritten,
+                },
+            })
     else:
         safe_input = text
 
@@ -327,9 +433,11 @@ def _build_pipeline_result(record: AuditRecord) -> PipelineResult:
                 source=ev["source"],
                 category=ev["category"],
                 confidence=ev["confidence"],
-                matchedPattern=ev.get("explanation", ""),
-                matchedText="[已脱敏片段]",
-                explanation=ev["explanation"],
+                matchedPattern=ev.get("matched_pattern", ""),
+                matchedText=ev.get("matched_text", ""),
+                explanation=ev.get("explanation", ""),
+                step=ev.get("step", ""),
+                metadata=ev.get("metadata", {}),
             )
             for ev in record.input_evidence
         ],

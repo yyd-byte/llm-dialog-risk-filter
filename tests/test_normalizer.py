@@ -287,7 +287,7 @@ class TestAbbreviationExpansion:
         test_map = {
             "禁毒办": "禁毒办公室",
             "参赌": "参加赌博",
-            "扫黄打非": "扫黄打非",
+            "禁毒": "禁止毒品",
         }
         return TextNormalizer(NormalizerConfig(
             normalize_abbreviations=True,
@@ -312,8 +312,9 @@ class TestAbbreviationExpansion:
 
     def test_longest_match_priority(self, normalizer):
         """Longer abbreviation should match before shorter substring."""
-        result = normalizer.normalize("扫黄打非行动")
-        assert "扫黄打非" in result.normalized
+        result = normalizer.normalize("禁毒办通报")
+        assert "禁毒办公室" in result.normalized
+        assert "禁止毒品" not in result.normalized
 
     def test_disabled_abbreviation(self):
         """When disabled, abbreviations should not be expanded."""

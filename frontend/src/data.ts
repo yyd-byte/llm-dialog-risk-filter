@@ -12,6 +12,22 @@ export const categoryLabels: Record<RiskCategory, string> = {
   sensitive: "敏感话术",
 };
 
+export const stepLabels: Record<string, string> = {
+  normalize: "规范化",
+  rule: "规则召回",
+  semantic: "语义判断",
+  fusion: "风险融合",
+  desensitize: "片段脱敏",
+};
+
+export const stepIcons: Record<string, string> = {
+  normalize: "🔧",
+  rule: "📋",
+  semantic: "🧠",
+  fusion: "⚖️",
+  desensitize: "🔒",
+};
+
 export const riskLevelLabels: Record<RiskLevel, string> = {
   high: "高风险",
   medium: "中风险",
