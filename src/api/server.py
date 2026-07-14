@@ -147,10 +147,31 @@ def startup():
         with open(pinyin_path, "r", encoding="utf-8") as f:
             pinyin_map = yaml.safe_load(f) or {}
 
+    traditional_simplified_map: dict[str, str] = {}
+    ts_path = project_root / "config" / "traditional_simplified.yaml"
+    if ts_path.exists():
+        with open(ts_path, "r", encoding="utf-8") as f:
+            traditional_simplified_map = yaml.safe_load(f) or {}
+
+    abbreviation_map: dict[str, str] = {}
+    abbr_path = project_root / "config" / "abbreviation_map.yaml"
+    if abbr_path.exists():
+        with open(abbr_path, "r", encoding="utf-8") as f:
+            abbreviation_map = yaml.safe_load(f) or {}
+
+    decomposition_map: dict[str, str] = {}
+    decomp_path = project_root / "config" / "decomposition_map.yaml"
+    if decomp_path.exists():
+        with open(decomp_path, "r", encoding="utf-8") as f:
+            decomposition_map = yaml.safe_load(f) or {}
+
     _normalizer = TextNormalizer(NormalizerConfig(
         bypass_map=bypass_map,
         confusable_map=confusable_map,
         pinyin_map=pinyin_map,
+        traditional_simplified_map=traditional_simplified_map,
+        abbreviation_map=abbreviation_map,
+        decomposition_map=decomposition_map,
     ))
 
     # Rules
