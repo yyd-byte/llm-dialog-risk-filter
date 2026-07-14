@@ -308,15 +308,24 @@ class TextNormalizer:
             return text
         str_map = {str(k): str(v) for k, v
                    in self.config.abbreviation_map.items()}
-        # Keys are already sorted by length descending in the YAML.
-        # But sort again to be safe.
-        for abbr in sorted(str_map, key=len, reverse=True):
+
+        # Phase 1: replace all matches with unique placeholder markers.
+        # This prevents shorter keys from matching inside the replacement
+        # text of longer keys (e.g. "禁毒" matching within "禁毒办公室").
+        markers: dict[str, str] = {}
+        for i, abbr in enumerate(sorted(str_map, key=len, reverse=True)):
             if len(abbr) < 2:
                 continue
             if not _contains_cjk(abbr):
                 continue
             if abbr in text:
-                text = text.replace(abbr, str_map[abbr])
+                marker = f"\x00ABBR_{i}\x00"
+                markers[marker] = str_map[abbr]
+                text = text.replace(abbr, marker)
+
+        # Phase 2: replace placeholders with actual expansions.
+        for marker, expansion in markers.items():
+            text = text.replace(marker, expansion)
         return text
 
     def _normalize_decomposition(self, text: str) -> str:
