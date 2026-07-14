@@ -334,3 +334,57 @@ class TestAbbreviationExpansion:
         ))
         result = n.normalize("禁毒办通报")
         assert "禁毒办" in result.normalized
+
+
+class TestDecompositionRestore:
+    """Tests for _normalize_decomposition (Path B)."""
+
+    @pytest.fixture
+    def normalizer(self):
+        """Normalizer with decomposition restoration enabled."""
+        test_map = {
+            "贝者": "赌",
+            "木仓": "枪",
+            "丰母": "毒",
+        }
+        return TextNormalizer(NormalizerConfig(
+            normalize_decomposition=True,
+            decomposition_map=test_map,
+        ))
+
+    def test_decomposition_restored(self, normalizer):
+        """Non-word component combination should be restored."""
+        result = normalizer.normalize("玩贝者游戏")
+        assert "赌" in result.normalized
+
+    def test_multiple_decompositions(self, normalizer):
+        """Multiple decompositions in one text should all be restored."""
+        result = normalizer.normalize("贝者博木仓")
+        # Both "贝者"→"赌" and "木仓"→"枪" should be restored
+        assert "赌" in result.normalized
+        assert "枪" in result.normalized
+
+    def test_disabled_decomposition(self):
+        """When disabled, decompositions should not be restored."""
+        test_map = {"贝者": "赌"}
+        cfg = NormalizerConfig(
+            normalize_decomposition=False,
+            decomposition_map=test_map,
+        )
+        n = TextNormalizer(cfg)
+        result = n.normalize("玩贝者游戏")
+        assert "贝者" in result.normalized
+
+    def test_empty_map(self):
+        """Empty decomposition map should not crash."""
+        n = TextNormalizer(NormalizerConfig(
+            normalize_decomposition=True,
+            decomposition_map={},
+        ))
+        result = n.normalize("贝者博")
+        assert "贝者" in result.normalized
+
+    def test_normal_text_unchanged(self, normalizer):
+        """Normal Chinese text should not be modified."""
+        result = normalizer.normalize("正常的文本内容")
+        assert "正常的文本内容" in result.normalized

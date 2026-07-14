@@ -77,6 +77,9 @@ class NormalizerConfig:
     # New: abbreviation expansion
     normalize_abbreviations: bool = True
     abbreviation_map: dict[str, str] = field(default_factory=dict)
+    # New: character decomposition restoration (Path B)
+    normalize_decomposition: bool = True
+    decomposition_map: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -109,6 +112,7 @@ class TextNormalizer:
             self._normalize_full_to_half,
             self._normalize_traditional_chinese,
             self._normalize_abbreviations,
+            self._normalize_decomposition,
             self._normalize_confusable_chars,
             self._normalize_bypass_variants,
             self._normalize_pinyin_variants,
@@ -136,6 +140,7 @@ class TextNormalizer:
             "_normalize_pinyin_variants": self.config.normalize_pinyin,
             "_normalize_traditional_chinese": self.config.normalize_traditional,
             "_normalize_abbreviations": self.config.normalize_abbreviations,
+            "_normalize_decomposition": self.config.normalize_decomposition,
         }
         return mapping.get(step_name, True)
 
@@ -313,6 +318,58 @@ class TextNormalizer:
             if abbr in text:
                 text = text.replace(abbr, str_map[abbr])
         return text
+
+    def _normalize_decomposition(self, text: str) -> str:
+        """Restore decomposed CJK characters (Path B: global with dictionary check).
+
+        Detects patterns where attackers write characters as individual
+        components to evade keyword matching. Only reverses when the
+        component combination is NOT a real Chinese word (verified via
+        jieba's built-in frequency dictionary).
+
+        Example:
+            "木仓" → not a real word → "枪" (restored)
+            "女子" → real word (woman) → kept as-is
+        """
+        if not self.config.decomposition_map:
+            return text
+
+        str_map = {str(k): str(v) for k, v
+                   in self.config.decomposition_map.items()}
+
+        # Build a set of known Chinese words for dictionary validation
+        try:
+            import jieba
+            _known_words: frozenset[str] = frozenset(
+                w for w in jieba.dt.FREQ if len(w) >= 2
+            )
+        except (ImportError, AttributeError):
+            _known_words = frozenset()
+
+        result = list(text)
+        n = len(text)
+
+        i = 0
+        while i < n:
+            matched = False
+            for window in range(min(5, n - i), 1, -1):
+                candidate = text[i:i + window]
+                if candidate not in str_map:
+                    continue
+                original_char = str_map[candidate]
+
+                if _known_words and candidate in _known_words:
+                    # This is a real dictionary word — don't restore
+                    # (e.g., "女子" = woman, not "好")
+                    matched = False
+                else:
+                    # Not a known word → likely decomposition → restore
+                    result[i:i + window] = [original_char]
+                    matched = True
+                break
+            i += window if matched else 1
+
+        return "".join(result)
 
     def _normalize_confusable_chars(self, text: str) -> str:
         """Replace confusable CJK characters with their standard forms.
