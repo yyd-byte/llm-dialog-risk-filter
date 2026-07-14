@@ -104,7 +104,7 @@ def run_pipeline(text: str, scenario_name: str,
                 resp = llm_client.chat(prompt)
                 return resp.text if resp.success else ""
             llm_rewrite = _rewrite
-        des_result = desensitizer.desensitize(text, risk_result, llm_call=llm_rewrite)
+        des_result = desensitizer.desensitize(normalized.normalized, risk_result, llm_call=llm_rewrite)
         safe_input = des_result.desensitized
         record.desensitized_input = safe_input
     else:

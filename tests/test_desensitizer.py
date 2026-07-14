@@ -349,3 +349,99 @@ class TestDesensitizerRewriteMode:
         # Should fall back to semantic labels without crashing
         assert "[联系方式]" in result.desensitized
         assert not result.was_rewritten
+
+
+class TestDesensitizeAfterNormalization:
+    """Desensitizer must operate on normalized text, not the original.
+
+    When the normalizer transforms evasion text (e.g. bypass variants,
+    confusable chars, pinyin matching), evidence.matched_text reflects
+    the normalized form.  If the desensitizer receives the original text,
+    it cannot locate matched_text and silently skips desensitization.
+    """
+
+    def test_bypass_variant_desensitized_on_normalized(self):
+        """matched_text from normalized form must be findable after normalization."""
+        from src.detection.normalizer import TextNormalizer, NormalizerConfig
+        from src.desensitization.desensitizer import Desensitizer, DesensitizeConfig
+
+        # Simulate a bypass variant: "葳信" → "微信"
+        normalizer = TextNormalizer(NormalizerConfig(
+            normalize_bypass=True,
+            bypass_map={"葳信": "微信"},
+        ))
+
+        original = "加我葳信abc123"
+        normalized = normalizer.normalize(original)
+
+        # Normalization DID change the text
+        assert "微信" in normalized.normalized
+        assert "葳信" not in normalized.normalized
+
+        # Simulate evidence produced by rule detection on normalized text
+        evidence = Evidence(
+            source=DetectionSource.RULE,
+            category=RiskCategory.ADVERTISING,
+            confidence=0.9,
+            matched_pattern="微信",
+            matched_text="微信",
+            explanation="命中规则: 微信引流",
+        )
+
+        risk_result = RiskResult(
+            risk_level=RiskLevel.MEDIUM,
+            risk_category=RiskCategory.ADVERTISING,
+            confidence=0.9,
+            evidence_chain=[evidence],
+        )
+
+        # --- The bug: desensitize on ORIGINAL text ---
+        desensitizer_sem = Desensitizer(DesensitizeConfig(mode="semantic"))
+        result_original = desensitizer_sem.desensitize(original, risk_result)
+        # matched_text "微信" does NOT exist in original "加我葳信abc123",
+        # so the old code silently skipped desensitization — "葳信" remains
+        assert "葳信" in result_original.desensitized, \
+            "BUG CONFIRMED: '葳信' not desensitized (can't find '微信' in original text)"
+
+        # --- The fix: desensitize on NORMALIZED text ---
+        result_fixed = desensitizer_sem.desensitize(normalized.normalized, risk_result)
+        assert "微信" not in result_fixed.desensitized, \
+            f"Expected '微信' to be desensitized, got: {result_fixed.desensitized}"
+        assert "[联系方式]" in result_fixed.desensitized, \
+            f"Expected [联系方式] replacement, got: {result_fixed.desensitized}"
+        assert len(result_fixed.replaced_fragments) >= 1
+
+    def test_mask_mode_also_works_on_normalized(self):
+        """Mask mode should also benefit from normalized-text fix."""
+        from src.detection.normalizer import TextNormalizer, NormalizerConfig
+        from src.desensitization.desensitizer import Desensitizer, DesensitizeConfig
+
+        normalizer = TextNormalizer(NormalizerConfig(
+            normalize_bypass=True,
+            bypass_map={"葳信": "微信"},
+        ))
+
+        original = "加我葳信abc123"
+        normalized = normalizer.normalize(original)
+
+        evidence = Evidence(
+            source=DetectionSource.RULE,
+            category=RiskCategory.ADVERTISING,
+            confidence=0.9,
+            matched_pattern="微信",
+            matched_text="微信",
+            explanation="命中规则: 微信引流",
+        )
+
+        risk_result = RiskResult(
+            risk_level=RiskLevel.MEDIUM,
+            risk_category=RiskCategory.ADVERTISING,
+            confidence=0.9,
+            evidence_chain=[evidence],
+        )
+
+        desensitizer_mask = Desensitizer(DesensitizeConfig(mode="mask"))
+        result = desensitizer_mask.desensitize(normalized.normalized, risk_result)
+        # "微信" should be masked (e.g. "微*信" or "***")
+        assert "微信" not in result.desensitized, \
+            f"Expected '微信' to be masked, got: {result.desensitized}"
