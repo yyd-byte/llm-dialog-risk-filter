@@ -276,3 +276,61 @@ class TestTraditionalChinese:
         ))
         result = n.normalize("亂倫")
         assert "亂" in result.normalized
+
+
+class TestAbbreviationExpansion:
+    """Tests for _normalize_abbreviations."""
+
+    @pytest.fixture
+    def normalizer(self):
+        """Normalizer with abbreviation expansion enabled."""
+        test_map = {
+            "禁毒办": "禁毒办公室",
+            "参赌": "参加赌博",
+            "扫黄打非": "扫黄打非",
+        }
+        return TextNormalizer(NormalizerConfig(
+            normalize_abbreviations=True,
+            abbreviation_map=test_map,
+        ))
+
+    def test_abbreviation_expansion(self):
+        """Known abbreviation should be expanded to full form."""
+        test_map = {"高院": "高级人民法院"}
+        n = TextNormalizer(NormalizerConfig(
+            normalize_abbreviations=True,
+            abbreviation_map=test_map,
+        ))
+        result = n.normalize("高院判决")
+        assert "高级人民法院" in result.normalized
+        assert "高院" not in result.normalized
+
+    def test_abbreviation_catches_sensitive_word(self, normalizer):
+        """Expanded abbreviation should reveal sensitive keywords."""
+        result = normalizer.normalize("有人参赌")
+        assert "参加赌博" in result.normalized
+
+    def test_longest_match_priority(self, normalizer):
+        """Longer abbreviation should match before shorter substring."""
+        result = normalizer.normalize("扫黄打非行动")
+        assert "扫黄打非" in result.normalized
+
+    def test_disabled_abbreviation(self):
+        """When disabled, abbreviations should not be expanded."""
+        test_map = {"参赌": "参加赌博"}
+        cfg = NormalizerConfig(
+            normalize_abbreviations=False,
+            abbreviation_map=test_map,
+        )
+        n = TextNormalizer(cfg)
+        result = n.normalize("参赌人员")
+        assert "参赌" in result.normalized
+
+    def test_empty_map(self):
+        """Empty abbreviation map should not crash."""
+        n = TextNormalizer(NormalizerConfig(
+            normalize_abbreviations=True,
+            abbreviation_map={},
+        ))
+        result = n.normalize("禁毒办通报")
+        assert "禁毒办" in result.normalized

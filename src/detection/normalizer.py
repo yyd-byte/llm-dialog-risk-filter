@@ -74,6 +74,9 @@ class NormalizerConfig:
     # New: traditional Chinese -> simplified Chinese
     normalize_traditional: bool = True
     traditional_simplified_map: dict[str, str] = field(default_factory=dict)
+    # New: abbreviation expansion
+    normalize_abbreviations: bool = True
+    abbreviation_map: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -105,6 +108,7 @@ class TextNormalizer:
         for step in [
             self._normalize_full_to_half,
             self._normalize_traditional_chinese,
+            self._normalize_abbreviations,
             self._normalize_confusable_chars,
             self._normalize_bypass_variants,
             self._normalize_pinyin_variants,
@@ -131,6 +135,7 @@ class TextNormalizer:
             "_normalize_confusable_chars": self.config.normalize_confusable_chars,
             "_normalize_pinyin_variants": self.config.normalize_pinyin,
             "_normalize_traditional_chinese": self.config.normalize_traditional,
+            "_normalize_abbreviations": self.config.normalize_abbreviations,
         }
         return mapping.get(step_name, True)
 
@@ -284,6 +289,30 @@ class TextNormalizer:
         for ch in text:
             result.append(str_map.get(ch, ch))
         return "".join(result)
+
+    def _normalize_abbreviations(self, text: str) -> str:
+        """Expand known abbreviations to their full forms.
+
+        Uses longest-match-first to prevent partial matches:
+        "禁毒办" should match "禁毒办" not "禁毒" first.
+
+        Only matches Chinese abbreviations (2+ CJK characters) to
+        avoid false positives on English acronyms.
+        """
+        if not self.config.abbreviation_map:
+            return text
+        str_map = {str(k): str(v) for k, v
+                   in self.config.abbreviation_map.items()}
+        # Keys are already sorted by length descending in the YAML.
+        # But sort again to be safe.
+        for abbr in sorted(str_map, key=len, reverse=True):
+            if len(abbr) < 2:
+                continue
+            if not _contains_cjk(abbr):
+                continue
+            if abbr in text:
+                text = text.replace(abbr, str_map[abbr])
+        return text
 
     def _normalize_confusable_chars(self, text: str) -> str:
         """Replace confusable CJK characters with their standard forms.
