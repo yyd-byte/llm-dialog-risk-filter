@@ -13,6 +13,9 @@ normalizer:
   strip_evasion_separators: true  # 剥离绕过分隔符（/ | - 等）
   normalize_confusable_chars: true # 混淆字还原（形近字/同音字）
   normalize_pinyin: true           # 拼音感知绕过检测（需 pypinyin）
+  normalize_traditional: true      # 繁 → 简（来自 funNLP 繁简体转换词库）
+  normalize_abbreviations: true    # 缩写展开（来自 funNLP 中文缩写库）
+  normalize_decomposition: true    # 拆字还原 Path B（来自 funNLP 拆字词库）
 
 # --- Rule Detection ---
 rule_detection:
