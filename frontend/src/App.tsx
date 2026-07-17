@@ -389,22 +389,25 @@ function RulesView() {
   const [source, setSource] = useState("");
   const [enabled, setEnabled] = useState("");
   const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(true);
   const [busyRule, setBusyRule] = useState("");
   const [message, setMessage] = useState("");
 
-  async function loadRules(nextPage = page) {
+  async function loadRules(nextPage = 1, filters = { category, source, enabled }) {
     setLoading(true);
     try {
-      const enabledFilter = enabled === "" ? undefined : enabled === "true";
+      const enabledFilter = filters.enabled === "" ? undefined : filters.enabled === "true";
       const [rulePage, nextMetadata] = await Promise.all([
-        fetchRules({ page: nextPage, category, source, enabled: enabledFilter }),
+        fetchRules({ page: nextPage, category: filters.category, source: filters.source, enabled: enabledFilter }),
         fetchRuleMetadata(),
       ]);
       setRules(rulePage.items);
       setMetadata(nextMetadata);
       setPage(rulePage.page);
+      setTotal(rulePage.total);
+      setMessage("");
     } catch {
       setMessage("规则数据加载失败，请确认后端服务可用。");
     } finally {
@@ -419,11 +422,14 @@ function RulesView() {
     setBusyRule(rule.id);
     setMessage("");
     try {
-      await setRuleEnabled(rule.id, !rule.enabled, metadata.version, token);
-      await loadRules(page);
+      const result = await setRuleEnabled(rule.id, !rule.enabled, metadata.version, token);
+      setMetadata((prev) => prev ? { ...prev, version: result.version } : prev);
+      await loadRules(page, { category, source, enabled });
       setMessage("规则状态已更新并生效。");
-    } catch {
-      setMessage("规则更新失败，请检查管理员令牌或刷新后重试。");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "";
+      setMessage(detail.includes("409") ? "规则版本已变更，已自动刷新。" : "规则更新失败，请检查管理员令牌或刷新后重试。");
+      await loadRules(page, { category, source, enabled });
     } finally {
       setBusyRule("");
     }
@@ -446,7 +452,7 @@ function RulesView() {
     return <section className="panel"><p style={{ padding: 40, textAlign: "center" }}>加载中...</p></section>;
   }
 
-  const totalPages = Math.max(1, Math.ceil((metadata?.total ?? 0) / 50));
+  const totalPages = Math.max(1, Math.ceil(total / 50));
   return (
     <section className="panel">
       <PanelHeader icon={Database} title="规则词库管理" meta={`${metadata?.enabledTotal ?? 0} / ${metadata?.total ?? 0} 条启用 · ${metadata?.version.slice(0, 20) ?? ""}`} />

@@ -96,13 +96,14 @@ class TestRiskFusion:
         assert result.confidence == pytest.approx(0.8)
 
     def test_rule_and_semantic_combined(self, fusion):
-        """Evidence from both sources should use normalized configured weights."""
+        """Corroborating rule and semantic evidence should not weaken or dilute."""
         result = fusion.evaluate(
             [rule_evidence("medium", RiskLevel.MEDIUM)],
             [semantic_evidence(0.8)],
         )
-        assert result.risk_level == RiskLevel.MEDIUM
-        assert result.confidence == pytest.approx(0.69)
+        # semantic 0.8 alone → HIGH; medium rule should not downgrade
+        assert result.risk_level == RiskLevel.HIGH
+        assert result.confidence == pytest.approx(0.8)
 
     def test_custom_thresholds(self):
         """Custom thresholds should be respected."""

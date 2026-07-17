@@ -41,15 +41,20 @@ class FusionConfig:
 
 def fusion_config_from_dict(config: dict) -> FusionConfig:
     """Build validated fusion configuration from a YAML-compatible mapping."""
+    default_confidence = FusionConfig().rule_confidence
     confidence = {
-        RiskLevel(level): float(score) for level, score in config.get("rule_confidence", {}).items()
+        **default_confidence,
+        **{
+            RiskLevel(level): float(score)
+            for level, score in config.get("rule_confidence", {}).items()
+        },
     }
     return FusionConfig(
         high_threshold=float(config.get("high_threshold", 0.8)),
         medium_threshold=float(config.get("medium_threshold", 0.4)),
         rule_weight=float(config.get("rule_weight", 0.5)),
         semantic_weight=float(config.get("semantic_weight", 0.5)),
-        rule_confidence=confidence or FusionConfig().rule_confidence,
+        rule_confidence=confidence,
     )
 
 
@@ -128,9 +133,10 @@ class RiskFusion:
         semantic_score = self._max_confidence(category_semantic)
         if rule_score and semantic_score:
             total_weight = self.config.rule_weight + self.config.semantic_weight
-            return (
+            weighted = (
                 self.config.rule_weight * rule_score + self.config.semantic_weight * semantic_score
             ) / total_weight
+            return max(weighted, rule_score, semantic_score)
         return rule_score or semantic_score
 
     @staticmethod

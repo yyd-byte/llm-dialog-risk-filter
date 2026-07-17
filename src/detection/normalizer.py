@@ -8,9 +8,9 @@ from dataclasses import dataclass, field
 
 # Common CJK Unicode ranges
 _CJK_RANGES = [
-    (0x4E00, 0x9FFF),     # CJK Unified Ideographs (常用汉字)
-    (0x3400, 0x4DBF),     # CJK Unified Ideographs Extension A
-    (0xF900, 0xFAFF),     # CJK Compatibility Ideographs
+    (0x4E00, 0x9FFF),  # CJK Unified Ideographs (常用汉字)
+    (0x3400, 0x4DBF),  # CJK Unified Ideographs Extension A
+    (0xF900, 0xFAFF),  # CJK Compatibility Ideographs
 ]
 
 
@@ -25,8 +25,7 @@ def _contains_cjk(s: str) -> bool:
     return any(_is_cjk(ch) for ch in s)
 
 
-def _replace_ascii_boundary(text: str, variant: str,
-                            replacement: str) -> str:
+def _replace_ascii_boundary(text: str, variant: str, replacement: str) -> str:
     """Replace `variant` with `replacement` only at token boundaries.
 
     A token boundary is: start-of-string, end-of-string, whitespace,
@@ -38,7 +37,7 @@ def _replace_ascii_boundary(text: str, variant: str,
     # Build a regex that matches `variant` only when surrounded by
     # non-alphanumeric characters (or string boundaries).
     # Use lookbehind/lookahead to ensure we don't consume the boundaries.
-    pattern = r'(?<![a-zA-Z0-9])' + re.escape(variant) + r'(?![a-zA-Z0-9])'
+    pattern = r"(?<![a-zA-Z0-9])" + re.escape(variant) + r"(?![a-zA-Z0-9])"
     return re.sub(pattern, replacement, text)
 
 
@@ -46,9 +45,7 @@ def _replace_ascii_boundary(text: str, variant: str,
 
 # Characters that are inserted between CJK characters to evade keyword matching.
 # Includes ASCII punctuation and Chinese punctuation marks.
-_EVASION_SEPARATORS = frozenset(
-    "/|\\-_*.,·•～~!#^&+=;；，、。，．"
-)
+_EVASION_SEPARATORS = frozenset("/|\\-_*.,·•～~!#^&+=;；，、。，．")
 
 
 @dataclass
@@ -205,45 +202,38 @@ class TextNormalizer:
         return text
 
     def _normalize_pinyin_variants(self, text: str) -> str:
-        """Replace CJK spans whose pinyin matches known sensitive words.
+        """Replace CJK spans whose pinyin matches known sensitive words
+        AND replace raw ASCII pinyin already present in text.
 
         Uses pypinyin for dynamic CJK→pinyin conversion if available.
-        Falls back to direct substring matching for ASCII pinyin in text.
-
-        Example (with pypinyin):
-            "加我薇信" → pinyin "jia wo weixin" → matches "weixin" →
-            replaces "薇信" with "微信"
-
-        Without pypinyin, ASCII pinyin like "weixin" in mixed text is
-        already handled by _normalize_bypass_variants.
+        Always runs ASCII fallback for pinyin literals like "zhadan".
         """
         if not self.config.pinyin_map:
             return text
 
-        # Try dynamic CJK→pinyin conversion
-        try:
-            import pypinyin
-            return self._pinyin_cjk_replace(text, self.config.pinyin_map, pypinyin)
-        except ImportError:
-            pass
-
-        # Fallback: direct ASCII pinyin matching in text
-        # (Mostly redundant with bypass_variants, but handles edge cases)
         str_map = {str(k): str(v) for k, v in self.config.pinyin_map.items()}
+
+        # Always replace raw ASCII pinyin variants (e.g. "zhadan" → "炸弹")
         for variant in sorted(str_map, key=len, reverse=True):
             if variant in text:
                 text = text.replace(variant, str_map[variant])
+
+        # Try dynamic CJK→pinyin conversion for disguised characters
+        try:
+            import pypinyin
+
+            return self._pinyin_cjk_replace(text, str_map, pypinyin)
+        except ImportError:
+            pass
+
         return text
 
     @staticmethod
-    def _pinyin_cjk_replace(text: str, pinyin_map: dict[str, str],
-                            pypinyin) -> str:
+    def _pinyin_cjk_replace(text: str, str_map: dict[str, str], pypinyin) -> str:
         """Use pypinyin to convert CJK spans to pinyin and replace matches."""
-        str_map = {str(k): str(v) for k, v in pinyin_map.items()}
         # Get pinyin for the whole text
         # pypinyin.pinyin returns a list of lists, e.g. [['wo'], ['ai'], ['ni']]
-        pinyin_list = pypinyin.lazy_pinyin(text, style=pypinyin.Style.TONE3,
-                                           errors='ignore')
+        pinyin_list = pypinyin.lazy_pinyin(text, style=pypinyin.Style.TONE3, errors="ignore")
         # Build positions: find CJK spans and their pinyin
         n = len(text)
         result = list(text)
@@ -269,24 +259,23 @@ class TextNormalizer:
                 span_end = cjk_positions[end - 1] + 1
                 cjk_span = text[span_start:span_end]
                 # Get pinyin for this span
-                pinyin_indices = [pos_to_pinyin[i] for i in range(span_start, span_end)
-                                  if pos_to_pinyin[i] is not None]
+                pinyin_indices = [
+                    pos_to_pinyin[i]
+                    for i in range(span_start, span_end)
+                    if pos_to_pinyin[i] is not None
+                ]
                 if not pinyin_indices:
                     continue
                 # Build pinyin string
-                pinyin_str = ''.join(
-                    pinyin_list[idx] for idx in pinyin_indices
-                )
+                pinyin_str = "".join(pinyin_list[idx] for idx in pinyin_indices)
                 # Remove tone numbers for matching
-                pinyin_flat = ''.join(
-                    c for c in pinyin_str if not c.isdigit()
-                )
+                pinyin_flat = "".join(c for c in pinyin_str if not c.isdigit())
                 if pinyin_flat in str_map:
                     replacement = str_map[pinyin_flat]
                     # Replace the CJK span
                     result[span_start:span_end] = list(replacement)
 
-        return ''.join(result)
+        return "".join(result)
 
     def _normalize_traditional_chinese(self, text: str) -> str:
         """Convert traditional Chinese characters to simplified.
@@ -296,8 +285,7 @@ class TextNormalizer:
         """
         if not self.config.traditional_simplified_map:
             return text
-        str_map = {str(k): str(v) for k, v
-                   in self.config.traditional_simplified_map.items()}
+        str_map = {str(k): str(v) for k, v in self.config.traditional_simplified_map.items()}
         result = []
         for ch in text:
             result.append(str_map.get(ch, ch))
@@ -314,8 +302,7 @@ class TextNormalizer:
         """
         if not self.config.abbreviation_map:
             return text
-        str_map = {str(k): str(v) for k, v
-                   in self.config.abbreviation_map.items()}
+        str_map = {str(k): str(v) for k, v in self.config.abbreviation_map.items()}
 
         # Phase 1: replace all matches with unique placeholder markers.
         # This prevents shorter keys from matching inside the replacement
@@ -351,15 +338,13 @@ class TextNormalizer:
         if not self.config.decomposition_map:
             return text
 
-        str_map = {str(k): str(v) for k, v
-                   in self.config.decomposition_map.items()}
+        str_map = {str(k): str(v) for k, v in self.config.decomposition_map.items()}
 
         # Build a set of known Chinese words for dictionary validation
         try:
             import jieba
-            _known_words: frozenset[str] = frozenset(
-                w for w in jieba.dt.FREQ if len(w) >= 2
-            )
+
+            _known_words: frozenset[str] = frozenset(w for w in jieba.dt.FREQ if len(w) >= 2)
             _has_dict = True
         except (ImportError, AttributeError):
             _known_words = frozenset()
@@ -370,12 +355,12 @@ class TextNormalizer:
 
         i = 0
         while i < n:
-            if n - i < 2:   # remaining text too short for any decomposition
+            if n - i < 2:  # remaining text too short for any decomposition
                 break
             matched = False
             candidate_len = 1  # default advance when no match
             for window in range(min(5, n - i), 1, -1):
-                candidate = text[i:i + window]
+                candidate = text[i : i + window]
                 if candidate not in str_map:
                     continue
                 original_char = str_map[candidate]
@@ -394,7 +379,7 @@ class TextNormalizer:
                     candidate_len = len(candidate)
                 else:
                     # Not a known word → likely decomposition → restore
-                    result[i:i + window] = [original_char]
+                    result[i : i + window] = [original_char]
                     matched = True
                 break
             i += window if matched else candidate_len
@@ -466,10 +451,8 @@ class TextNormalizer:
                         # catches chains like 是///消防员 (是 is isolated even
                         # though 消 is part of a multi-char word) while still
                         # preserving 双肩包/单肩包 (neither 包 nor 单 is isolated).
-                        left_isolated = (left == 0 or
-                                         not _is_cjk(chars[left - 1]))
-                        right_isolated = (right == n - 1 or
-                                          not _is_cjk(chars[right + 1]))
+                        left_isolated = left == 0 or not _is_cjk(chars[left - 1])
+                        right_isolated = right == n - 1 or not _is_cjk(chars[right + 1])
 
                         if left_isolated or right_isolated:
                             remove[i] = True
@@ -497,8 +480,10 @@ class TextNormalizer:
         """
         symbol_map = {
             # Chinese punctuation → English
-            "‘": "'", "’": "'",  # 左/右单引号
-            "“": '"', "”": '"',  # 左/右双引号
+            "‘": "'",
+            "’": "'",  # 左/右单引号
+            "“": '"',
+            "”": '"',  # 左/右双引号
             "，": ",",  # 全角逗号
             "。": ".",  # 句号
             "；": ";",  # 全角分号
@@ -513,8 +498,7 @@ class TextNormalizer:
         return "".join(result)
 
 
-def _mark_adjacent_spaces(chars: list[str], idx: int, n: int,
-                          remove: list[bool]) -> None:
+def _mark_adjacent_spaces(chars: list[str], idx: int, n: int, remove: list[bool]) -> None:
     """Mark spaces immediately adjacent to a removed separator for cleanup.
 
     When we remove "/" from "违 / 禁", we also want to remove the spaces

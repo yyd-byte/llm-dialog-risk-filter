@@ -652,10 +652,10 @@ def rule_metadata():
 def set_rule_enabled(
     rule_id: str,
     request: SetRuleEnabledRequest,
-    _: None = Header(default=None, alias="X-Admin-Token"),
+    x_admin_token: str | None = Header(default=None, alias="X-Admin-Token"),
 ):
     """Persist an explicit enable state and immediately rebuild detector caches."""
-    _require_rules_admin_token(_)
+    _require_rules_admin_token(x_admin_token)
     assert _rule_manager is not None and _rule_detector is not None
     assert _rule_management_audit is not None
     try:
@@ -668,23 +668,25 @@ def set_rule_enabled(
         raise HTTPException(status_code=409, detail={"version": str(error)}) from error
     except KeyError as error:
         raise HTTPException(status_code=404, detail="Rule not found") from error
-    _rule_detector.rebuild_cache()
-    _rule_management_audit.log_enabled_change(
-        rule.id,
-        rule.category.value,
-        rule.source,
-        previous_enabled,
-        rule.enabled,
-        request.expectedVersion,
-        version,
-    )
+    state_changed = previous_enabled != rule.enabled
+    if state_changed:
+        _rule_detector.rebuild_cache()
+        _rule_management_audit.log_enabled_change(
+            rule.id,
+            rule.category.value,
+            rule.source,
+            previous_enabled,
+            rule.enabled,
+            request.expectedVersion,
+            version,
+        )
     return RuleMutationResponse(item=_rule_item(rule), version=version)
 
 
 @app.post("/api/rules/reload", response_model=RuleMetadata)
 def reload_rules(
     request: ReloadRequest,
-    _: None = Header(default=None, alias="X-Admin-Token"),
+    _: str | None = Header(default=None, alias="X-Admin-Token"),
 ):
     """Reload YAML rules and rebuild detection caches without restarting the API."""
     _require_rules_admin_token(_)

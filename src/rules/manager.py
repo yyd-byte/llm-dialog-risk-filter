@@ -92,10 +92,31 @@ class RuleManager:
             if rule is None:
                 raise KeyError(rule_id)
             previous_enabled = rule.enabled
-            if previous_enabled != enabled:
-                rule.enabled = enabled
-                rule.updated_at = datetime.now().isoformat()
-                self._repo.save_category(rule.category, self._rules[rule.category])
+            if previous_enabled == enabled:
+                return rule, current_version, previous_enabled
+
+            now = datetime.now().isoformat()
+            category = rule.category
+            saved_rules = [
+                Rule(
+                    id=r.id,
+                    pattern=r.pattern,
+                    pattern_type=r.pattern_type,
+                    category=r.category,
+                    risk_level=r.risk_level,
+                    enabled=(not r.enabled) if r.id == rule_id else r.enabled,
+                    description=r.description,
+                    source=r.source,
+                    created_at=r.created_at,
+                    updated_at=now if r.id == rule_id else r.updated_at,
+                )
+                for r in self._rules[category]
+            ]
+            self._repo.save_category(category, saved_rules)
+
+            rule.enabled = enabled
+            rule.updated_at = now
+            self._rules[category] = saved_rules
             return rule, self._repo.version(), previous_enabled
 
     def get_category_meta(self) -> list[RuleCategoryMeta]:

@@ -71,7 +71,7 @@ rules:
 - id: adv-kw-1004
   pattern: QQ
   pattern_type: keyword
-  risk_level: medium
+  risk_level: low
   enabled: true
   description: QQ
 - id: adv-kw-1005
@@ -89,7 +89,7 @@ rules:
 - id: adv-kw-1007
   pattern: 代理
   pattern_type: keyword
-  risk_level: medium
+  risk_level: low
   enabled: true
   description: 代理
 - id: adv-kw-1008
@@ -173,13 +173,13 @@ rules:
 - id: adv-kw-1021
   pattern: 客服
   pattern_type: keyword
-  risk_level: medium
+  risk_level: low
   enabled: true
   description: 客服
 - id: adv-kw-1022
   pattern: 小姐
   pattern_type: keyword
-  risk_level: medium
+  risk_level: low
   enabled: true
   description: 小姐
 - id: adv-kw-1023
@@ -209,7 +209,7 @@ rules:
 - id: adv-kw-1027
   pattern: 招聘
   pattern_type: keyword
-  risk_level: medium
+  risk_level: low
   enabled: true
   description: 招聘
 - id: adv-kw-1028

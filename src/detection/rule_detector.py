@@ -1,12 +1,15 @@
 """Rule-based detection engine — keyword and regex matching."""
 
+import logging
 import re
-from typing import Optional
+from threading import RLock
 
 from src.decision.models import DetectionSource, Evidence, RiskLevel
 from src.detection.keyword_automaton import KeywordAutomaton
 from src.rules.manager import RuleManager
 from src.rules.models import Rule
+
+logger = logging.getLogger(__name__)
 
 
 class RuleDetector:
@@ -28,6 +31,7 @@ class RuleDetector:
             **self.DEFAULT_LEVEL_CONFIDENCE,
             **(level_confidence or {}),
         }
+        self._lock = RLock()
         self._ordered_rules: list[Rule] = []
         self._compiled_regex: dict[int, re.Pattern] = {}
         self._keyword_automaton = KeywordAutomaton([])
@@ -35,26 +39,32 @@ class RuleDetector:
         self._rebuild_cache()
 
     def _rebuild_cache(self) -> None:
-        """Rebuild enabled-rule snapshots, keyword automaton, and regex cache."""
-        self._ordered_rules = self._rule_manager.get_enabled_rules()
-        self._compiled_regex.clear()
+        """Build new caches and atomically publish them."""
+        ordered = self._rule_manager.get_enabled_rules()
+        compiled: dict[int, re.Pattern] = {}
         keyword_patterns: list[tuple[str, int]] = []
-        self._empty_keyword_ordinals.clear()
+        empty_ordinals: set[int] = set()
 
-        for ordinal, rule in enumerate(self._ordered_rules):
+        for ordinal, rule in enumerate(ordered):
             if rule.pattern_type == "keyword":
                 pattern = rule.pattern.lower()
                 if pattern:
                     keyword_patterns.append((pattern, ordinal))
                 else:
-                    self._empty_keyword_ordinals.add(ordinal)
+                    empty_ordinals.add(ordinal)
             elif rule.pattern_type == "regex":
                 try:
-                    self._compiled_regex[ordinal] = re.compile(rule.pattern, re.IGNORECASE)
+                    compiled[ordinal] = re.compile(rule.pattern, re.IGNORECASE)
                 except re.error:
-                    pass
+                    logger.warning("跳过无效正则规则 %s: %r", rule.id, rule.pattern)
 
-        self._keyword_automaton = KeywordAutomaton(keyword_patterns)
+        automaton = KeywordAutomaton(keyword_patterns)
+
+        with self._lock:
+            self._ordered_rules = ordered
+            self._compiled_regex = compiled
+            self._keyword_automaton = automaton
+            self._empty_keyword_ordinals = empty_ordinals
 
     def rebuild_cache(self) -> None:
         """Rebuild matcher caches from the manager's current in-memory snapshot."""
@@ -72,27 +82,34 @@ class RuleDetector:
         declaration order. Repeated occurrences of one rule emit once.
         """
         text_lower = text.lower()
-        matched_ordinals = self._keyword_automaton.search(text_lower)
-        matched_ordinals.update(self._empty_keyword_ordinals)
         regex_matches: dict[int, str] = {}
 
-        for ordinal, compiled in self._compiled_regex.items():
-            match = compiled.search(text_lower)
-            if match:
+        with self._lock:
+            ordered_rules = self._ordered_rules
+            compiled_regex = self._compiled_regex
+            keyword_automaton = self._keyword_automaton
+            empty_ordinals = self._empty_keyword_ordinals
+            level_confidence = self._level_confidence
+
+        matched_ordinals = keyword_automaton.search(text_lower)
+        matched_ordinals.update(empty_ordinals)
+
+        for ordinal, compiled in compiled_regex.items():
+            match_result = compiled.search(text_lower)
+            if match_result:
                 matched_ordinals.add(ordinal)
-                regex_matches[ordinal] = match.group()
+                regex_matches[ordinal] = match_result.group()
 
         evidence_list: list[Evidence] = []
         for ordinal in sorted(matched_ordinals):
-            rule = self._ordered_rules[ordinal]
-            match_result = regex_matches.get(ordinal, rule.pattern)
+            rule = ordered_rules[ordinal]
             evidence_list.append(
                 Evidence(
                     source=DetectionSource.RULE,
                     category=rule.category,
-                    confidence=self._level_confidence[rule.risk_level],
+                    confidence=level_confidence[rule.risk_level],
                     matched_pattern=rule.pattern,
-                    matched_text=match_result,
+                    matched_text=regex_matches.get(ordinal, rule.pattern),
                     explanation=f"命中规则: {rule.description or rule.id}",
                     step="rule",
                     declared_risk_level=rule.risk_level,
@@ -100,16 +117,3 @@ class RuleDetector:
                 )
             )
         return evidence_list
-
-    def _match_rule(self, rule: Rule, text: str) -> Optional[str]:
-        """Retain single-rule matching semantics for callers and compatibility tests."""
-        if rule.pattern_type == "keyword":
-            return rule.pattern if rule.pattern.lower() in text else None
-        if rule.pattern_type == "regex":
-            for ordinal, cached_rule in enumerate(self._ordered_rules):
-                if cached_rule is rule:
-                    compiled = self._compiled_regex.get(ordinal)
-                    if compiled:
-                        match = compiled.search(text)
-                        return match.group() if match else None
-        return None

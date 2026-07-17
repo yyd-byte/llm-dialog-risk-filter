@@ -21,8 +21,12 @@ class OutputCheckResult:
 
     @property
     def final_output(self) -> str:
-        """Return the safe replacement when output processing produced one."""
-        return self.safe_output or self.original_output
+        """Return content safe for display, never the raw output when blocked."""
+        if self.safe_output:
+            return self.safe_output
+        if self.is_safe:
+            return self.original_output
+        return "[内容已拦截]"
 
 
 class OutputChecker:
