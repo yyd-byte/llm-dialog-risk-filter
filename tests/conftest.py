@@ -9,7 +9,7 @@ import yaml
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.detection.normalizer import TextNormalizer, NormalizerConfig
+from src.detection.normalizer import TextNormalizer
 from src.detection.rule_detector import RuleDetector
 from src.detection.semantic_detector import SemanticDetector
 from src.rules.repository import RuleRepository
@@ -17,7 +17,7 @@ from src.rules.manager import RuleManager
 from src.decision.fusion import RiskFusion
 from src.desensitization.desensitizer import Desensitizer
 from src.output_check.checker import OutputChecker
-from src.audit.logger import AuditLogger, AuditRecord
+from src.audit.logger import AuditLogger
 
 
 @pytest.fixture
@@ -62,6 +62,30 @@ def rule_manager():
                     "risk_level": "medium",
                     "enabled": True,
                     "description": "测试中风险词",
+                },
+                {
+                    "id": "test-low-001",
+                    "pattern": "低风险甲",
+                    "pattern_type": "keyword",
+                    "risk_level": "low",
+                    "enabled": True,
+                    "description": "测试低风险词甲",
+                },
+                {
+                    "id": "test-low-002",
+                    "pattern": "低风险乙",
+                    "pattern_type": "keyword",
+                    "risk_level": "low",
+                    "enabled": True,
+                    "description": "测试低风险词乙",
+                },
+                {
+                    "id": "test-low-003",
+                    "pattern": "低风险丙",
+                    "pattern_type": "keyword",
+                    "risk_level": "low",
+                    "enabled": True,
+                    "description": "测试低风险词丙",
                 },
             ],
         }

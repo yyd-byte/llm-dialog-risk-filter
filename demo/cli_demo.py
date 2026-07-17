@@ -19,17 +19,18 @@ from src.detection.rule_detector import RuleDetector
 from src.detection.semantic_detector import SemanticDetector
 from src.rules.repository import RuleRepository
 from src.rules.manager import RuleManager
-from src.decision.fusion import RiskFusion
+from src.decision.fusion import RiskFusion, fusion_config_from_dict
 from src.desensitization.desensitizer import Desensitizer, DesensitizeConfig
 from src.output_check.checker import OutputChecker
 from src.audit.logger import AuditLogger, AuditRecord
 from src.llm.client import LLMClient, LLMConfig
-from demo.scenarios import SCENARIOS, DemoScenario
+from demo.scenarios import SCENARIOS
 
 
 # =============================================================================
 # Colors for terminal output
 # =============================================================================
+
 
 class Color:
     RED = "\033[91m"
@@ -43,9 +44,9 @@ class Color:
 
 def print_header(title: str) -> None:
     """Print a section header."""
-    print(f"\n{Color.BOLD}{Color.BLUE}{'='*60}{Color.RESET}")
+    print(f"\n{Color.BOLD}{Color.BLUE}{'=' * 60}{Color.RESET}")
     print(f"{Color.BOLD}{Color.BLUE}  {title}{Color.RESET}")
-    print(f"{Color.BOLD}{Color.BLUE}{'='*60}{Color.RESET}")
+    print(f"{Color.BOLD}{Color.BLUE}{'=' * 60}{Color.RESET}")
 
 
 def print_result(label: str, value: str, color: str = Color.RESET) -> None:
@@ -53,15 +54,18 @@ def print_result(label: str, value: str, color: str = Color.RESET) -> None:
     print(f"  {Color.BOLD}{label}:{Color.RESET} {color}{value}{Color.RESET}")
 
 
-def run_pipeline(text: str, scenario_name: str,
-                 normalizer: TextNormalizer,
-                 rule_detector: RuleDetector,
-                 semantic_detector: SemanticDetector,
-                 fusion: RiskFusion,
-                 desensitizer: Desensitizer,
-                 output_checker: OutputChecker,
-                 audit_logger: AuditLogger,
-                 llm_client: LLMClient | None = None) -> AuditRecord:
+def run_pipeline(
+    text: str,
+    scenario_name: str,
+    normalizer: TextNormalizer,
+    rule_detector: RuleDetector,
+    semantic_detector: SemanticDetector,
+    fusion: RiskFusion,
+    desensitizer: Desensitizer,
+    output_checker: OutputChecker,
+    audit_logger: AuditLogger,
+    llm_client: LLMClient | None = None,
+) -> AuditRecord:
     """Run the full content filtering pipeline on a single input."""
     record = AuditRecord(original_input=text)
     start_time = time.time()
@@ -79,12 +83,18 @@ def run_pipeline(text: str, scenario_name: str,
     # Step 4: Risk fusion
     risk_result = fusion.evaluate_input(rule_evidence, semantic_evidence)
     record.input_risk_level = risk_result.risk_level.value
-    record.input_risk_category = risk_result.risk_category.value if risk_result.risk_category else None
+    record.input_risk_category = (
+        risk_result.risk_category.value if risk_result.risk_category else None
+    )
     record.input_confidence = risk_result.confidence
     record.input_action = risk_result.action
     record.input_evidence = [
-        {"source": e.source.value, "category": e.category.value if e.category else "",
-         "confidence": e.confidence, "explanation": e.explanation}
+        {
+            "source": e.source.value,
+            "category": e.category.value if e.category else "",
+            "confidence": e.confidence,
+            "explanation": e.explanation,
+        }
         for e in risk_result.evidence_chain
     ]
 
@@ -100,11 +110,15 @@ def run_pipeline(text: str, scenario_name: str,
         # Desensitize (with LLM rewrite if mode="rewrite")
         llm_rewrite = None
         if desensitizer.config.mode == "rewrite" and llm_client:
+
             def _rewrite(prompt: str) -> str:
                 resp = llm_client.chat(prompt)
                 return resp.text if resp.success else ""
+
             llm_rewrite = _rewrite
-        des_result = desensitizer.desensitize(normalized.normalized, risk_result, llm_call=llm_rewrite)
+        des_result = desensitizer.desensitize(
+            normalized.normalized, risk_result, llm_call=llm_rewrite
+        )
         safe_input = des_result.desensitized
         record.desensitized_input = safe_input
     else:
@@ -121,7 +135,7 @@ def run_pipeline(text: str, scenario_name: str,
             llm_output = f"[LLM Error: {llm_resp.error}]"
     else:
         # Simulate LLM response for demo
-        llm_output = f'[模拟大模型回复] 针对您的问题“{text[:30]}”，这是一个示例回答。'
+        llm_output = f"[模拟大模型回复] 针对您的问题“{text[:30]}”，这是一个示例回答。"
         record.llm_called = False
         record.llm_model = "demo-simulation"
 
@@ -129,7 +143,9 @@ def run_pipeline(text: str, scenario_name: str,
 
     # Step 7: Output re-check
     output_result = output_checker.check(llm_output)
-    record.output_risk_level = output_result.risk_result.risk_level.value if output_result.risk_result else "low"
+    record.output_risk_level = (
+        output_result.risk_result.risk_level.value if output_result.risk_result else "low"
+    )
     record.output_passed = output_result.is_safe
     record.output_blocked = not output_result.is_safe
     record.final_output = output_result.final_output
@@ -153,7 +169,10 @@ def print_pipeline_result(record: AuditRecord) -> None:
         "low": Color.GREEN,
     }.get(record.input_risk_level, Color.RESET)
 
-    print(f"  {Color.CYAN}🎯 风险等级:{Color.RESET} {level_color}{record.input_risk_level.upper()}{Color.RESET}", end="")
+    print(
+        f"  {Color.CYAN}🎯 风险等级:{Color.RESET} {level_color}{record.input_risk_level.upper()}{Color.RESET}",
+        end="",
+    )
     if record.input_risk_category:
         print(f" | 类别: {record.input_risk_category} | 置信度: {record.input_confidence:.2f}")
     else:
@@ -190,32 +209,52 @@ def print_pipeline_result(record: AuditRecord) -> None:
     print(f"  {Color.CYAN}⏱️ 耗时:{Color.RESET} {record.total_duration_ms:.1f}ms")
 
 
-def run_all_scenarios(normalizer, rule_detector, semantic_detector,
-                      fusion, desensitizer, output_checker,
-                      audit_logger, llm_client) -> None:
+def run_all_scenarios(
+    normalizer,
+    rule_detector,
+    semantic_detector,
+    fusion,
+    desensitizer,
+    output_checker,
+    audit_logger,
+    llm_client,
+) -> None:
     """Run all predefined demo scenarios."""
     print_header("🚀 预设场景演示")
     print(f"共 {len(SCENARIOS)} 个场景\n")
 
     for i, scenario in enumerate(SCENARIOS):
-        print(f"\n{Color.BOLD}── 场景 {i+1}: {scenario.name} ──{Color.RESET}")
+        print(f"\n{Color.BOLD}── 场景 {i + 1}: {scenario.name} ──{Color.RESET}")
         print(f"  {Color.CYAN}目的:{Color.RESET} {scenario.display_purpose}")
         print(f"  {Color.CYAN}描述:{Color.RESET} {scenario.description}")
 
         record = run_pipeline(
-            scenario.input_text, scenario.name,
-            normalizer, rule_detector, semantic_detector,
-            fusion, desensitizer, output_checker,
-            audit_logger, llm_client,
+            scenario.input_text,
+            scenario.name,
+            normalizer,
+            rule_detector,
+            semantic_detector,
+            fusion,
+            desensitizer,
+            output_checker,
+            audit_logger,
+            llm_client,
         )
         print_pipeline_result(record)
 
     print_header("✅ 演示完成")
 
 
-def run_interactive(normalizer, rule_detector, semantic_detector,
-                    fusion, desensitizer, output_checker,
-                    audit_logger, llm_client) -> None:
+def run_interactive(
+    normalizer,
+    rule_detector,
+    semantic_detector,
+    fusion,
+    desensitizer,
+    output_checker,
+    audit_logger,
+    llm_client,
+) -> None:
     """Interactive mode — user types input and sees real-time results."""
     print_header("💬 交互模式")
     print("输入文本查看风控结果，输入 'quit' 退出\n")
@@ -234,10 +273,16 @@ def run_interactive(normalizer, rule_detector, semantic_detector,
             break
 
         record = run_pipeline(
-            user_input, "interactive",
-            normalizer, rule_detector, semantic_detector,
-            fusion, desensitizer, output_checker,
-            audit_logger, llm_client,
+            user_input,
+            "interactive",
+            normalizer,
+            rule_detector,
+            semantic_detector,
+            fusion,
+            desensitizer,
+            output_checker,
+            audit_logger,
+            llm_client,
         )
         print_pipeline_result(record)
 
@@ -253,24 +298,14 @@ def main():
         except Exception:
             pass
 
-    parser = argparse.ArgumentParser(
-        description="LLM Dialog Risk Filter — CLI Demo"
-    )
+    parser = argparse.ArgumentParser(description="LLM Dialog Risk Filter — CLI Demo")
+    parser.add_argument("--interactive", "-i", action="store_true", help="交互模式")
     parser.add_argument(
-        "--interactive", "-i", action="store_true",
-        help="交互模式"
+        "--scenario", "-s", type=int, default=None, help="运行指定场景（0-based 索引）"
     )
+    parser.add_argument("--no-llm", action="store_true", help="不连接 LLM，使用模拟回复")
     parser.add_argument(
-        "--scenario", "-s", type=int, default=None,
-        help="运行指定场景（0-based 索引）"
-    )
-    parser.add_argument(
-        "--no-llm", action="store_true",
-        help="不连接 LLM，使用模拟回复"
-    )
-    parser.add_argument(
-        "--load-model", action="store_true",
-        help="加载语义模型（默认不加载，使用纯规则模式）"
+        "--load-model", action="store_true", help="加载语义模型（默认不加载，使用纯规则模式）"
     )
     args = parser.parse_args()
 
@@ -280,6 +315,7 @@ def main():
 
     # Config
     import yaml
+
     config_path = Path(__file__).resolve().parent.parent / "config" / "default.yaml"
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
@@ -287,6 +323,7 @@ def main():
     # 从环境变量注入敏感密钥
     # 优先从 .env 文件加载，其次从系统环境变量
     import os as _os
+
     _env_file = Path(__file__).resolve().parent.parent / ".env"
     if _env_file.exists():
         with open(_env_file, "r", encoding="utf-8") as _f:
@@ -338,20 +375,23 @@ def main():
         with open(decomp_path, "r", encoding="utf-8") as f:
             decomposition_map = yaml.safe_load(f) or {}
 
-    normalizer = TextNormalizer(NormalizerConfig(
-        bypass_map=bypass_map,
-        confusable_map=confusable_map,
-        pinyin_map=pinyin_map,
-        traditional_simplified_map=traditional_simplified_map,
-        abbreviation_map=abbreviation_map,
-        decomposition_map=decomposition_map,
-    ))
+    normalizer = TextNormalizer(
+        NormalizerConfig(
+            bypass_map=bypass_map,
+            confusable_map=confusable_map,
+            pinyin_map=pinyin_map,
+            traditional_simplified_map=traditional_simplified_map,
+            abbreviation_map=abbreviation_map,
+            decomposition_map=decomposition_map,
+        )
+    )
 
     # Rules
     rules_dir = Path(__file__).resolve().parent.parent / config["rule_detection"]["rules_dir"]
     repo = RuleRepository(str(rules_dir))
     manager = RuleManager(repo)
-    rule_detector = RuleDetector(manager)
+    fusion_cfg = fusion_config_from_dict(config.get("risk_fusion", {}))
+    rule_detector = RuleDetector(manager, level_confidence=fusion_cfg.rule_confidence)
 
     # Semantic
     sem_cfg = config["semantic_detection"]
@@ -371,6 +411,7 @@ def main():
             print("  加载语义模型...")
             # 国内网络环境使用 HuggingFace 镜像加速
             import os as _os
+
             if not _os.environ.get("HF_ENDPOINT"):
                 _os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
             semantic_detector.load_model()
@@ -380,23 +421,26 @@ def main():
             print("  将回退到纯规则模式")
 
     # Fusion
-    fusion_cfg = config["risk_fusion"]
-    fusion = RiskFusion()
+    fusion = RiskFusion(fusion_cfg)
 
     # Desensitizer
     ds_cfg = config.get("desensitization", {})
-    desensitizer = Desensitizer(DesensitizeConfig(
-        mode=ds_cfg.get("mode", "semantic"),
-        replacement_char=ds_cfg.get("replacement_char", "*"),
-        keep_first_last=ds_cfg.get("keep_first_last", True),
-        category_labels=ds_cfg.get("category_labels", {}),
-        fallback_label=ds_cfg.get("fallback_label", "[违规内容]"),
-        rewrite_prompt=ds_cfg.get("rewrite_prompt", ""),
-    ))
+    desensitizer = Desensitizer(
+        DesensitizeConfig(
+            mode=ds_cfg.get("mode", "semantic"),
+            replacement_char=ds_cfg.get("replacement_char", "*"),
+            keep_first_last=ds_cfg.get("keep_first_last", True),
+            category_labels=ds_cfg.get("category_labels", {}),
+            fallback_label=ds_cfg.get("fallback_label", "[违规内容]"),
+            rewrite_prompt=ds_cfg.get("rewrite_prompt", ""),
+        )
+    )
 
     # Output checker
     output_checker = OutputChecker(
-        rule_detector, semantic_detector, fusion,
+        rule_detector,
+        semantic_detector,
+        fusion,
         block_message=config["output_check"]["output_block_message"],
         desensitizer=desensitizer,
     )
@@ -411,14 +455,16 @@ def main():
     llm_client = None
     if not args.no_llm:
         llm_cfg = config["llm"]
-        llm_client = LLMClient(LLMConfig(
-            provider=llm_cfg["provider"],
-            base_url=llm_cfg["base_url"],
-            model=llm_cfg["model"],
-            api_key=llm_cfg["api_key"],
-            timeout=llm_cfg["timeout"],
-            max_tokens=llm_cfg["max_tokens"],
-        ))
+        llm_client = LLMClient(
+            LLMConfig(
+                provider=llm_cfg["provider"],
+                base_url=llm_cfg["base_url"],
+                model=llm_cfg["model"],
+                api_key=llm_cfg["api_key"],
+                timeout=llm_cfg["timeout"],
+                max_tokens=llm_cfg["max_tokens"],
+            )
+        )
         print(f"  LLM: {llm_cfg['provider']} / {llm_cfg['model']}")
     else:
         print("  LLM: 模拟模式")
@@ -429,25 +475,41 @@ def main():
     # ---- Run ----
     if args.interactive:
         run_interactive(
-            normalizer, rule_detector, semantic_detector,
-            fusion, desensitizer, output_checker,
-            audit_logger, llm_client,
+            normalizer,
+            rule_detector,
+            semantic_detector,
+            fusion,
+            desensitizer,
+            output_checker,
+            audit_logger,
+            llm_client,
         )
     elif args.scenario is not None:
         scenario = SCENARIOS[args.scenario]
         print(f"{Color.BOLD}── 场景 {args.scenario}: {scenario.name} ──{Color.RESET}")
         record = run_pipeline(
-            scenario.input_text, scenario.name,
-            normalizer, rule_detector, semantic_detector,
-            fusion, desensitizer, output_checker,
-            audit_logger, llm_client,
+            scenario.input_text,
+            scenario.name,
+            normalizer,
+            rule_detector,
+            semantic_detector,
+            fusion,
+            desensitizer,
+            output_checker,
+            audit_logger,
+            llm_client,
         )
         print_pipeline_result(record)
     else:
         run_all_scenarios(
-            normalizer, rule_detector, semantic_detector,
-            fusion, desensitizer, output_checker,
-            audit_logger, llm_client,
+            normalizer,
+            rule_detector,
+            semantic_detector,
+            fusion,
+            desensitizer,
+            output_checker,
+            audit_logger,
+            llm_client,
         )
 
     if llm_client:

@@ -21,8 +21,8 @@ class OutputCheckResult:
 
     @property
     def final_output(self) -> str:
-        """The output that should be returned to the user."""
-        return self.safe_output if not self.is_safe else self.original_output
+        """Return the safe replacement when output processing produced one."""
+        return self.safe_output or self.original_output
 
 
 class OutputChecker:
@@ -39,12 +39,14 @@ class OutputChecker:
 
     DEFAULT_BLOCK_MESSAGE = "抱歉，系统在处理您的请求时生成了不适宜内容，已被安全拦截。"
 
-    def __init__(self,
-                 rule_detector: RuleDetector,
-                 semantic_detector: SemanticDetector,
-                 risk_fusion: RiskFusion,
-                 block_message: str | None = None,
-                 desensitizer: Desensitizer | None = None):
+    def __init__(
+        self,
+        rule_detector: RuleDetector,
+        semantic_detector: SemanticDetector,
+        risk_fusion: RiskFusion,
+        block_message: str | None = None,
+        desensitizer: Desensitizer | None = None,
+    ):
         self._rule_detector = rule_detector
         self._semantic_detector = semantic_detector
         self._risk_fusion = risk_fusion

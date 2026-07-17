@@ -8,24 +8,24 @@ from typing import Optional
 class RiskLevel(str, Enum):
     """Three-tier risk classification."""
 
-    HIGH = "high"       # 高风险 — 直接拦截
-    MEDIUM = "medium"   # 中风险 — 脱敏后放行
-    LOW = "low"         # 低风险/正常 — 直接放行
+    HIGH = "high"  # 高风险 — 直接拦截
+    MEDIUM = "medium"  # 中风险 — 脱敏后放行
+    LOW = "low"  # 低风险/正常 — 直接放行
 
 
 class RiskCategory(str, Enum):
     """Four risk categories as defined in the spec."""
 
-    SEXUAL = "sexual"           # 色情低俗
-    VIOLENT = "violent"         # 暴力危险
-    ADVERTISING = "advertising" # 广告引流
-    SENSITIVE = "sensitive"     # 敏感话术
+    SEXUAL = "sexual"  # 色情低俗
+    VIOLENT = "violent"  # 暴力危险
+    ADVERTISING = "advertising"  # 广告引流
+    SENSITIVE = "sensitive"  # 敏感话术
 
 
 class DetectionSource(str, Enum):
     """Source of a detection result."""
 
-    RULE = "rule"       # 规则引擎命中
+    RULE = "rule"  # 规则引擎命中
     SEMANTIC = "semantic"  # 语义模型判断
 
 
@@ -40,12 +40,14 @@ class Evidence:
     source: DetectionSource
     category: RiskCategory
     confidence: float  # 0.0 ~ 1.0
-    matched_pattern: str = ""     # 命中的关键词/正则
-    matched_text: str = ""        # 命中的原文片段
-    explanation: str = ""         # 可解释的说明
+    matched_pattern: str = ""  # 命中的关键词/正则
+    matched_text: str = ""  # 命中的原文片段
+    explanation: str = ""  # 可解释的说明
     # Pipeline step that generated this evidence:
     # "normalize" | "rule" | "semantic" | "fusion" | "desensitize"
     step: str = ""
+    # 规则配置声明的风险等级；语义证据保持为空
+    declared_risk_level: RiskLevel | None = None
     # Extra structured data for rich visualization
     metadata: dict = field(default_factory=dict)
 

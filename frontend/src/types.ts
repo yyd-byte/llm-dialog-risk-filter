@@ -60,6 +60,37 @@ export interface RuleItem {
   updatedAt: string;
 }
 
+export interface RulePage {
+  items: RuleItem[];
+  page: number;
+  pageSize: number;
+  total: number;
+  version: string;
+}
+
+export interface RuleSourceSummary {
+  source: string;
+  ruleCount: number;
+  enabledCount: number;
+}
+
+export interface RuleMetadata {
+  version: string;
+  total: number;
+  enabledTotal: number;
+  categories: Array<{
+    category: RiskCategory;
+    label: string;
+    ruleCount: number;
+    enabledCount: number;
+  }>;
+  sources: RuleSourceSummary[];
+}
+
+export interface RuleMutationResponse {
+  item: RuleItem;
+  version: string;
+}
 export interface AuditRecord {
   requestId: string;
   timestamp: string;

@@ -1,46 +1,58 @@
-# 大模型内容风控系统前端
+# 前端开发说明
 
-这是面向答辩和联调的网页前端，基于 Vite + React + TypeScript 实现。当前后端接口尚未完成，页面通过 `src/api.ts` 中的 mock adapter 模拟检测链路，字段命名尽量对齐现有 Python 后端的数据模型。
+前端采用 React + TypeScript + Vite，位于 `frontend/`。它通过 `src/api.ts` 调用真实 FastAPI 后端，不使用 mock 数据。
 
-## 页面模块
+## 团队统一工具
 
-- 链路演示：展示输入规范化、规则召回、语义判断、风险融合、输出复检和最终处置。
-- 运营看板：展示请求趋势、明显违规拦截率、脱敏放行、输出复检拦截、风险类别占比。
-- 规则中心：展示四类风险规则的分类、启停、等级、来源和更新时间。
-- 审计日志：展示请求 ID、时间、动作、风险等级、是否调用 LLM、输出复检状态和耗时。
-- 误判反馈：展示误拦截、漏拦截、分类错误的反馈闭环。
+项目统一使用 **pnpm**：
 
-## 本地运行
+```bash
+pnpm install --frozen-lockfile
+pnpm dev
+pnpm build
+pnpm preview
+```
+
+请不要使用 npm 生成或提交 `package-lock.json`。
+
+## 本地开发
+
+先在仓库根目录启动后端：
+
+```bash
+python -m uvicorn src.api.server:app --reload --port 8000
+```
+
+再启动前端：
 
 ```bash
 cd frontend
-pnpm install
 pnpm dev
 ```
 
-默认访问地址：
+默认地址：
 
-```text
-http://127.0.0.1:5173/
-```
+- 前端：`http://127.0.0.1:5173/`
+- 后端：`http://127.0.0.1:8000/`
+- API 文档：`http://127.0.0.1:8000/docs`
 
-生产构建：
+当前 API base 固定为 `http://localhost:8000`，见 `src/api.ts`。开发后端必须使用 8000 端口；后端只允许本地 Vite 5173 来源跨域访问。
+
+## 前端功能
+
+- 链路演示：输入检测、风险等级、脱敏、输出复检。
+- 运营看板：请求统计与风险类别分布。
+- 规则中心：按类别、来源、启停状态分页筛选规则。
+- 审计与反馈：查看本地审计摘要、提交误判反馈。
+
+规则中心的启停与 YAML reload 是维护者操作：维护者在页面临时输入本地 `RULES_ADMIN_TOKEN` 后才可执行。该 token 不应放进任何前端 `.env`、浏览器存储、源代码或截图中。
+
+## 构建与发布前检查
 
 ```bash
 pnpm build
 ```
 
-构建产物会生成到 `frontend/dist/`，可以部署到 Nginx、静态资源服务器或后端框架的静态目录。
+该命令执行 TypeScript 构建和 Vite 生产构建。项目目前未配置独立前端测试框架；每次前端修改至少应运行 `pnpm build`，并与启动的后端完成一次实际联调。
 
-## 待后端接入接口
-
-当前页面预留了以下接口语义：
-
-```text
-POST /api/pipeline/check
-GET  /api/stats/overview
-GET  /api/rules
-POST /api/feedback
-```
-
-后端完成后，优先替换 `src/api.ts` 中的 `runPipeline` 方法，再逐步把 `src/data.ts` 中的 mock 数据替换为真实接口请求。
+完整操作流程、规则维护与团队协作规范见仓库根目录的 [使用手册](../docs/USAGE_MANUAL.md)。

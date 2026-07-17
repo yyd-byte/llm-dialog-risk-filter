@@ -1,0 +1,17 @@
+schema_version: 1
+policy_version: "2026-07-17.1"
+source:
+  repository: https://github.com/houbb/sensitive-word-data
+  commit: fe6fc2921836217b8c90619db81b24af8b22d80f
+  resource_path: src/main/resources/sensitive_word_tags.txt
+  sha256: 37cea2687a1525a436aaa080e918f6c263310bd21b4bce8b05ba5185ee3e5ae8
+license: Apache-2.0
+tag_signature_categories:
+  "2": sexual
+  "4": sensitive
+import_defaults:
+  pattern_type: keyword
+  risk_level: medium
+  enabled: true
+safety:
+  min_pattern_length: 3

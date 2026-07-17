@@ -50,7 +50,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ├── tests/                    # 单元测试 & 集成测试
 ├── scripts/
 │   ├── download_model.py     # 下载语义模型
-│   └── init_rules.py         # 初始化规则库
+│   ├── evaluate.py           # 量化评估
+│   ├── benchmark_rule_detector.py # 规则匹配性能基准
+│   ├── import_sensitive_words.py  # 受控标签词库导入
+│   └── init_rules.py         # 初始化规则库（会改写 YAML）
 └── data/                     # 运行时数据（logs/、models/、feedback/）
 ```
 
@@ -103,7 +106,16 @@ streamlit run src/dashboard/app.py
 # 下载语义模型
 python scripts/download_model.py
 
-# 初始化规则库
+# 规则层评估
+python scripts/evaluate.py --no-semantic
+
+# 规则匹配基准
+python scripts/benchmark_rule_detector.py --iterations 100
+
+# 受控词库导入（默认 dry-run；仅维护者在分支审查后使用 --apply）
+python scripts/import_sensitive_words.py --input <reviewed-tags-file>
+
+# 初始化规则库（会改写规则 YAML，禁止在 main 直接运行）
 python scripts/init_rules.py
 ```
 
@@ -115,8 +127,10 @@ python scripts/init_rules.py
 ## 配置要点
 
 - `config/default.yaml` 是全局配置文件
-- 规则文件在 `config/rules/`，每个类别一个 YAML，支持 `keywords` 和 `regex` 两种模式
-- 规则可动态启停，无需重启系统
+- 规则文件在 `config/rules/`，每个类别一个 YAML，支持 `keyword` 和 `regex` 两种模式
+- 手动 YAML 改动后需由规则维护者执行受保护 reload 或重启后端；启停 API 会持久化 YAML 并重建检测索引
+- `.env` 只保存本地 API Key；`RULES_ADMIN_TOKEN` 仅规则维护者保管，绝不提交或共享
+- 三人协作通过 feature branch + PR；规则、mapping、manifest 和风险配置改动至少需要规则维护者与另一位成员审查
 - 语义模型默认使用 `BAAI/bge-small-zh-v1.5`（通过 HuggingFace 镜像下载），未加载时自动回退到纯规则模式
 - 审计日志以 JSONL 格式写入 `data/logs/`，原始文本脱敏后存储
 

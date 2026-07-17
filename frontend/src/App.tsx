@@ -23,7 +23,7 @@ import {
   ToggleRight,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { fetchAuditLogs, fetchRules, fetchStats, runPipeline, submitFeedback } from "./api";
+import { fetchAuditLogs, fetchRuleMetadata, fetchRules, fetchStats, reloadRules, runPipeline, setRuleEnabled, submitFeedback } from "./api";
 import {
   actionLabels,
   categoryLabels,
@@ -32,7 +32,16 @@ import {
   stepLabels,
   stepIcons,
 } from "./data";
-import type { AuditRecord, CategoryStat, DailyStat, PipelineResult, RiskAction, RiskLevel, RuleItem } from "./types";
+import type {
+  AuditRecord,
+  CategoryStat,
+  DailyStat,
+  PipelineResult,
+  RiskAction,
+  RiskLevel,
+  RuleItem,
+  RuleMetadata,
+} from "./types";
 
 type View = "console" | "dashboard" | "rules" | "audit" | "feedback";
 
@@ -254,12 +263,12 @@ function ConsoleView() {
                         📊 规则{String(item.metadata.rule_count)}条 + 语义{String(item.metadata.semantic_count)}条
                       </span>
                     )}
-                    {item.metadata && item.metadata.changes && Array.isArray(item.metadata.changes) && (item.metadata.changes as string[]).length > 0 && (
+                    {item.metadata && Array.isArray(item.metadata.changes) && (item.metadata.changes as string[]).length > 0 && (
                       <span className="detail-chip">
                         🔧 {(item.metadata.changes as string[]).join(" · ")}
                       </span>
                     )}
-                    {item.metadata && item.metadata.original_fragment && (
+                    {item.metadata && item.metadata.original_fragment !== undefined && (
                       <span className="detail-chip">
                         🔒 &ldquo;{String(item.metadata.original_fragment)}&rdquo; → &ldquo;{String(item.metadata.replacement)}&rdquo;
                       </span>
@@ -375,61 +384,106 @@ function DashboardView() {
 
 function RulesView() {
   const [rules, setRules] = useState<RuleItem[]>([]);
-  const [query, setQuery] = useState("");
+  const [metadata, setMetadata] = useState<RuleMetadata | null>(null);
+  const [category, setCategory] = useState("");
+  const [source, setSource] = useState("");
+  const [enabled, setEnabled] = useState("");
+  const [page, setPage] = useState(1);
+  const [token, setToken] = useState("");
   const [loading, setLoading] = useState(true);
+  const [busyRule, setBusyRule] = useState("");
+  const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    fetchRules()
-      .then(setRules)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+  async function loadRules(nextPage = page) {
+    setLoading(true);
+    try {
+      const enabledFilter = enabled === "" ? undefined : enabled === "true";
+      const [rulePage, nextMetadata] = await Promise.all([
+        fetchRules({ page: nextPage, category, source, enabled: enabledFilter }),
+        fetchRuleMetadata(),
+      ]);
+      setRules(rulePage.items);
+      setMetadata(nextMetadata);
+      setPage(rulePage.page);
+    } catch {
+      setMessage("规则数据加载失败，请确认后端服务可用。");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  const filtered = rules.filter((rule) => {
-    const haystack = `${rule.id}${rule.pattern}${rule.description}${categoryLabels[rule.category]}`;
-    return haystack.toLowerCase().includes(query.toLowerCase());
-  });
+  useEffect(() => { void loadRules(1); }, [category, source, enabled]);
 
-  if (loading) {
+  async function handleEnabledChange(rule: RuleItem) {
+    if (!metadata || !token) return;
+    setBusyRule(rule.id);
+    setMessage("");
+    try {
+      await setRuleEnabled(rule.id, !rule.enabled, metadata.version, token);
+      await loadRules(page);
+      setMessage("规则状态已更新并生效。");
+    } catch {
+      setMessage("规则更新失败，请检查管理员令牌或刷新后重试。");
+    } finally {
+      setBusyRule("");
+    }
+  }
+
+  async function handleReload() {
+    if (!metadata || !token || !window.confirm("确认从本地 YAML 重新加载规则吗？")) return;
+    setMessage("");
+    try {
+      const nextMetadata = await reloadRules(metadata.version, token);
+      setMetadata(nextMetadata);
+      await loadRules(1);
+      setMessage("规则已重新加载并重建检测索引。");
+    } catch {
+      setMessage("规则重载失败，请检查管理员令牌或 YAML 文件。");
+    }
+  }
+
+  if (loading && !metadata) {
     return <section className="panel"><p style={{ padding: 40, textAlign: "center" }}>加载中...</p></section>;
   }
 
+  const totalPages = Math.max(1, Math.ceil((metadata?.total ?? 0) / 50));
   return (
     <section className="panel">
-      <PanelHeader icon={Database} title="规则词库管理" meta={`${rules.length} 条规则 · GET /api/rules`} />
+      <PanelHeader icon={Database} title="规则词库管理" meta={`${metadata?.enabledTotal ?? 0} / ${metadata?.total ?? 0} 条启用 · ${metadata?.version.slice(0, 20) ?? ""}`} />
       <div className="table-toolbar">
-        <label className="search-box">
-          <Search size={17} />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索规则、类别或说明" />
-        </label>
-        <button className="secondary-button" type="button">
-          <Download size={17} />
-          <span>导入导出</span>
+        <select value={category} onChange={(event) => setCategory(event.target.value)}>
+          <option value="">全部类别</option>
+          {Object.entries(categoryLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select>
+        <select value={source} onChange={(event) => setSource(event.target.value)}>
+          <option value="">全部来源</option>
+          {metadata?.sources.map((item) => <option key={item.source || "manual"} value={item.source}>{item.source || "手工规则"}</option>)}
+        </select>
+        <select value={enabled} onChange={(event) => setEnabled(event.target.value)}>
+          <option value="">全部状态</option><option value="true">已启用</option><option value="false">已停用</option>
+        </select>
+        <input type="password" value={token} onChange={(event) => setToken(event.target.value)} placeholder="管理员令牌" aria-label="管理员令牌" />
+        <button className="secondary-button" type="button" disabled={!token} onClick={handleReload}>
+          <RefreshCcw size={17} /><span>重新加载规则</span>
         </button>
       </div>
+      {message && <p style={{ padding: "0 20px", color: message.includes("失败") ? "#dc2626" : "#16a34a" }}>{message}</p>}
       <div className="data-table">
-        <div className="table-head rules-head">
-          <span>状态</span>
-          <span>规则</span>
-          <span>类别</span>
-          <span>等级</span>
-          <span>来源</span>
-          <span>更新</span>
-        </div>
-        {filtered.map((rule) => (
+        <div className="table-head rules-head"><span>状态</span><span>规则</span><span>类别</span><span>等级</span><span>来源</span><span>更新</span></div>
+        {rules.map((rule) => (
           <div className="table-row rules-row" key={rule.id}>
-            <span className="toggle-state">{rule.enabled ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}</span>
-            <div>
-              <strong>{rule.id}</strong>
-              <span>{rule.pattern}</span>
-              <small>{rule.description}</small>
-            </div>
-            <span>{categoryLabels[rule.category]}</span>
-            <RiskBadge level={rule.riskLevel} compact />
-            <span className="mono">{rule.source}</span>
-            <span>{rule.updatedAt}</span>
+            <button className="toggle-state" type="button" disabled={!token || busyRule === rule.id} onClick={() => void handleEnabledChange(rule)} aria-label={`${rule.enabled ? "停用" : "启用"}规则 ${rule.id}`}>
+              {rule.enabled ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+            </button>
+            <div><strong>{rule.id}</strong><span>{rule.pattern}</span><small>{rule.description}</small></div>
+            <span>{categoryLabels[rule.category]}</span><RiskBadge level={rule.riskLevel} compact />
+            <span className="mono">{rule.source || "手工规则"}</span><span>{rule.updatedAt || "未记录"}</span>
           </div>
         ))}
+      </div>
+      <div className="table-toolbar" style={{ justifyContent: "space-between" }}>
+        <span>第 {page} / {totalPages} 页</span>
+        <div><button className="secondary-button" type="button" disabled={page <= 1 || loading} onClick={() => void loadRules(page - 1)}>上一页</button> <button className="secondary-button" type="button" disabled={page >= totalPages || loading} onClick={() => void loadRules(page + 1)}>下一页</button></div>
       </div>
     </section>
   );

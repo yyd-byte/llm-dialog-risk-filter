@@ -56,9 +56,14 @@ risk_fusion:
   # 中风险阈值：综合置信度 >= 此值 → MEDIUM
   medium_threshold: 0.4
   # 低于 medium_threshold → LOW
-  # 规则命中权重（与语义模型权重相对）
+  # 规则命中权重（仅规则与语义在同一类别均有证据时使用）
   rule_weight: 0.5
   semantic_weight: 0.5
+  # 单条规则的策略强度：低风险需多条独立信号才会升级
+  rule_confidence:
+    low: 0.2
+    medium: 0.58
+    high: 1.0
 
 # --- Desensitization ---
 desensitization:

@@ -1,18 +1,19 @@
-"""Rule file loading and saving (YAML backend)."""
+"""Rule file loading and atomic saving (YAML backend)."""
 
+import hashlib
 import os
+import tempfile
 from pathlib import Path
-from typing import Optional
 
 import yaml
 
-from src.rules.models import Rule, RuleMatch
 from src.decision.models import RiskCategory, RiskLevel
+from src.rules.models import Rule
 from src.utils.exceptions import RuleLoadError
 
 
 class RuleRepository:
-    """Load and save rule files from YAML."""
+    """Load and atomically save category rule files from YAML."""
 
     def __init__(self, rules_dir: str):
         self.rules_dir = Path(rules_dir)
@@ -20,59 +21,91 @@ class RuleRepository:
             raise RuleLoadError(f"Rules directory not found: {rules_dir}")
 
     def load_category(self, category: RiskCategory) -> list[Rule]:
-        """Load all rules for a given category."""
-        filename = f"{category.value}.yaml"
-        filepath = self.rules_dir / filename
-        if not filepath.exists():
-            return []
-        return self._parse_rule_file(filepath)
+        """Load all rules for one category."""
+        filepath = self.rules_dir / f"{category.value}.yaml"
+        return self._parse_rule_file(filepath) if filepath.exists() else []
 
     def load_all(self) -> dict[RiskCategory, list[Rule]]:
-        """Load all rules from all category files."""
-        result: dict[RiskCategory, list[Rule]] = {}
-        for cat in RiskCategory:
-            result[cat] = self.load_category(cat)
-        return result
+        """Load all active category files into one snapshot."""
+        return {category: self.load_category(category) for category in RiskCategory}
 
     def save_category(self, category: RiskCategory, rules: list[Rule]) -> None:
-        """Save rules for a category to YAML file."""
-        filename = f"{category.value}.yaml"
-        filepath = self.rules_dir / filename
+        """Atomically persist one category's rules while retaining file metadata."""
+        filepath = self.rules_dir / f"{category.value}.yaml"
+        existing = self._load_raw(filepath)
         data = {
             "category": category.value,
-            "label": self._category_label(category),
-            "description": self._category_description(category),
-            "rules": [self._rule_to_dict(r) for r in rules],
+            "label": existing.get("label", self._category_label(category)),
+            "description": existing.get("description", self._category_description(category)),
+            "rules": [self._rule_to_dict(rule) for rule in rules],
         }
-        with open(filepath, "w", encoding="utf-8") as f:
-            yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+        content = yaml.dump(data, allow_unicode=True, default_flow_style=False, sort_keys=False)
+        self._atomic_write(filepath, content)
+
+    def version(self) -> str:
+        """Return a stable version for the four active category YAML files."""
+        digest = hashlib.sha256()
+        for category in RiskCategory:
+            path = self.rules_dir / f"{category.value}.yaml"
+            digest.update(category.value.encode("utf-8"))
+            digest.update(path.read_bytes() if path.exists() else b"")
+        return f"sha256:{digest.hexdigest()}"
 
     def _parse_rule_file(self, filepath: Path) -> list[Rule]:
-        """Parse a single YAML rule file into Rule objects."""
-        try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                data = yaml.safe_load(f)
-        except Exception as e:
-            raise RuleLoadError(f"Failed to parse {filepath}: {e}")
-
+        """Parse a single YAML rule file into rule objects."""
+        data = self._load_raw(filepath)
         if not data or "rules" not in data:
             return []
+        try:
+            category = RiskCategory(data.get("category", "sensitive"))
+            return [
+                Rule(
+                    id=item.get("id", ""),
+                    pattern=item.get("pattern", ""),
+                    pattern_type=item.get("pattern_type", "keyword"),
+                    category=category,
+                    risk_level=RiskLevel(item.get("risk_level", "high")),
+                    enabled=item.get("enabled", True),
+                    description=item.get("description", ""),
+                    source=item.get("source", ""),
+                    created_at=item.get("created_at", ""),
+                    updated_at=item.get("updated_at", ""),
+                )
+                for item in data["rules"]
+            ]
+        except (TypeError, ValueError) as error:
+            raise RuleLoadError(f"Invalid rule data in {filepath}: {error}") from error
 
-        rules = []
-        for item in data["rules"]:
-            rules.append(Rule(
-                id=item.get("id", ""),
-                pattern=item.get("pattern", ""),
-                pattern_type=item.get("pattern_type", "keyword"),
-                category=RiskCategory(data.get("category", data.get("category", "sensitive"))),
-                risk_level=RiskLevel(item.get("risk_level", "high")),
-                enabled=item.get("enabled", True),
-                description=item.get("description", ""),
-            ))
-        return rules
+    @staticmethod
+    def _load_raw(filepath: Path) -> dict:
+        try:
+            with filepath.open("r", encoding="utf-8") as file:
+                data = yaml.safe_load(file) or {}
+        except (OSError, yaml.YAMLError) as error:
+            raise RuleLoadError(f"Failed to parse {filepath}: {error}") from error
+        if not isinstance(data, dict):
+            raise RuleLoadError(f"YAML root must be a mapping: {filepath}")
+        return data
 
-    def _rule_to_dict(self, rule: Rule) -> dict:
-        """Convert a Rule object to a dictionary for YAML serialization."""
+    @staticmethod
+    def _atomic_write(filepath: Path, content: str) -> None:
+        """Replace one YAML file atomically after flushing its temporary payload."""
+        descriptor, temp_name = tempfile.mkstemp(prefix=f".{filepath.name}.", dir=filepath.parent)
+        try:
+            with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as file:
+                file.write(content)
+                file.flush()
+                os.fsync(file.fileno())
+            os.replace(temp_name, filepath)
+        except OSError as error:
+            raise RuleLoadError(f"Failed to save {filepath}: {error}") from error
+        finally:
+            if os.path.exists(temp_name):
+                os.unlink(temp_name)
+
+    @staticmethod
+    def _rule_to_dict(rule: Rule) -> dict:
+        """Convert one rule to its persisted YAML representation."""
         return {
             "id": rule.id,
             "pattern": rule.pattern,
@@ -80,24 +113,25 @@ class RuleRepository:
             "risk_level": rule.risk_level.value,
             "enabled": rule.enabled,
             "description": rule.description,
+            "source": rule.source,
+            "created_at": rule.created_at,
+            "updated_at": rule.updated_at,
         }
 
     @staticmethod
     def _category_label(category: RiskCategory) -> str:
-        labels = {
+        return {
             RiskCategory.SEXUAL: "色情低俗",
             RiskCategory.VIOLENT: "暴力危险",
             RiskCategory.ADVERTISING: "广告引流",
             RiskCategory.SENSITIVE: "敏感话术",
-        }
-        return labels.get(category, "")
+        }.get(category, "")
 
     @staticmethod
     def _category_description(category: RiskCategory) -> str:
-        descriptions = {
+        return {
             RiskCategory.SEXUAL: "检测色情、低俗、性暗示等违规内容",
             RiskCategory.VIOLENT: "检测暴力、威胁、自残、危险行为等违规内容",
             RiskCategory.ADVERTISING: "检测广告推广、联系方式引流、重复营销话术等违规内容",
             RiskCategory.SENSITIVE: "检测政治敏感、违法违规、谣言等敏感话术",
-        }
-        return descriptions.get(category, "")
+        }.get(category, "")

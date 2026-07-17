@@ -1,105 +1,105 @@
-"""Rule management — CRUD operations, enable/disable, import/export."""
+"""Rule management — queries, persistence, and enable-state operations."""
 
-import copy
 from datetime import datetime
-from typing import Optional
+from threading import RLock
 
-from src.rules.models import Rule, RuleCategoryMeta, RuleMatch
-from src.rules.repository import RuleRepository
 from src.decision.models import RiskCategory, RiskLevel
+from src.rules.models import Rule, RuleCategoryMeta
+from src.rules.repository import RuleRepository
+
+
+class RuleVersionConflictError(Exception):
+    """Raised when a rule mutation targets an outdated ruleset version."""
 
 
 class RuleManager:
-    """Manages the lifecycle of detection rules.
-
-    Provides CRUD, enable/disable toggle, batch import/export, and
-    category-level statistics.
-    """
+    """Manage one in-memory rule snapshot backed by category YAML files."""
 
     def __init__(self, repository: RuleRepository):
         self._repo = repository
+        self._lock = RLock()
         self._rules: dict[RiskCategory, list[Rule]] = {}
         self.reload()
 
-    # ---- Lifecycle ----
-
     def reload(self) -> None:
-        """Reload all rules from disk."""
-        self._rules = self._repo.load_all()
+        """Replace the current snapshot only after all files load successfully."""
+        candidate = self._repo.load_all()
+        with self._lock:
+            self._rules = candidate
 
-    def save(self) -> None:
-        """Save all rules to disk."""
-        for category, rules in self._rules.items():
-            self._repo.save_category(category, rules)
+    def rebuild_version(self) -> str:
+        """Return the current persisted ruleset version."""
+        return self._repo.version()
 
-    # ---- Query ----
+    def get_enabled_rules(self, category: RiskCategory | None = None) -> list[Rule]:
+        """Get enabled rules, optionally scoped to one category."""
+        with self._lock:
+            if category:
+                return [rule for rule in self._rules.get(category, []) if rule.enabled]
+            return [rule for rules in self._rules.values() for rule in rules if rule.enabled]
 
-    def get_enabled_rules(self, category: Optional[RiskCategory] = None) -> list[Rule]:
-        """Get all enabled rules, optionally filtered by category."""
-        if category:
-            return [r for r in self._rules.get(category, []) if r.enabled]
-        result = []
-        for rules in self._rules.values():
-            result.extend(r for r in rules if r.enabled)
-        return result
-
-    def get_all_rules(self, category: Optional[RiskCategory] = None) -> list[Rule]:
-        """Get all rules, optionally filtered by category."""
-        if category:
-            return list(self._rules.get(category, []))
-        result = []
-        for rules in self._rules.values():
-            result.extend(rules)
-        return result
-
-    def get_rule_by_id(self, rule_id: str) -> Optional[Rule]:
-        """Find a rule by its unique ID."""
-        for rules in self._rules.values():
-            for r in rules:
-                if r.id == rule_id:
-                    return r
-        return None
-
-    # ---- Mutation ----
+    def get_all_rules(self, category: RiskCategory | None = None) -> list[Rule]:
+        """Get all rules, optionally scoped to one category."""
+        with self._lock:
+            if category:
+                return list(self._rules.get(category, []))
+            return [rule for rules in self._rules.values() for rule in rules]
 
     def add_rule(self, rule: Rule) -> None:
-        """Add a new rule to its category."""
-        self._rules.setdefault(rule.category, []).append(rule)
+        """Add one rule to the current in-memory snapshot."""
+        with self._lock:
+            self._rules.setdefault(rule.category, []).append(rule)
 
-    def update_rule(self, rule_id: str, **kwargs) -> bool:
-        """Update fields of an existing rule. Returns True if found."""
-        rule = self.get_rule_by_id(rule_id)
-        if not rule:
-            return False
-        for key, value in kwargs.items():
-            if hasattr(rule, key):
-                setattr(rule, key, value)
-        rule.updated_at = datetime.now().isoformat()
-        return True
+    def get_rule_by_id(self, rule_id: str) -> Rule | None:
+        """Find one rule by ID."""
+        with self._lock:
+            for rules in self._rules.values():
+                for rule in rules:
+                    if rule.id == rule_id:
+                        return rule
+        return None
 
-    def delete_rule(self, rule_id: str) -> bool:
-        """Delete a rule by ID. Returns True if found and deleted."""
-        for cat, rules in self._rules.items():
-            for i, r in enumerate(rules):
-                if r.id == rule_id:
-                    self._rules[cat].pop(i)
-                    return True
-        return False
+    def list_rules(
+        self,
+        category: RiskCategory | None = None,
+        source: str | None = None,
+        enabled: bool | None = None,
+        page: int = 1,
+        page_size: int = 50,
+    ) -> tuple[list[Rule], int]:
+        """Return a stable filtered page of rules and its total count."""
+        rules = self.get_all_rules(category)
+        if source is not None:
+            rules = [rule for rule in rules if rule.source == source]
+        if enabled is not None:
+            rules = [rule for rule in rules if rule.enabled == enabled]
+        total = len(rules)
+        start = (page - 1) * page_size
+        return rules[start : start + page_size], total
 
-    def toggle_rule(self, rule_id: str) -> bool:
-        """Toggle a rule's enabled status. Returns True if found."""
-        rule = self.get_rule_by_id(rule_id)
-        if not rule:
-            return False
-        rule.enabled = not rule.enabled
-        rule.updated_at = datetime.now().isoformat()
-        return True
-
-    # ---- Statistics ----
+    def set_rule_enabled(
+        self,
+        rule_id: str,
+        enabled: bool,
+        expected_version: str,
+    ) -> tuple[Rule, str, bool]:
+        """Persist an explicit enabled state and return rule, version, and prior state."""
+        with self._lock:
+            current_version = self._repo.version()
+            if expected_version != current_version:
+                raise RuleVersionConflictError(current_version)
+            rule = self.get_rule_by_id(rule_id)
+            if rule is None:
+                raise KeyError(rule_id)
+            previous_enabled = rule.enabled
+            if previous_enabled != enabled:
+                rule.enabled = enabled
+                rule.updated_at = datetime.now().isoformat()
+                self._repo.save_category(rule.category, self._rules[rule.category])
+            return rule, self._repo.version(), previous_enabled
 
     def get_category_meta(self) -> list[RuleCategoryMeta]:
-        """Get metadata for all categories."""
-        metas = []
+        """Get rule counts and labels for every category."""
         labels = {
             RiskCategory.SEXUAL: "色情低俗",
             RiskCategory.VIOLENT: "暴力危险",
@@ -112,47 +112,62 @@ class RuleManager:
             RiskCategory.ADVERTISING: "检测广告推广、联系方式引流、重复营销话术等违规内容",
             RiskCategory.SENSITIVE: "检测政治敏感、违法违规、谣言等敏感话术",
         }
-        for cat in RiskCategory:
-            rules = self._rules.get(cat, [])
-            metas.append(RuleCategoryMeta(
-                category=cat,
-                label=labels.get(cat, ""),
-                description=descriptions.get(cat, ""),
-                rule_count=len(rules),
-                enabled_count=sum(1 for r in rules if r.enabled),
-            ))
-        return metas
+        with self._lock:
+            return [
+                RuleCategoryMeta(
+                    category=category,
+                    label=labels[category],
+                    description=descriptions[category],
+                    rule_count=len(self._rules.get(category, [])),
+                    enabled_count=sum(rule.enabled for rule in self._rules.get(category, [])),
+                )
+                for category in RiskCategory
+            ]
 
-    # ---- Import / Export ----
-
-    def export_rules(self, category: RiskCategory) -> list[dict]:
-        """Export rules as list of dicts."""
+    def source_counts(self) -> list[dict]:
+        """Return deterministic provenance counts for loaded rules."""
+        counts: dict[str, list[Rule]] = {}
+        for rule in self.get_all_rules():
+            counts.setdefault(rule.source, []).append(rule)
         return [
             {
-                "id": r.id,
-                "pattern": r.pattern,
-                "pattern_type": r.pattern_type,
-                "category": r.category.value,
-                "risk_level": r.risk_level.value,
-                "enabled": r.enabled,
-                "description": r.description,
+                "source": source,
+                "rule_count": len(rules),
+                "enabled_count": sum(rule.enabled for rule in rules),
             }
-            for r in self._rules.get(category, [])
+            for source, rules in sorted(counts.items())
+        ]
+
+    def export_rules(self, category: RiskCategory) -> list[dict]:
+        """Export rules as serializable dictionaries."""
+        return [
+            {
+                "id": rule.id,
+                "pattern": rule.pattern,
+                "pattern_type": rule.pattern_type,
+                "category": rule.category.value,
+                "risk_level": rule.risk_level.value,
+                "enabled": rule.enabled,
+                "description": rule.description,
+                "source": rule.source,
+            }
+            for rule in self.get_all_rules(category)
         ]
 
     def import_rules(self, category: RiskCategory, rules_data: list[dict]) -> int:
-        """Import rules from list of dicts. Returns count of imported rules."""
-        count = 0
-        for item in rules_data:
-            rule = Rule(
-                id=item.get("id", f"import-{datetime.now().timestamp()}"),
-                pattern=item["pattern"],
-                pattern_type=item.get("pattern_type", "keyword"),
-                category=category,
-                risk_level=RiskLevel(item.get("risk_level", "high")),
-                enabled=item.get("enabled", True),
-                description=item.get("description", ""),
-            )
-            self.add_rule(rule)
-            count += 1
-        return count
+        """Add supplied rules to memory for compatibility with existing callers."""
+        with self._lock:
+            for item in rules_data:
+                self._rules.setdefault(category, []).append(
+                    Rule(
+                        id=item.get("id", f"import-{datetime.now().timestamp()}"),
+                        pattern=item["pattern"],
+                        pattern_type=item.get("pattern_type", "keyword"),
+                        category=category,
+                        risk_level=RiskLevel(item.get("risk_level", "high")),
+                        enabled=item.get("enabled", True),
+                        description=item.get("description", ""),
+                        source=item.get("source", ""),
+                    )
+                )
+        return len(rules_data)

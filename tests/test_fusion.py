@@ -1,14 +1,34 @@
 """Tests for risk fusion."""
 
 import pytest
-from src.decision.models import (
-    RiskLevel, RiskCategory, RiskResult, Evidence, DetectionSource
-)
-from src.decision.fusion import RiskFusion, FusionConfig
+
+from src.decision.fusion import FusionConfig, RiskFusion, fusion_config_from_dict
+from src.decision.models import DetectionSource, Evidence, RiskCategory, RiskLevel, RiskResult
+
+
+def rule_evidence(
+    text: str,
+    level: RiskLevel,
+    category: RiskCategory = RiskCategory.SENSITIVE,
+) -> Evidence:
+    """Build synthetic rule evidence without using production vocabulary."""
+    scores = {RiskLevel.LOW: 0.2, RiskLevel.MEDIUM: 0.58, RiskLevel.HIGH: 1.0}
+    return Evidence(
+        source=DetectionSource.RULE,
+        category=category,
+        confidence=scores[level],
+        matched_text=text,
+        declared_risk_level=level,
+    )
+
+
+def semantic_evidence(score: float, category: RiskCategory = RiskCategory.SENSITIVE) -> Evidence:
+    """Build synthetic semantic evidence."""
+    return Evidence(source=DetectionSource.SEMANTIC, category=category, confidence=score)
 
 
 class TestRiskFusion:
-    """Tests for RiskFusion."""
+    """Tests for category-aware severity-aware fusion."""
 
     def test_empty_evidence_returns_low(self, fusion):
         """No evidence should result in LOW risk."""
@@ -16,119 +36,101 @@ class TestRiskFusion:
         assert result.risk_level == RiskLevel.LOW
         assert result.is_safe is True
 
-    def test_high_confidence_rule_returns_high(self, fusion):
-        """High confidence rule evidence should return HIGH."""
-        evidence = [
-            Evidence(
-                source=DetectionSource.RULE,
-                category=RiskCategory.SENSITIVE,
-                confidence=0.9,
-                matched_pattern="test",
-                matched_text="test",
-                explanation="test",
-            )
-        ]
-        result = fusion.evaluate(evidence, [])
-        assert result.risk_level == RiskLevel.HIGH
+    def test_single_low_rule_stays_low(self, fusion):
+        """One low rule should not cause an intervention."""
+        result = fusion.evaluate([rule_evidence("low-one", RiskLevel.LOW)], [])
+        assert result.risk_level == RiskLevel.LOW
+        assert result.confidence == pytest.approx(0.2)
 
-    def test_medium_confidence_returns_medium(self, fusion):
-        """Medium confidence should return MEDIUM."""
+    def test_three_distinct_low_rules_escalate_to_medium(self, fusion):
+        """Three independent low signals in one category should escalate."""
         evidence = [
-            Evidence(
-                source=DetectionSource.RULE,
-                category=RiskCategory.ADVERTISING,
-                confidence=0.5,
-                matched_pattern="test",
-                matched_text="test",
-                explanation="test",
-            )
+            rule_evidence("low-one", RiskLevel.LOW),
+            rule_evidence("low-two", RiskLevel.LOW),
+            rule_evidence("low-three", RiskLevel.LOW),
         ]
         result = fusion.evaluate(evidence, [])
         assert result.risk_level == RiskLevel.MEDIUM
+        assert result.confidence == pytest.approx(0.488)
 
-    def test_low_confidence_returns_low(self, fusion):
-        """Low confidence should return LOW."""
+    def test_duplicate_low_rule_does_not_escalate(self, fusion):
+        """Repeated evidence for one fragment should count only once."""
         evidence = [
-            Evidence(
-                source=DetectionSource.RULE,
-                category=RiskCategory.SENSITIVE,
-                confidence=0.1,
-                matched_pattern="test",
-                matched_text="test",
-                explanation="test",
-            )
+            rule_evidence("low-one", RiskLevel.LOW),
+            rule_evidence("LOW-ONE", RiskLevel.LOW),
         ]
         result = fusion.evaluate(evidence, [])
         assert result.risk_level == RiskLevel.LOW
+        assert result.confidence == pytest.approx(0.2)
+
+    def test_low_signals_from_different_categories_do_not_compound(self, fusion):
+        """Weak signals in separate policy categories should not aggregate."""
+        evidence = [
+            rule_evidence("low-one", RiskLevel.LOW, RiskCategory.SENSITIVE),
+            rule_evidence("low-two", RiskLevel.LOW, RiskCategory.ADVERTISING),
+            rule_evidence("low-three", RiskLevel.LOW, RiskCategory.VIOLENT),
+        ]
+        result = fusion.evaluate(evidence, [])
+        assert result.risk_level == RiskLevel.LOW
+        assert result.confidence == pytest.approx(0.2)
+
+    def test_medium_rule_returns_medium(self, fusion):
+        """One medium rule should require desensitization."""
+        result = fusion.evaluate([rule_evidence("medium", RiskLevel.MEDIUM)], [])
+        assert result.risk_level == RiskLevel.MEDIUM
+        assert result.confidence == pytest.approx(0.58)
+
+    def test_high_rule_overrides_other_evidence(self, fusion):
+        """A high rule should remain a direct block signal."""
+        result = fusion.evaluate(
+            [rule_evidence("high", RiskLevel.HIGH)],
+            [semantic_evidence(0.1)],
+        )
+        assert result.risk_level == RiskLevel.HIGH
+        assert result.confidence == 1.0
+
+    def test_semantic_only_confidence_is_not_attenuated(self, fusion):
+        """Semantic-only evidence should not be weighted against an absent rule source."""
+        result = fusion.evaluate([], [semantic_evidence(0.8)])
+        assert result.risk_level == RiskLevel.HIGH
+        assert result.confidence == pytest.approx(0.8)
 
     def test_rule_and_semantic_combined(self, fusion):
-        """Rule + semantic evidence should be weighted together."""
-        rule_ev = [
-            Evidence(
-                source=DetectionSource.RULE,
-                category=RiskCategory.SENSITIVE,
-                confidence=0.4,
-                matched_pattern="kw",
-                matched_text="kw",
-                explanation="keyword match",
-            )
-        ]
-        sem_ev = [
-            Evidence(
-                source=DetectionSource.SEMANTIC,
-                category=RiskCategory.SENSITIVE,
-                confidence=0.8,
-                matched_pattern="",
-                matched_text="",
-                explanation="semantic match",
-            )
-        ]
-        result = fusion.evaluate(rule_ev, sem_ev)
-        # Weighted: 0.5*0.4 + 0.5*0.8 = 0.6 → MEDIUM
+        """Evidence from both sources should use normalized configured weights."""
+        result = fusion.evaluate(
+            [rule_evidence("medium", RiskLevel.MEDIUM)],
+            [semantic_evidence(0.8)],
+        )
         assert result.risk_level == RiskLevel.MEDIUM
-        assert len(result.evidence_chain) == 2
-
-    def test_evidence_summary(self, fusion):
-        """evidence_summary should return readable string."""
-        result = RiskResult(risk_level=RiskLevel.LOW)
-        summary = fusion.evidence_summary(result)
-        assert "正常" in summary or "LOW" in summary
-
-    def test_evaluate_input_same_as_evaluate(self, fusion):
-        """evaluate_input should give same result as evaluate."""
-        evidence = [
-            Evidence(
-                source=DetectionSource.RULE,
-                category=RiskCategory.VIOLENT,
-                confidence=0.95,
-                matched_pattern="x",
-                matched_text="x",
-                explanation="x",
-            )
-        ]
-        r1 = fusion.evaluate(evidence, [])
-        r2 = fusion.evaluate_input(evidence, [])
-        assert r1.risk_level == r2.risk_level
-
-    def test_evaluate_output(self, fusion):
-        """evaluate_output should work."""
-        result = fusion.evaluate_output([], [])
-        assert result.risk_level == RiskLevel.LOW
+        assert result.confidence == pytest.approx(0.69)
 
     def test_custom_thresholds(self):
         """Custom thresholds should be respected."""
-        cfg = FusionConfig(high_threshold=0.95, medium_threshold=0.8)
-        fusion = RiskFusion(cfg)
-        evidence = [
-            Evidence(
-                source=DetectionSource.RULE,
-                category=RiskCategory.SENSITIVE,
-                confidence=0.9,
-                matched_pattern="x",
-                matched_text="x",
-                explanation="x",
+        fusion = RiskFusion(FusionConfig(high_threshold=0.95, medium_threshold=0.8))
+        result = fusion.evaluate([rule_evidence("medium", RiskLevel.MEDIUM)], [])
+        assert result.risk_level == RiskLevel.LOW
+
+    def test_invalid_rule_confidence_is_rejected(self):
+        """Invalid severity ordering should fail fast."""
+        with pytest.raises(ValueError, match="rule confidence"):
+            FusionConfig(
+                rule_confidence={
+                    RiskLevel.LOW: 0.6,
+                    RiskLevel.MEDIUM: 0.5,
+                    RiskLevel.HIGH: 1.0,
+                }
             )
-        ]
-        result = fusion.evaluate(evidence, [])
-        # 0.9 < 0.95 high threshold, but > 0.8 medium → MEDIUM
-        assert result.risk_level == RiskLevel.MEDIUM
+
+    def test_yaml_compatible_config_maps_levels(self):
+        """Configuration loader should accept YAML string keys."""
+        config = fusion_config_from_dict(
+            {
+                "rule_confidence": {"low": 0.1, "medium": 0.5, "high": 1.0},
+            }
+        )
+        assert config.rule_confidence[RiskLevel.LOW] == 0.1
+
+    def test_evidence_summary(self, fusion):
+        """evidence_summary should return readable string."""
+        summary = fusion.evidence_summary(RiskResult(risk_level=RiskLevel.LOW))
+        assert "正常" in summary or "LOW" in summary

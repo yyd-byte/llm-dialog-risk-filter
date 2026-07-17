@@ -32,8 +32,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from src.detection.normalizer import TextNormalizer, NormalizerConfig
 from src.detection.rule_detector import RuleDetector
 from src.detection.semantic_detector import SemanticDetector
-from src.decision.fusion import RiskFusion, FusionConfig
-from src.decision.models import RiskLevel, RiskCategory
+from src.decision.fusion import RiskFusion, fusion_config_from_dict
 from src.rules.manager import RuleManager
 from src.rules.repository import RuleRepository
 
@@ -42,11 +41,12 @@ from src.rules.repository import RuleRepository
 # Data Models
 # =============================================================================
 
+
 @dataclass
 class TestCase:
     id: str
     text: str
-    expected_risk: str          # "high" | "medium" | "low"
+    expected_risk: str  # "high" | "medium" | "low"
     expected_category: Optional[str] = None  # "sexual" | "violent" | ...
     note: str = ""
     bypass_types: list[str] = field(default_factory=list)
@@ -68,6 +68,7 @@ class EvalResult:
 # =============================================================================
 # Loader
 # =============================================================================
+
 
 def load_yaml_map(path: str) -> dict[str, str]:
     p = Path(path)
@@ -94,14 +95,16 @@ def load_test_cases(cases_dir: str) -> list[TestCase]:
         file_expected_category = data.get("expected_category")
 
         for entry in data.get("cases", []):
-            cases.append(TestCase(
-                id=entry.get("id", ""),
-                text=entry.get("text", ""),
-                expected_risk=entry.get("expected_risk", file_expected_risk),
-                expected_category=entry.get("expected_category", file_expected_category),
-                note=entry.get("note", ""),
-                bypass_types=entry.get("bypass_types", []),
-            ))
+            cases.append(
+                TestCase(
+                    id=entry.get("id", ""),
+                    text=entry.get("text", ""),
+                    expected_risk=entry.get("expected_risk", file_expected_risk),
+                    expected_category=entry.get("expected_category", file_expected_category),
+                    note=entry.get("note", ""),
+                    bypass_types=entry.get("bypass_types", []),
+                )
+            )
 
     return cases
 
@@ -109,6 +112,7 @@ def load_test_cases(cases_dir: str) -> list[TestCase]:
 # =============================================================================
 # Pipeline Runner
 # =============================================================================
+
 
 def build_normalizer() -> TextNormalizer:
     """Build TextNormalizer with all funNLP config maps loaded."""
@@ -175,6 +179,7 @@ def run_pipeline(
 # Metrics
 # =============================================================================
 
+
 @dataclass
 class Metrics:
     total: int
@@ -184,16 +189,16 @@ class Metrics:
     # Per-category
     per_category: dict[str, dict[str, float]]  # {cat: {precision, recall, f1, support}}
     # Binary (violation detection)
-    true_positives: int       # violation → predicted violation
-    false_positives: int      # normal → predicted violation
-    true_negatives: int       # normal → predicted normal
-    false_negatives: int      # violation → predicted normal
-    fpr: float                # false positive rate
-    fnr: float                # false negative rate
+    true_positives: int  # violation → predicted violation
+    false_positives: int  # normal → predicted violation
+    true_negatives: int  # normal → predicted normal
+    false_negatives: int  # violation → predicted normal
+    fpr: float  # false positive rate
+    fnr: float  # false negative rate
     # Timing
     avg_duration_ms: float
     # Details
-    misclassified: list[EvalResult]   # false positives + false negatives
+    misclassified: list[EvalResult]  # false positives + false negatives
     per_bypass_type: dict[str, dict[str, float]]  # {bypass_type: {correct, total, rate}}
 
 
@@ -216,8 +221,8 @@ def compute_metrics(results: list[EvalResult]) -> Metrics:
 
         # For each category: is this case expected to be in it?
         for cat in categories:
-            exp_in_cat = (expected_cat == cat)
-            pred_in_cat = (predicted_cat == cat)
+            exp_in_cat = expected_cat == cat
+            pred_in_cat = predicted_cat == cat
 
             if exp_in_cat and pred_in_cat:
                 per_cat[cat]["tp"] += 1
@@ -251,8 +256,8 @@ def compute_metrics(results: list[EvalResult]) -> Metrics:
     fn = 0  # violation → predicted normal
 
     for r in results:
-        exp_is_safe = (r.case.expected_risk == "low")
-        pred_is_safe = (r.predicted_risk == "low")
+        exp_is_safe = r.case.expected_risk == "low"
+        pred_is_safe = r.predicted_risk == "low"
 
         if exp_is_safe and pred_is_safe:
             tn += 1
@@ -307,6 +312,7 @@ def compute_metrics(results: list[EvalResult]) -> Metrics:
 # Reporters
 # =============================================================================
 
+
 def report_console(metrics: Metrics) -> str:
     """Generate a human-readable console report."""
     lines = []
@@ -316,7 +322,9 @@ def report_console(metrics: Metrics) -> str:
     lines.append("  内容风控系统 — 量化评估报告")
     lines.append(sep)
     lines.append(f"  测试用例总数: {metrics.total}")
-    lines.append(f"  风险等级准确率: {metrics.accuracy:.1%} ({metrics.correct_risk}/{metrics.total})")
+    lines.append(
+        f"  风险等级准确率: {metrics.accuracy:.1%} ({metrics.correct_risk}/{metrics.total})"
+    )
     lines.append(f"  类别分类准确率: {metrics.correct_category}/{metrics.total}")
     lines.append(f"  平均处理时间: {metrics.avg_duration_ms:.2f} ms")
     lines.append("")
@@ -331,7 +339,7 @@ def report_console(metrics: Metrics) -> str:
 
     # Per-category
     lines.append(f"  {'类别':<14} {'精确率':>8} {'召回率':>8} {'F1':>8} {'样本数':>6}")
-    lines.append(f"  {'-'*44}")
+    lines.append(f"  {'-' * 44}")
     for cat in ["normal", "sexual", "violent", "advertising", "sensitive"]:
         m = metrics.per_category.get(cat, {})
         lines.append(
@@ -345,19 +353,20 @@ def report_console(metrics: Metrics) -> str:
     if metrics.per_bypass_type:
         lines.append(f"  绕过类型检出率:")
         for bt, stats in metrics.per_bypass_type.items():
-            lines.append(f"    {bt:<16} {stats['correct']:>3}/{stats['total']:<3} = {stats['rate']:.1%}")
+            lines.append(
+                f"    {bt:<16} {stats['correct']:>3}/{stats['total']:<3} = {stats['rate']:.1%}"
+            )
         lines.append("")
 
     # Misclassified details
     if metrics.misclassified:
         lines.append(f"  误判/漏报详情 ({len(metrics.misclassified)} 条):")
         lines.append(f"  {'ID':<18} {'期望':>6} {'预测':>6} {'文本'}")
-        lines.append(f"  {'-'*60}")
+        lines.append(f"  {'-' * 60}")
         for r in metrics.misclassified:
             text_preview = r.case.text[:32].replace("\n", " ")
             lines.append(
-                f"  {r.case.id:<18} {r.case.expected_risk:>6} {r.predicted_risk:>6} "
-                f"{text_preview}"
+                f"  {r.case.id:<18} {r.case.expected_risk:>6} {r.predicted_risk:>6} {text_preview}"
             )
         lines.append("")
 
@@ -408,8 +417,7 @@ def report_markdown(metrics: Metrics) -> str:
         for r in metrics.misclassified:
             text_preview = r.case.text[:40].replace("\n", " ")
             lines.append(
-                f"| {r.case.id} | {r.case.expected_risk} | "
-                f"{r.predicted_risk} | {text_preview} |"
+                f"| {r.case.id} | {r.case.expected_risk} | {r.predicted_risk} | {text_preview} |"
             )
         lines.append("")
 
@@ -452,27 +460,38 @@ def report_json(metrics: Metrics) -> str:
 # Main
 # =============================================================================
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate content filtering pipeline")
     parser.add_argument(
-        "--cases-dir", default="data/test_cases",
+        "--cases-dir",
+        default="data/test_cases",
         help="Directory containing test case YAML files (default: data/test_cases)",
     )
     parser.add_argument(
-        "--output", choices=["console", "markdown", "json"],
+        "--output",
+        choices=["console", "markdown", "json"],
         default="console",
         help="Output format (default: console)",
     )
     parser.add_argument(
-        "--no-semantic", action="store_true",
+        "--no-semantic",
+        action="store_true",
         help="Skip semantic model loading (rules-only evaluation, faster)",
     )
     parser.add_argument(
-        "--rules-dir", default="config/rules",
+        "--config",
+        default="config/default.yaml",
+        help="风险策略配置文件（默认: config/default.yaml）",
+    )
+    parser.add_argument(
+        "--rules-dir",
+        default="config/rules",
         help="Rules directory (default: config/rules)",
     )
     parser.add_argument(
-        "--detail", action="store_true",
+        "--detail",
+        action="store_true",
         help="Show per-case results even when correct",
     )
     args = parser.parse_args()
@@ -488,9 +507,13 @@ def main() -> None:
     print("Initializing pipeline...")
     normalizer = build_normalizer()
 
+    with open(args.config, "r", encoding="utf-8") as f:
+        app_config = yaml.safe_load(f) or {}
+    fusion_config = fusion_config_from_dict(app_config.get("risk_fusion", {}))
+
     repo = RuleRepository(args.rules_dir)
     manager = RuleManager(repo)
-    rule_detector = RuleDetector(manager)
+    rule_detector = RuleDetector(manager, level_confidence=fusion_config.rule_confidence)
 
     semantic_detector: SemanticDetector | None = None
     if not args.no_semantic:
@@ -506,12 +529,7 @@ def main() -> None:
             print(f"  Semantic model unavailable: {e}")
             print("  Falling back to rules-only mode")
 
-    fusion = RiskFusion(FusionConfig(
-        high_threshold=0.8,
-        medium_threshold=0.4,
-        rule_weight=0.5,
-        semantic_weight=0.5,
-    ))
+    fusion = RiskFusion(fusion_config)
 
     # Run evaluation
     print(f"Running evaluation on {len(cases)} cases...")

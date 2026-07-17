@@ -150,6 +150,9 @@ activemq-data/
 # Environments
 .env
 .envrc
+.env.local
+.env.*
+!.env.example
 .venv
 env/
 venv/
@@ -216,6 +219,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Frontend / editor / OS local artifacts
+frontend/package-lock.json
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
 
 # Project data
 data/logs/

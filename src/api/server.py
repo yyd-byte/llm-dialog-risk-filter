@@ -5,6 +5,7 @@ Usage:
 """
 
 import json
+import secrets
 import time
 import uuid
 from datetime import datetime
@@ -12,7 +13,7 @@ from pathlib import Path
 from typing import Optional
 
 import yaml
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.models import (
@@ -23,12 +24,19 @@ from src.api.models import (
     DailyStatItem,
     CategoryStatItem,
     RuleItem,
+    RuleMetadata,
+    RuleMutationResponse,
+    RulePage,
+    RuleSourceSummary,
+    SetRuleEnabledRequest,
+    ReloadRequest,
     FeedbackRequest,
     FeedbackItem,
 )
 from src.audit.logger import AuditLogger, AuditRecord
+from src.audit.rule_management import RuleManagementAuditLogger
 from src.audit.statistics import StatisticsEngine
-from src.decision.fusion import RiskFusion
+from src.decision.fusion import RiskFusion, fusion_config_from_dict
 from src.decision.models import RiskLevel, RiskCategory
 from src.desensitization.desensitizer import Desensitizer, DesensitizeConfig
 from src.detection.normalizer import TextNormalizer, NormalizerConfig
@@ -36,7 +44,7 @@ from src.detection.rule_detector import RuleDetector
 from src.detection.semantic_detector import SemanticDetector
 from src.llm.client import LLMClient, LLMConfig
 from src.output_check.checker import OutputChecker
-from src.rules.manager import RuleManager
+from src.rules.manager import RuleManager, RuleVersionConflictError
 from src.rules.repository import RuleRepository
 
 # =============================================================================
@@ -55,7 +63,7 @@ app.add_middleware(
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["Content-Type", "X-Admin-Token"],
 )
 
 # =============================================================================
@@ -70,6 +78,8 @@ _fusion: Optional[RiskFusion] = None
 _desensitizer: Optional[Desensitizer] = None
 _output_checker: Optional[OutputChecker] = None
 _audit_logger: Optional[AuditLogger] = None
+_rule_management_audit: Optional[RuleManagementAuditLogger] = None
+_rules_admin_token: str = ""
 _stats_engine: Optional[StatisticsEngine] = None
 _llm_client: Optional[LLMClient] = None
 _config: dict = {}
@@ -97,12 +107,13 @@ _CATEGORY_LABELS = {
 # Lifecycle
 # =============================================================================
 
+
 @app.on_event("startup")
 def startup():
     """Initialize all components."""
     global _normalizer, _rule_detector, _rule_manager, _semantic_detector
-    global _fusion, _desensitizer, _output_checker, _audit_logger
-    global _stats_engine, _llm_client, _config
+    global _fusion, _desensitizer, _output_checker, _audit_logger, _rule_management_audit
+    global _stats_engine, _llm_client, _config, _rules_admin_token
 
     project_root = Path(__file__).resolve().parent.parent.parent
 
@@ -114,6 +125,7 @@ def startup():
     # 从环境变量注入敏感密钥（防止泄露到 GitHub）
     # 优先从 .env 文件加载，其次从系统环境变量
     import os as _os
+
     _env_file = project_root / ".env"
     if _env_file.exists():
         with open(_env_file, "r", encoding="utf-8") as _f:
@@ -127,6 +139,7 @@ def startup():
     if _os.environ.get("SILICONFLOW_API_KEY"):
         _config.setdefault("semantic_detection", {}).setdefault("api", {})
         _config["semantic_detection"]["api"]["api_key"] = _os.environ["SILICONFLOW_API_KEY"]
+    _rules_admin_token = _os.environ.get("RULES_ADMIN_TOKEN", "")
 
     # Normalizer
     bypass_map: dict[str, str] = {}
@@ -165,19 +178,25 @@ def startup():
         with open(decomp_path, "r", encoding="utf-8") as f:
             decomposition_map = yaml.safe_load(f) or {}
 
-    _normalizer = TextNormalizer(NormalizerConfig(
-        bypass_map=bypass_map,
-        confusable_map=confusable_map,
-        pinyin_map=pinyin_map,
-        traditional_simplified_map=traditional_simplified_map,
-        abbreviation_map=abbreviation_map,
-        decomposition_map=decomposition_map,
-    ))
+    _normalizer = TextNormalizer(
+        NormalizerConfig(
+            bypass_map=bypass_map,
+            confusable_map=confusable_map,
+            pinyin_map=pinyin_map,
+            traditional_simplified_map=traditional_simplified_map,
+            abbreviation_map=abbreviation_map,
+            decomposition_map=decomposition_map,
+        )
+    )
 
     # Rules
     rules_dir = project_root / _config["rule_detection"]["rules_dir"]
     _rule_manager = RuleManager(RuleRepository(str(rules_dir)))
-    _rule_detector = RuleDetector(_rule_manager)
+    fusion_config = fusion_config_from_dict(_config.get("risk_fusion", {}))
+    _rule_detector = RuleDetector(
+        _rule_manager,
+        level_confidence=fusion_config.rule_confidence,
+    )
 
     # Semantic
     sem_cfg = _config["semantic_detection"]
@@ -194,6 +213,7 @@ def startup():
     try:
         # 国内网络环境使用 HuggingFace 镜像加速
         import os as _os
+
         if not _os.environ.get("HF_ENDPOINT"):
             _os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
         _semantic_detector.load_model()
@@ -202,21 +222,25 @@ def startup():
         print(f"语义模型未加载（回退到纯规则模式）: {e}")
 
     # Fusion
-    _fusion = RiskFusion()
+    _fusion = RiskFusion(fusion_config)
 
     # Desensitizer
     ds_cfg = _config.get("desensitization", {})
-    _desensitizer = Desensitizer(DesensitizeConfig(
-        mode=ds_cfg.get("mode", "semantic"),
-        replacement_char=ds_cfg.get("replacement_char", "*"),
-        keep_first_last=ds_cfg.get("keep_first_last", True),
-        category_labels=ds_cfg.get("category_labels", {}),
-        fallback_label=ds_cfg.get("fallback_label", "[违规内容]"),
-        rewrite_prompt=ds_cfg.get("rewrite_prompt", ""),
-    ))
+    _desensitizer = Desensitizer(
+        DesensitizeConfig(
+            mode=ds_cfg.get("mode", "semantic"),
+            replacement_char=ds_cfg.get("replacement_char", "*"),
+            keep_first_last=ds_cfg.get("keep_first_last", True),
+            category_labels=ds_cfg.get("category_labels", {}),
+            fallback_label=ds_cfg.get("fallback_label", "[违规内容]"),
+            rewrite_prompt=ds_cfg.get("rewrite_prompt", ""),
+        )
+    )
     # Output checker
     _output_checker = OutputChecker(
-        _rule_detector, _semantic_detector, _fusion,
+        _rule_detector,
+        _semantic_detector,
+        _fusion,
         block_message=_config["output_check"]["output_block_message"],
         desensitizer=_desensitizer,
     )
@@ -224,6 +248,9 @@ def startup():
     # Audit logger
     audit_cfg = _config["audit"]
     _audit_logger = AuditLogger(
+        log_dir=str(project_root / audit_cfg["log_dir"]),
+    )
+    _rule_management_audit = RuleManagementAuditLogger(
         log_dir=str(project_root / audit_cfg["log_dir"]),
     )
 
@@ -235,14 +262,16 @@ def startup():
     # LLM client (try to connect, non-fatal)
     llm_cfg = _config["llm"]
     try:
-        _llm_client = LLMClient(LLMConfig(
-            provider=llm_cfg["provider"],
-            base_url=llm_cfg["base_url"],
-            model=llm_cfg["model"],
-            api_key=llm_cfg["api_key"],
-            timeout=llm_cfg["timeout"],
-            max_tokens=llm_cfg["max_tokens"],
-        ))
+        _llm_client = LLMClient(
+            LLMConfig(
+                provider=llm_cfg["provider"],
+                base_url=llm_cfg["base_url"],
+                model=llm_cfg["model"],
+                api_key=llm_cfg["api_key"],
+                timeout=llm_cfg["timeout"],
+                max_tokens=llm_cfg["max_tokens"],
+            )
+        )
         print(f"LLM 客户端已配置: {llm_cfg['provider']} / {llm_cfg['model']}")
     except Exception as e:
         print(f"LLM 客户端未配置（模拟模式）: {e}")
@@ -256,6 +285,7 @@ def startup():
 # =============================================================================
 # POST /api/pipeline/check
 # =============================================================================
+
 
 @app.post("/api/pipeline/check", response_model=PipelineResult)
 def pipeline_check(req: PipelineRequest):
@@ -312,56 +342,64 @@ def pipeline_check(req: PipelineRequest):
     evidence_chain = []
 
     # 1. Normalize evidence
-    evidence_chain.append({
-        "source": "rule",
-        "category": risk_result.risk_category.value if risk_result.risk_category else "sensitive",
-        "confidence": 0.0,
-        "matched_pattern": "",
-        "matched_text": "",
-        "explanation": f"文本规范化: {norm_explanation}",
-        "step": "normalize",
-        "metadata": {
-            "original_length": len(text),
-            "normalized_length": len(normalized.normalized),
-            "changes": normalize_changes,
-        },
-    })
+    evidence_chain.append(
+        {
+            "source": "rule",
+            "category": risk_result.risk_category.value
+            if risk_result.risk_category
+            else "sensitive",
+            "confidence": 0.0,
+            "matched_pattern": "",
+            "matched_text": "",
+            "explanation": f"文本规范化: {norm_explanation}",
+            "step": "normalize",
+            "metadata": {
+                "original_length": len(text),
+                "normalized_length": len(normalized.normalized),
+                "changes": normalize_changes,
+            },
+        }
+    )
 
     # 2. Detection evidence (rule + semantic)
     for e in risk_result.evidence_chain:
-        evidence_chain.append({
-            "source": e.source.value,
-            "category": e.category.value if e.category else "",
-            "confidence": e.confidence,
-            "matched_pattern": e.matched_pattern,
-            "matched_text": e.matched_text,
-            "explanation": e.explanation,
-            "step": e.step or ("rule" if e.source.value == "rule" else "semantic"),
-            "metadata": e.metadata,
-        })
+        evidence_chain.append(
+            {
+                "source": e.source.value,
+                "category": e.category.value if e.category else "",
+                "confidence": e.confidence,
+                "matched_pattern": e.matched_pattern,
+                "matched_text": e.matched_text,
+                "explanation": e.explanation,
+                "step": e.step or ("rule" if e.source.value == "rule" else "semantic"),
+                "metadata": e.metadata,
+            }
+        )
 
     # 3. Fusion decision evidence
-    evidence_chain.append({
-        "source": "semantic",
-        "category": risk_result.risk_category.value if risk_result.risk_category else "",
-        "confidence": risk_result.confidence,
-        "matched_pattern": "",
-        "matched_text": "",
-        "explanation": (
-            f"融合决策: 规则层({len(rule_evidence)}条) + 语义层({len(semantic_evidence)}条) "
-            f"→ 综合置信度 {risk_result.confidence:.0%} → "
-            f"风险等级 {risk_result.risk_level.value.upper()}"
-        ),
-        "step": "fusion",
-        "metadata": {
-            "rule_count": len(rule_evidence),
-            "semantic_count": len(semantic_evidence),
-            "rule_weight": _fusion.config.rule_weight,
-            "semantic_weight": _fusion.config.semantic_weight,
-            "high_threshold": _fusion.config.high_threshold,
-            "medium_threshold": _fusion.config.medium_threshold,
-        },
-    })
+    evidence_chain.append(
+        {
+            "source": "semantic",
+            "category": risk_result.risk_category.value if risk_result.risk_category else "",
+            "confidence": risk_result.confidence,
+            "matched_pattern": "",
+            "matched_text": "",
+            "explanation": (
+                f"融合决策: 规则层({len(rule_evidence)}条) + 语义层({len(semantic_evidence)}条) "
+                f"→ 综合置信度 {risk_result.confidence:.0%} → "
+                f"风险等级 {risk_result.risk_level.value.upper()}"
+            ),
+            "step": "fusion",
+            "metadata": {
+                "rule_count": len(rule_evidence),
+                "semantic_count": len(semantic_evidence),
+                "rule_weight": _fusion.config.rule_weight,
+                "semantic_weight": _fusion.config.semantic_weight,
+                "high_threshold": _fusion.config.high_threshold,
+                "medium_threshold": _fusion.config.medium_threshold,
+            },
+        }
+    )
 
     record.input_evidence = evidence_chain
 
@@ -377,29 +415,35 @@ def pipeline_check(req: PipelineRequest):
         # Desensitize (with LLM rewrite if mode="rewrite")
         llm_rewrite = None
         if _desensitizer.config.mode == "rewrite" and _llm_client:
+
             def _rewrite(prompt: str) -> str:
                 resp = _llm_client.chat(prompt)
                 return resp.text if resp.success else ""
+
             llm_rewrite = _rewrite
-        des_result = _desensitizer.desensitize(normalized.normalized, risk_result, llm_call=llm_rewrite)
+        des_result = _desensitizer.desensitize(
+            normalized.normalized, risk_result, llm_call=llm_rewrite
+        )
         safe_input = des_result.desensitized
         record.desensitized_input = safe_input
         # Add desensitization evidence
         for frag in des_result.replaced_fragments:
-            record.input_evidence.append({
-                "source": "rule",
-                "category": frag.get("category", ""),
-                "confidence": 1.0,
-                "matched_pattern": frag.get("original", ""),
-                "matched_text": frag.get("original", ""),
-                "explanation": f"片段脱敏: '{frag.get('original', '')}' → '{frag.get('replacement', '')}' ({frag.get('reason', '')})",
-                "step": "desensitize",
-                "metadata": {
-                    "original_fragment": frag.get("original", ""),
-                    "replacement": frag.get("replacement", ""),
-                    "was_rewritten": des_result.was_rewritten,
-                },
-            })
+            record.input_evidence.append(
+                {
+                    "source": "rule",
+                    "category": frag.get("category", ""),
+                    "confidence": 1.0,
+                    "matched_pattern": frag.get("original", ""),
+                    "matched_text": frag.get("original", ""),
+                    "explanation": f"片段脱敏: '{frag.get('original', '')}' → '{frag.get('replacement', '')}' ({frag.get('reason', '')})",
+                    "step": "desensitize",
+                    "metadata": {
+                        "original_fragment": frag.get("original", ""),
+                        "replacement": frag.get("replacement", ""),
+                        "was_rewritten": des_result.was_rewritten,
+                    },
+                }
+            )
     else:
         safe_input = text
 
@@ -419,8 +463,7 @@ def pipeline_check(req: PipelineRequest):
     # Step 7: Output re-check
     output_result = _output_checker.check(llm_output)
     record.output_risk_level = (
-        output_result.risk_result.risk_level.value
-        if output_result.risk_result else "low"
+        output_result.risk_result.risk_level.value if output_result.risk_result else "low"
     )
     record.output_passed = output_result.is_safe
     record.output_blocked = not output_result.is_safe
@@ -469,6 +512,7 @@ def _build_pipeline_result(record: AuditRecord) -> PipelineResult:
 # GET /api/stats/overview
 # =============================================================================
 
+
 @app.get("/api/stats/overview", response_model=StatsOverview)
 def stats_overview(days: int = 7):
     """Get aggregated statistics overview."""
@@ -509,42 +553,165 @@ def stats_overview(days: int = 7):
 
 
 # =============================================================================
+# Rule-management helpers
+# =============================================================================
+
+
+def _rule_item(rule) -> RuleItem:
+    """Convert an internal rule to its public API representation."""
+    return RuleItem(
+        id=rule.id,
+        pattern=rule.pattern,
+        patternType=rule.pattern_type,
+        category=rule.category.value,
+        riskLevel=rule.risk_level.value,
+        enabled=rule.enabled,
+        description=rule.description,
+        source=rule.source,
+        updatedAt=rule.updated_at,
+    )
+
+
+def _rule_metadata() -> RuleMetadata:
+    """Build current rule metadata from the active manager snapshot."""
+    assert _rule_manager is not None
+    categories = [
+        {
+            "category": meta.category.value,
+            "label": meta.label,
+            "ruleCount": meta.rule_count,
+            "enabledCount": meta.enabled_count,
+        }
+        for meta in _rule_manager.get_category_meta()
+    ]
+    sources = [
+        RuleSourceSummary(
+            source=item["source"],
+            ruleCount=item["rule_count"],
+            enabledCount=item["enabled_count"],
+        )
+        for item in _rule_manager.source_counts()
+    ]
+    total = sum(item["ruleCount"] for item in categories)
+    enabled_total = sum(item["enabledCount"] for item in categories)
+    return RuleMetadata(
+        version=_rule_manager.rebuild_version(),
+        total=total,
+        enabledTotal=enabled_total,
+        categories=categories,
+        sources=sources,
+    )
+
+
+def _require_rules_admin_token(x_admin_token: str | None = Header(default=None)) -> None:
+    """Reject rule-management writes without the configured local admin token."""
+    if not _rules_admin_token:
+        raise HTTPException(status_code=503, detail="Rule management unavailable")
+    if x_admin_token is None or not secrets.compare_digest(x_admin_token, _rules_admin_token):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+# =============================================================================
 # GET /api/rules
 # =============================================================================
 
-@app.get("/api/rules", response_model=list[RuleItem])
-def list_rules(category: str | None = None):
-    """Get all rules, optionally filtered by category."""
+
+@app.get("/api/rules", response_model=RulePage)
+def list_rules(
+    page: int = 1,
+    page_size: int = 50,
+    category: str | None = None,
+    source: str | None = None,
+    enabled: bool | None = None,
+):
+    """Get one stable filtered page of rules."""
     assert _rule_manager is not None
+    if page < 1 or not 1 <= page_size <= 200:
+        raise HTTPException(status_code=422, detail="Invalid pagination")
+    try:
+        category_enum = RiskCategory(category) if category else None
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail="Invalid risk category") from error
+    rules, total = _rule_manager.list_rules(category_enum, source, enabled, page, page_size)
+    return RulePage(
+        items=[_rule_item(rule) for rule in rules],
+        page=page,
+        pageSize=page_size,
+        total=total,
+        version=_rule_manager.rebuild_version(),
+    )
 
-    if category:
-        try:
-            cat_enum = RiskCategory(category)
-        except ValueError:
-            raise HTTPException(status_code=400, detail=f"无效的风险类别: {category}")
-        rules = _rule_manager.get_all_rules(cat_enum)
-    else:
-        rules = _rule_manager.get_all_rules()
 
-    return [
-        RuleItem(
-            id=r.id,
-            pattern=r.pattern,
-            patternType=r.pattern_type,
-            category=r.category.value,
-            riskLevel=r.risk_level.value,
-            enabled=r.enabled,
-            description=r.description,
-            source=r.source,
-            updatedAt=r.updated_at,
+@app.get("/api/rules/metadata", response_model=RuleMetadata)
+def rule_metadata():
+    """Get active ruleset version and provenance summaries."""
+    return _rule_metadata()
+
+
+@app.patch("/api/rules/{rule_id}/enabled", response_model=RuleMutationResponse)
+def set_rule_enabled(
+    rule_id: str,
+    request: SetRuleEnabledRequest,
+    _: None = Header(default=None, alias="X-Admin-Token"),
+):
+    """Persist an explicit enable state and immediately rebuild detector caches."""
+    _require_rules_admin_token(_)
+    assert _rule_manager is not None and _rule_detector is not None
+    assert _rule_management_audit is not None
+    try:
+        rule, version, previous_enabled = _rule_manager.set_rule_enabled(
+            rule_id,
+            request.enabled,
+            request.expectedVersion,
         )
-        for r in rules
-    ]
+    except RuleVersionConflictError as error:
+        raise HTTPException(status_code=409, detail={"version": str(error)}) from error
+    except KeyError as error:
+        raise HTTPException(status_code=404, detail="Rule not found") from error
+    _rule_detector.rebuild_cache()
+    _rule_management_audit.log_enabled_change(
+        rule.id,
+        rule.category.value,
+        rule.source,
+        previous_enabled,
+        rule.enabled,
+        request.expectedVersion,
+        version,
+    )
+    return RuleMutationResponse(item=_rule_item(rule), version=version)
+
+
+@app.post("/api/rules/reload", response_model=RuleMetadata)
+def reload_rules(
+    request: ReloadRequest,
+    _: None = Header(default=None, alias="X-Admin-Token"),
+):
+    """Reload YAML rules and rebuild detection caches without restarting the API."""
+    _require_rules_admin_token(_)
+    assert _rule_manager is not None and _rule_detector is not None
+    assert _rule_management_audit is not None
+    version_before = _rule_manager.rebuild_version()
+    if request.expectedVersion and request.expectedVersion != version_before:
+        raise HTTPException(status_code=409, detail={"version": version_before})
+    try:
+        _rule_manager.reload()
+        _rule_detector.rebuild_cache()
+    except Exception as error:
+        raise HTTPException(status_code=500, detail="Rule reload failed") from error
+    metadata = _rule_metadata()
+    _rule_management_audit.log_reload(
+        version_before,
+        metadata.version,
+        metadata.total,
+        metadata.enabledTotal,
+    )
+    return metadata
 
 
 # =============================================================================
 # POST /api/feedback
 # =============================================================================
+
 
 @app.post("/api/feedback", response_model=FeedbackItem)
 def submit_feedback(req: FeedbackRequest):
@@ -582,6 +749,7 @@ def submit_feedback(req: FeedbackRequest):
 # GET /api/audit
 # =============================================================================
 
+
 @app.get("/api/audit", response_model=list[dict])
 def list_audit_logs(limit: int = 50):
     """Get recent audit log entries."""
@@ -603,17 +771,19 @@ def list_audit_logs(limit: int = 50):
                     out = entry.get("output", {})
                     perf = entry.get("performance", {})
                     llm = entry.get("llm", {})
-                    records.append({
-                        "requestId": entry.get("request_id", ""),
-                        "timestamp": entry.get("timestamp", ""),
-                        "action": inp.get("action", "pass"),
-                        "riskLevel": inp.get("risk_level", "low"),
-                        "category": inp.get("risk_category"),
-                        "evidenceCount": inp.get("evidence_count", 0),
-                        "llmCalled": llm.get("called", False),
-                        "outputBlocked": out.get("blocked", False),
-                        "durationMs": perf.get("total_duration_ms", 0),
-                    })
+                    records.append(
+                        {
+                            "requestId": entry.get("request_id", ""),
+                            "timestamp": entry.get("timestamp", ""),
+                            "action": inp.get("action", "pass"),
+                            "riskLevel": inp.get("risk_level", "low"),
+                            "category": inp.get("risk_category"),
+                            "evidenceCount": inp.get("evidence_count", 0),
+                            "llmCalled": llm.get("called", False),
+                            "outputBlocked": out.get("blocked", False),
+                            "durationMs": perf.get("total_duration_ms", 0),
+                        }
+                    )
                 except json.JSONDecodeError:
                     continue
 
@@ -625,6 +795,7 @@ def list_audit_logs(limit: int = 50):
 # =============================================================================
 # Health check
 # =============================================================================
+
 
 @app.get("/api/health")
 def health():
