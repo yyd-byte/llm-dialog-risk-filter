@@ -184,7 +184,8 @@ class TextNormalizer:
         """将已知绕过变体替换为其标准形式。
 
         处理：谐音（薇信→微信）、形近（草你→操你）、
-        拼音（weixin→微信）、符号变体（+V→加微信）、数字暗号（419→一夜情）。
+        拼音（weixin→微信）、符号变体（+V→加微信）、
+        数字暗号（419→一夜情）。
 
         ASCII 条目使用词边界匹配防止假阳性（如 "bc" 匹配到 "abc123" 内部）；
         CJK 条目使用纯子串匹配（多字 CJK 短语安全）。
@@ -215,7 +216,7 @@ class TextNormalizer:
         return text
 
     def _normalize_pinyin_variants(self, text: str) -> str:
-        """替换拼音匹配到已知敏感词的 CJK 片段，同时替换文本中的原始 ASCII 拼音。
+        """替换匹配敏感词拼音的 CJK 片段和文本中的原始 ASCII 拼音。
 
         使用 pypinyin 进行动态 CJK→拼音转换（如果可用）。
         始终对拼音字面量（如 "zhadan"）执行 ASCII 回退替换。
@@ -455,7 +456,8 @@ class TextNormalizer:
                     if _is_cjk(chars[left]) and _is_cjk(chars[right]):
                         # 检查孤立性：CJK 字符在其"外侧"不相邻其他 CJK 字符
                         # 即为"孤立"。要求至少有一侧是孤立的——这样既能捕获
-                        # 是///消防员 这类链式结构（"是"孤立，即使"消"是多字词的一部分），
+                        # 是///消防员 这类链式结构（"是"孤立，
+                        # 即使"消"是多字词的一部分），
                         # 又能保留 双肩包/单肩包（"包"和"单"都不孤立）。
                         left_isolated = left == 0 or not _is_cjk(chars[left - 1])
                         right_isolated = right == n - 1 or not _is_cjk(chars[right + 1])
