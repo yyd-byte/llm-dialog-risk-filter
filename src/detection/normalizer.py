@@ -1,4 +1,19 @@
-"""Text normalization — handles evasion techniques before detection."""
+"""文本规范化 — 在检测前对输入文本进行预处理，消除各种绕过手段。
+
+规范化步骤（按顺序执行）：
+1. 全角 → 半角转换
+2. 繁 → 简转换
+3. 缩写展开
+4. 拆字还原
+5. 绕过变体替换（谐音/形近/拼音）
+6. 混淆字标准化
+7. 拼音变体感知
+8. 大小写归一化
+9. 绕过分隔符剥离
+10. 空白字符合并
+11. 重复字符压缩
+12. 符号标准化
+"""
 
 import re
 from dataclasses import dataclass, field
@@ -15,22 +30,21 @@ _CJK_RANGES = [
 
 
 def _is_cjk(ch: str) -> bool:
-    """Check if character is a CJK (Chinese/Japanese/Korean) ideograph."""
+    """判断字符是否为 CJK（中日韩）表意文字。"""
     code = ord(ch)
     return any(lo <= code <= hi for lo, hi in _CJK_RANGES)
 
 
 def _contains_cjk(s: str) -> bool:
-    """Check if string contains at least one CJK character."""
+    """判断字符串是否包含至少一个 CJK 字符。"""
     return any(_is_cjk(ch) for ch in s)
 
 
 def _replace_ascii_boundary(text: str, variant: str, replacement: str) -> str:
-    """Replace `variant` with `replacement` only at token boundaries.
+    """仅在 token 边界处将 `variant` 替换为 `replacement`。
 
-    A token boundary is: start-of-string, end-of-string, whitespace,
-    punctuation, CJK character, or symbol — anything that is NOT a
-    letter or digit.  This prevents "bc" matching inside "abc123".
+    token 边界包括：字符串开头/结尾、空白、标点、CJK 字符或符号
+    ——即任何非字母数字的位置。这可以防止 "bc" 匹配到 "abc123" 内部。
     """
     if variant not in text:
         return text
@@ -50,7 +64,7 @@ _EVASION_SEPARATORS = frozenset("/|\\-_*.,·•～~!#^&+=;；，、。，．")
 
 @dataclass
 class NormalizerConfig:
-    """Configuration for TextNormalizer."""
+    """TextNormalizer 的配置类。"""
 
     lowercase: bool = True
     full_to_half: bool = True
@@ -81,7 +95,7 @@ class NormalizerConfig:
 
 @dataclass
 class NormalizedText:
-    """Result of text normalization."""
+    """文本规范化的结果。"""
 
     original: str
     normalized: str
@@ -90,20 +104,18 @@ class NormalizedText:
 
 
 class TextNormalizer:
-    """Pre-processes text before detection to handle evasion techniques.
+    """在检测前对文本进行预处理，消除各种绕过手段。
 
-    Handles: full/half-width conversion, case normalization, whitespace
-    normalization, bypass variant normalization (homophones, similar-looking
-    characters, pinyin, etc.), repeated character compression, evasion
-    separator stripping, confusable character normalization, and symbol
-    normalization.
+    处理：全角/半角转换、大小写归一化、空白归一化、绕过变体归一化
+    （谐音、形近、拼音等）、重复字符压缩、绕过分隔符剥离、
+    混淆字归一化、符号归一化。
     """
 
     def __init__(self, config: NormalizerConfig | None = None):
         self.config = config or NormalizerConfig()
 
     def normalize(self, text: str) -> NormalizedText:
-        """Apply all enabled normalization steps."""
+        """执行所有已启用的规范化步骤。"""
         result = text
         for step in [
             self._normalize_full_to_half,
@@ -124,7 +136,7 @@ class TextNormalizer:
         return NormalizedText(original=text, normalized=result)
 
     def _is_enabled(self, step_name: str) -> bool:
-        """Check if a normalization step is enabled in config."""
+        """检查某个规范化步骤是否在配置中启用。"""
         mapping = {
             "_normalize_full_to_half": self.config.full_to_half,
             "_normalize_case": self.config.lowercase,
@@ -144,10 +156,10 @@ class TextNormalizer:
     # ---- Individual normalization steps ----
 
     def _normalize_full_to_half(self, text: str) -> str:
-        """Convert full-width characters to half-width.
+        """将全角字符转换为半角。
 
-        Full-width range: FF01-FF5E → half-width 21-7E (offset: FEE0)
-        Full-width space: 3000 → 20
+        全角范围：FF01-FF5E → 半角 21-7E（偏移量：FEE0）
+        全角空格：3000 → 20
         """
         result = []
         for ch in text:
@@ -161,52 +173,52 @@ class TextNormalizer:
         return "".join(result)
 
     def _normalize_case(self, text: str) -> str:
-        """Convert to lowercase."""
+        """转换为小写。"""
         return text.lower()
 
     def _normalize_whitespace(self, text: str) -> str:
-        """Collapse multiple whitespace characters into single space."""
+        """将多个空白字符折叠为单个空格。"""
         return re.sub(r"\s+", " ", text).strip()
 
     def _normalize_bypass_variants(self, text: str) -> str:
-        """Replace known bypass variants with their standard forms.
+        """将已知绕过变体替换为其标准形式。
 
-        Handles: homophones (薇信→微信), similar-looking chars (草你→操你),
-        pinyin (weixin→微信), symbol variants (+V→加微信), number codes (419→一夜情).
+        处理：谐音（薇信→微信）、形近（草你→操你）、
+        拼音（weixin→微信）、符号变体（+V→加微信）、数字暗号（419→一夜情）。
 
-        Uses word-boundary matching for ASCII entries to prevent false
-        positives like "bc" matching inside "abc123".  CJK entries use
-        plain substring matching (safe for multi-char CJK phrases).
+        ASCII 条目使用词边界匹配防止假阳性（如 "bc" 匹配到 "abc123" 内部）；
+        CJK 条目使用纯子串匹配（多字 CJK 短语安全）。
         """
         if not self.config.bypass_map:
             return text
         str_map = {str(k): str(v) for k, v in self.config.bypass_map.items()}
+        # 按长度降序遍历，优先匹配最长变体，防止短变体抢先匹配
         for variant in sorted(str_map, key=len, reverse=True):
             replacement = str_map[variant]
             if _contains_cjk(variant):
-                # CJK variant: safe to use substring matching
+                # CJK 变体：可直接使用子串匹配（多字 CJK 短语不会误伤）
                 if variant in text:
                     text = text.replace(variant, replacement)
             else:
+                # ASCII 变体：按长度选择匹配策略
                 if len(variant) <= 3:
-                    # Short ASCII keys (vx, wx, VX etc.): use plain
-                    # substring matching so they match adjacent digits
-                    # (e.g. "vx123") which boundary matching would miss.
+                    # 短 ASCII 键（如 vx、wx）：使用纯子串匹配，
+                    # 使其能命中相邻数字的情况（如 "vx123"），
+                    # 词边界匹配会遗漏此类情况。
                     if variant in text:
                         text = text.replace(variant, replacement)
                 else:
-                    # Longer ASCII variant: use word-boundary matching to
-                    # avoid matching substrings inside longer alphanumeric
-                    # tokens (e.g. "bc" inside "abc123").
+                    # 较长 ASCII 变体：使用词边界匹配，
+                    # 避免匹配到较长字母数字 token 的子串
+                    # （如 "bc" 匹配到 "abc123"）。
                     text = _replace_ascii_boundary(text, variant, replacement)
         return text
 
     def _normalize_pinyin_variants(self, text: str) -> str:
-        """Replace CJK spans whose pinyin matches known sensitive words
-        AND replace raw ASCII pinyin already present in text.
+        """替换拼音匹配到已知敏感词的 CJK 片段，同时替换文本中的原始 ASCII 拼音。
 
-        Uses pypinyin for dynamic CJK→pinyin conversion if available.
-        Always runs ASCII fallback for pinyin literals like "zhadan".
+        使用 pypinyin 进行动态 CJK→拼音转换（如果可用）。
+        始终对拼音字面量（如 "zhadan"）执行 ASCII 回退替换。
         """
         if not self.config.pinyin_map:
             return text
@@ -230,18 +242,18 @@ class TextNormalizer:
 
     @staticmethod
     def _pinyin_cjk_replace(text: str, str_map: dict[str, str], pypinyin) -> str:
-        """Use pypinyin to convert CJK spans to pinyin and replace matches."""
-        # Get pinyin for the whole text
-        # pypinyin.pinyin returns a list of lists, e.g. [['wo'], ['ai'], ['ni']]
+        """使用 pypinyin 将 CJK 片段转换为拼音后进行匹配替换。
+
+        采用滑动窗口策略：遍历 CJK 字符的连续序列，对各长度的子串
+        分别计算拼音并检查是否命中映射表中的敏感词拼音。
+        """
+        # 获取整段文本的拼音列表
+        # pypinyin.lazy_pinyin 返回一维列表，如 ['wo', 'ai', 'ni']
         pinyin_list = pypinyin.lazy_pinyin(text, style=pypinyin.Style.TONE3, errors="ignore")
-        # Build positions: find CJK spans and their pinyin
         n = len(text)
         result = list(text)
 
-        # Sliding window approach: for each CJK span, try matching pinyin
-        i = 0
-        pinyin_idx = 0  # index into pinyin_list（粗略对应，非CJK字符不计入）
-        # Build a mapping from text position to pinyin list index
+        # 建立文本位置到拼音列表索引的映射（非 CJK 字符对应 None）
         pos_to_pinyin: list[int | None] = [None] * n
         pi = 0
         for ti, ch in enumerate(text):
@@ -249,16 +261,17 @@ class TextNormalizer:
                 pos_to_pinyin[ti] = pi
                 pi += 1
 
-        # Try multi-character CJK spans against pinyin map
-        # Start from longest possible spans
+        # 提取所有 CJK 字符的位置
         cjk_positions = [ti for ti, pi_val in enumerate(pos_to_pinyin) if pi_val is not None]
-        # Sliding window: try spans of CJK chars and check their concatenated pinyin
+
+        # 滑动窗口：尝试不同长度的 CJK 连续子串，检查其拼音是否命中映射
         for start in range(len(cjk_positions)):
+            # 限制最长窗口为 8 个字符，防止极端性能问题
             for end in range(start + 1, min(start + 8, len(cjk_positions) + 1)):
                 span_start = cjk_positions[start]
                 span_end = cjk_positions[end - 1] + 1
                 cjk_span = text[span_start:span_end]
-                # Get pinyin for this span
+                # 获取该子串中各 CJK 字符的拼音索引
                 pinyin_indices = [
                     pos_to_pinyin[i]
                     for i in range(span_start, span_end)
@@ -266,22 +279,21 @@ class TextNormalizer:
                 ]
                 if not pinyin_indices:
                     continue
-                # Build pinyin string
+                # 拼接拼音字符串
                 pinyin_str = "".join(pinyin_list[idx] for idx in pinyin_indices)
-                # Remove tone numbers for matching
+                # 去除声调数字后进行匹配
                 pinyin_flat = "".join(c for c in pinyin_str if not c.isdigit())
                 if pinyin_flat in str_map:
                     replacement = str_map[pinyin_flat]
-                    # Replace the CJK span
+                    # 用标准词替换 CJK 片段
                     result[span_start:span_end] = list(replacement)
 
         return "".join(result)
 
     def _normalize_traditional_chinese(self, text: str) -> str:
-        """Convert traditional Chinese characters to simplified.
+        """将繁体汉字转换为简体汉字。
 
-        Uses the traditional_simplified_map from config, loaded from
-        traditional_simplified.yaml.
+        使用配置中的 traditional_simplified_map，从 traditional_simplified.yaml 加载。
         """
         if not self.config.traditional_simplified_map:
             return text
@@ -292,21 +304,20 @@ class TextNormalizer:
         return "".join(result)
 
     def _normalize_abbreviations(self, text: str) -> str:
-        """Expand known abbreviations to their full forms.
+        """将已知缩写展开为完整形式。
 
-        Uses longest-match-first to prevent partial matches:
-        "禁毒办" should match "禁毒办" not "禁毒" first.
+        使用最长优先匹配防止部分匹配：
+        "禁毒办" 应优先匹配 "禁毒办" 而非 "禁毒"。
 
-        Only matches Chinese abbreviations (2+ CJK characters) to
-        avoid false positives on English acronyms.
+        仅匹配中文缩写（2 个以上 CJK 字符），避免英文缩写的误匹配。
         """
         if not self.config.abbreviation_map:
             return text
         str_map = {str(k): str(v) for k, v in self.config.abbreviation_map.items()}
 
-        # Phase 1: replace all matches with unique placeholder markers.
-        # This prevents shorter keys from matching inside the replacement
-        # text of longer keys (e.g. "禁毒" matching within "禁毒办公室").
+        # 第一阶段：将所有匹配项替换为唯一占位符标记。
+        # 防止较短键在较长键的替换文本中被再次匹配
+        # （如 "禁毒" 在 "禁毒办公室" 的替换结果中被匹配）。
         markers: dict[str, str] = {}
         for i, abbr in enumerate(sorted(str_map, key=len, reverse=True)):
             if len(abbr) < 2:
@@ -318,29 +329,28 @@ class TextNormalizer:
                 markers[marker] = str_map[abbr]
                 text = text.replace(abbr, marker)
 
-        # Phase 2: replace placeholders with actual expansions.
+        # 第二阶段：将占位符替换为实际的展开文本。
         for marker, expansion in markers.items():
             text = text.replace(marker, expansion)
         return text
 
     def _normalize_decomposition(self, text: str) -> str:
-        """Restore decomposed CJK characters (Path B: global with dictionary check).
+        """还原拆字表达的 CJK 字符（全局扫描 + 词典验证）。
 
-        Detects patterns where attackers write characters as individual
-        components to evade keyword matching. Only reverses when the
-        component combination is NOT a real Chinese word (verified via
-        jieba's built-in frequency dictionary).
+        检测攻击者将汉字拆分为独立部首以绕过关键词匹配的模式。
+        仅当拆分组合不是真实汉语词汇时（通过 jieba 内置词频词典验证）
+        才执行还原。
 
-        Example:
-            "木仓" → not a real word → "枪" (restored)
-            "女子" → real word (woman) → kept as-is
+        示例：
+            "木仓" → 不是真实词语 → "枪"（还原）
+            "女子" → 真实词语（woman）→ 保持原样
         """
         if not self.config.decomposition_map:
             return text
 
         str_map = {str(k): str(v) for k, v in self.config.decomposition_map.items()}
 
-        # Build a set of known Chinese words for dictionary validation
+        # 构建已知中文词语集合，用于词典验证
         try:
             import jieba
 
@@ -355,10 +365,11 @@ class TextNormalizer:
 
         i = 0
         while i < n:
-            if n - i < 2:  # remaining text too short for any decomposition
+            if n - i < 2:  # 剩余文本太短，无法构成任何拆字组合
                 break
             matched = False
-            candidate_len = 1  # default advance when no match
+            candidate_len = 1  # 默认前进长度（未匹配时）
+            # 从最长窗口（5 字符）开始向下尝试
             for window in range(min(5, n - i), 1, -1):
                 candidate = text[i : i + window]
                 if candidate not in str_map:
@@ -366,19 +377,18 @@ class TextNormalizer:
                 original_char = str_map[candidate]
 
                 if _has_dict and candidate in _known_words:
-                    # This is a real dictionary word — don't restore
-                    # (e.g., "女子" = woman, not "好").
-                    # Advance past the entire candidate so we don't
-                    # re-process its tail as a false decomposition.
+                    # 这是词典中的真实词语——不还原
+                    # （如 "女子" = woman，不是 "好" 的拆字）。
+                    # 跳过整个候选文本，避免将其尾部错认为拆字。
                     matched = False
                     candidate_len = len(candidate)
                 elif not _has_dict and len(candidate) == 2:
-                    # No dictionary available: 2-char combos are too
-                    # risky (most real Chinese words are 2 chars).
+                    # 无词典可用：2 字组合风险太大
+                    # （大多数中文真实词语是 2 字）。
                     matched = False
                     candidate_len = len(candidate)
                 else:
-                    # Not a known word → likely decomposition → restore
+                    # 非已知词语——很可能是拆字——执行还原
                     result[i : i + window] = [original_char]
                     matched = True
                 break
@@ -387,13 +397,13 @@ class TextNormalizer:
         return "".join(result)
 
     def _normalize_confusable_chars(self, text: str) -> str:
-        """Replace confusable CJK characters with their standard forms.
+        """将易混淆的 CJK 字符替换为标准形式。
 
-        Handles: 形近字 (形→行), 同音字替换 (草→操), etc.
-        Uses the confusable_map from config, loaded from confusable_chars.yaml.
+        处理：形近字（形→行）、同音字替换（草→操）等。
+        使用配置中的 confusable_map，从 confusable_chars.yaml 加载。
 
-        Unlike bypass_variants (phrase-level), this operates at the character
-        level — replacing individual confusable characters throughout the text.
+        与 bypass_variants（短语级别）不同，此方法在字符级别操作
+        ——替换全文中每个易混淆的单个字符。
         """
         if not self.config.confusable_map:
             return text
@@ -406,58 +416,53 @@ class TextNormalizer:
         return "".join(result)
 
     def _strip_evasion_separators(self, text: str) -> str:
-        """Strip separator characters inserted between isolated CJK chars.
+        """剥离插入在孤立 CJK 字符之间的绕过分隔符。
 
-        Attackers insert separators like / | - between characters of a
-        sensitive keyword to evade substring matching: 违/禁/词 → 违禁词.
+        攻击者在敏感关键词的字符之间插入 / | - 等分隔符以绕过子串匹配：
+        违/禁/词 → 违禁词。
 
-        Only removes separators when BOTH adjacent CJK characters are
-        "isolated" — meaning each is immediately next to another separator
-        or a text boundary, NOT part of a multi-character CJK word.
+        仅当分隔符两侧的 CJK 字符都是"孤立的"时才移除——即每个 CJK 字符
+        的"外侧"紧邻的是另一分隔符或文本边界，而非多字 CJK 词的一部分。
 
-        This preserves separators in normal usage:
-            违/禁/词    → 违禁词      (evasion, removed ✓)
-            你/好       → 你好        (evasion, removed ✓)
-            是///消防员  → 是消防员    (chain with multi-char word ✓)
-            双肩包/单肩包 → kept       (normal usage ✓)
-            http://a/b  → kept        (non-CJK ✓)
-            加微信/QQ    → kept        (one side non-CJK ✓)
+        这样可以保留正常用法中的分隔符：
+            违/禁/词    → 违禁词      (绕过，已移除 ✓)
+            你/好       → 你好        (绕过，已移除 ✓)
+            是///消防员  → 是消防员    (链式含多字词 ✓)
+            双肩包/单肩包 → 保留       (正常用法 ✓)
+            http://a/b  → 保留        (非 CJK ✓)
+            加微信/QQ    → 保留        (一侧非 CJK ✓)
         """
         chars = list(text)
         n = len(chars)
-        # Positions marked for removal
+        # 标记需要移除的位置
         remove = [False] * n
 
         i = 0
         while i < n:
             if chars[i] in _EVASION_SEPARATORS:
-                # Walk left past spaces and other separators to find a
-                # significant character
+                # 向左越过空格和其他分隔符，找到第一个有意义的字符
                 left = i - 1
                 while left >= 0 and (chars[left].isspace() or chars[left] in _EVASION_SEPARATORS):
                     left -= 1
 
-                # Walk right past spaces and other separators
+                # 向右越过空格和其他分隔符，找到第一个有意义的字符
                 right = i + 1
                 while right < n and (chars[right].isspace() or chars[right] in _EVASION_SEPARATORS):
                     right += 1
 
-                # Both sides must exist and be CJK
+                # 两侧都必须存在且为 CJK 字符
                 if left >= 0 and right < n:
                     if _is_cjk(chars[left]) and _is_cjk(chars[right]):
-                        # Check isolation: a CJK char is "isolated" when it is
-                        # NOT adjacent to another CJK char on its "outer" side.
-                        # We require at least ONE side to be isolated — this
-                        # catches chains like 是///消防员 (是 is isolated even
-                        # though 消 is part of a multi-char word) while still
-                        # preserving 双肩包/单肩包 (neither 包 nor 单 is isolated).
+                        # 检查孤立性：CJK 字符在其"外侧"不相邻其他 CJK 字符
+                        # 即为"孤立"。要求至少有一侧是孤立的——这样既能捕获
+                        # 是///消防员 这类链式结构（"是"孤立，即使"消"是多字词的一部分），
+                        # 又能保留 双肩包/单肩包（"包"和"单"都不孤立）。
                         left_isolated = left == 0 or not _is_cjk(chars[left - 1])
                         right_isolated = right == n - 1 or not _is_cjk(chars[right + 1])
 
                         if left_isolated or right_isolated:
                             remove[i] = True
-                            # Also remove spaces between the removed sep and
-                            # the isolated CJK chars
+                            # 同时移除移除的分隔符与孤立 CJK 字符之间的空格
                             _mark_adjacent_spaces(chars, i, n, remove)
 
             i += 1
@@ -465,18 +470,17 @@ class TextNormalizer:
         return "".join(ch for i, ch in enumerate(chars) if not remove[i])
 
     def _reduce_repeats(self, text: str) -> str:
-        """Reduce consecutive repeated characters.
+        """压缩连续重复字符。
 
-        E.g., with max_repeat=3, "aaaaaa" → "aaa"
+        例如，max_repeat=3 时，"aaaaaa" → "aaa"
         """
         max_r = self.config.max_repeat
         return re.sub(r"(.)\1{" + str(max_r) + r",}", r"\1" * max_r, text)
 
     def _normalize_symbols(self, text: str) -> str:
-        """Normalize common variant symbols to standard forms.
+        """将常见变体符号标准化为标准形式。
 
-        Handles: Chinese punctuation variants, common leetspeak,
-        visually similar character substitutions.
+        处理：中文标点变体、常见 leetspeak、形近字符替换。
         """
         symbol_map = {
             # Chinese punctuation → English
@@ -499,12 +503,11 @@ class TextNormalizer:
 
 
 def _mark_adjacent_spaces(chars: list[str], idx: int, n: int, remove: list[bool]) -> None:
-    """Mark spaces immediately adjacent to a removed separator for cleanup.
+    """标记紧邻已移除分隔符的空格以待清理。
 
-    When we remove "/" from "违 / 禁", we also want to remove the spaces
-    so we get "违禁" not "违  禁".  The whitespace normalizer (running
-    after this step) would collapse remaining gaps anyway, but removing
-    them here keeps the output clean.
+    当从 "违 / 禁" 中移除 "/" 时，也需要移除空格，
+    使得结果为 "违禁" 而非 "违  禁"。后续的空白规范化步骤
+    会折叠剩余间隙，但在此处移除可使中间输出更整洁。
     """
     # Left side spaces
     j = idx - 1

@@ -1,12 +1,11 @@
-"""Semantic model detection — embedding similarity-based judgment.
+"""语义模型检测 — 基于嵌入相似度的判断。
 
-Supports two modes:
-- local:  Uses a local sentence-transformers model (default: BAAI/bge-small-zh-v1.5).
-- api:    Calls a cloud embedding API (e.g. SiliconFlow, OpenAI-compatible).
+支持两种模式：
+- local：使用本地 sentence-transformers 模型（默认：BAAI/bge-small-zh-v1.5）。
+- api：调用云端嵌入 API（如 SiliconFlow、OpenAI 兼容接口）。
 
-Both modes compute cosine similarity between input text and risk category
-reference descriptions, catching ambiguous cases that rules cannot confidently
-determine.
+两种模式均计算输入文本与风险类别参考描述之间的余弦相似度，
+捕获规则无法确定置信度的模糊情况。
 """
 
 from typing import Optional
@@ -30,17 +29,16 @@ BGE_QUERY_PREFIX = "为这个句子生成表示以用于检索相关文章："
 
 
 class SemanticDetector:
-    """Semantic-level content risk detection using embedding similarity.
+    """基于嵌入相似度的语义级内容风险检测。
 
-    This is the second layer of the dual-filter architecture, responsible
-    for handling ambiguous/evasive expressions that rules miss.
+    这是双层过滤架构的第二层，负责处理规则漏检的模糊/规避表达。
 
-    Supports two modes:
-    - local (default): Uses sentence-transformers with a local model.
-    - api: Uses a cloud embedding API (OpenAI-compatible).
+    支持两种模式：
+    - local（默认）：使用 sentence-transformers 及本地模型。
+    - api：使用云端嵌入 API（OpenAI 兼容）。
 
-    Attributes:
-        is_available: Whether the model/API is loaded and ready.
+    属性：
+        is_available: 模型/API 是否已加载就绪。
     """
 
     def __init__(
@@ -67,14 +65,14 @@ class SemanticDetector:
 
     @property
     def is_available(self) -> bool:
-        """Whether a real model is loaded and ready."""
+        """模型是否已加载就绪。"""
         return self._is_loaded
 
     def load_model(self) -> None:
-        """Load the embedding model and pre-compute risk category embeddings.
+        """加载嵌入模型并预计算风险类别嵌入。
 
-        In local mode, downloads the model from HuggingFace if not cached.
-        In api mode, creates an EmbeddingAPIClient and encodes references via API.
+        在 local 模式下，从 HuggingFace 下载模型（如未缓存）。
+        在 api 模式下，创建 EmbeddingAPIClient 并通过 API 编码参考描述。
         """
         if self._api_mode:
             self._load_api()
@@ -82,7 +80,7 @@ class SemanticDetector:
             self._load_local()
 
     def _load_local(self) -> None:
-        """Load local sentence-transformers model."""
+        """加载本地 sentence-transformers 模型。"""
         try:
             from sentence_transformers import SentenceTransformer
         except ImportError:
@@ -113,7 +111,7 @@ class SemanticDetector:
         self._is_loaded = True
 
     def _load_api(self) -> None:
-        """Initialize cloud embedding API client and pre-compute category embeddings."""
+        """初始化云端嵌入 API 客户端并预计算类别嵌入。"""
         from src.llm.embedding_client import EmbeddingAPIClient, EmbeddingConfig
 
         api_cfg = EmbeddingConfig(
@@ -146,13 +144,12 @@ class SemanticDetector:
         self._is_loaded = True
 
     def detect(self, text: str) -> list[Evidence]:
-        """Run semantic detection on text.
+        """对文本执行语义检测。
 
-        Encodes the input text and computes cosine similarity against
-        each risk category's reference embedding. Returns Evidence for
-        categories whose similarity exceeds the confidence threshold.
+        编码输入文本，计算其与各风险类别参考嵌入的余弦相似度。
+        返回相似度超过置信度阈值的类别对应的 Evidence。
 
-        When model is not loaded, returns an empty list.
+        当模型未加载时，返回空列表。
         """
         if not self._is_loaded:
             return []
@@ -196,9 +193,9 @@ class SemanticDetector:
         return evidence_list
 
     def _encode(self, text: str) -> np.ndarray:
-        """Encode text to a normalized embedding vector.
+        """将文本编码为归一化的嵌入向量。
 
-        Dispatches to local model or API client based on mode.
+        根据模式分发到本地模型或 API 客户端。
         """
         if self._api_mode:
             return self._api_client.encode(text, normalize=True)
@@ -206,9 +203,9 @@ class SemanticDetector:
             return self._st_model.encode(text, normalize_embeddings=True)
 
     def detect_with_fallback(self, text: str) -> Optional[Evidence]:
-        """Run detection and return the highest-confidence evidence, or None.
+        """执行检测并返回置信度最高的证据，或 None。
 
-        This is a convenience method for the fusion layer.
+        这是为融合层提供的便捷方法。
         """
         evidence_list = self.detect(text)
         if not evidence_list:
@@ -219,9 +216,8 @@ class SemanticDetector:
 
     @staticmethod
     def _cosine_similarity(vec_a: np.ndarray, vec_b: np.ndarray) -> float:
-        """Compute cosine similarity between two normalized vectors.
+        """计算两个归一化向量之间的余弦相似度。
 
-        Since both vectors are already L2-normalized, cosine similarity
-        is simply the dot product.
+        由于两个向量均已 L2 归一化，余弦相似度即为点积。
         """
         return float(np.dot(vec_a, vec_b))

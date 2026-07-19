@@ -1,4 +1,4 @@
-"""Rule-based detection engine — keyword and regex matching."""
+"""基于规则的检测引擎 — 关键词和正则匹配。"""
 
 import logging
 import re
@@ -13,7 +13,15 @@ logger = logging.getLogger(__name__)
 
 
 class RuleDetector:
-    """Fast rule-based detection using keyword and regex patterns."""
+    """快速规则检测，同时支持关键词（AC 自动机）和正则表达式。
+
+    检测流程：
+    1. AC 自动机扫描全部关键词（单次遍历，O(n)）
+    2. 逐条正则编译匹配
+    3. 按声明顺序收集证据，每条规则最多产生一条证据
+
+    线程安全：通过 RLock 保护缓存替换操作。
+    """
 
     DEFAULT_LEVEL_CONFIDENCE = {
         RiskLevel.LOW: 0.2,
@@ -39,7 +47,7 @@ class RuleDetector:
         self._rebuild_cache()
 
     def _rebuild_cache(self) -> None:
-        """Build new caches and atomically publish them."""
+        """构建新缓存并原子化发布。"""
         ordered = self._rule_manager.get_enabled_rules()
         compiled: dict[int, re.Pattern] = {}
         keyword_patterns: list[tuple[str, int]] = []
@@ -67,23 +75,30 @@ class RuleDetector:
             self._empty_keyword_ordinals = empty_ordinals
 
     def rebuild_cache(self) -> None:
-        """Rebuild matcher caches from the manager's current in-memory snapshot."""
+        """从管理器的当前内存快照重建匹配器缓存。"""
         self._rebuild_cache()
 
     def reload(self) -> None:
-        """Reload rules from manager and rebuild all matcher caches."""
+        """从管理器重新加载规则，重建所有匹配器缓存。"""
         self._rule_manager.reload()
         self._rebuild_cache()
 
     def detect(self, text: str) -> list[Evidence]:
-        """Run rule-based detection on normalized text.
+        """对规范化文本执行规则检测。
 
-        Returns one evidence item for each matching rule in the original rule
-        declaration order. Repeated occurrences of one rule emit once.
+        按规则声明顺序返回 Evidence 列表，每条命中规则对应一条证据。
+        同一规则在文本中多次出现只记录一次。
+
+        Args:
+            text: 规范化后的输入文本。
+
+        Returns:
+            命中规则的 Evidence 列表；无命中时返回空列表。
         """
         text_lower = text.lower()
         regex_matches: dict[int, str] = {}
 
+        # 获取线程安全的缓存快照
         with self._lock:
             ordered_rules = self._ordered_rules
             compiled_regex = self._compiled_regex
@@ -91,15 +106,18 @@ class RuleDetector:
             empty_ordinals = self._empty_keyword_ordinals
             level_confidence = self._level_confidence
 
+        # 第一步：AC 自动机扫描全部关键词（一次遍历）
         matched_ordinals = keyword_automaton.search(text_lower)
         matched_ordinals.update(empty_ordinals)
 
+        # 第二步：逐条正则匹配
         for ordinal, compiled in compiled_regex.items():
             match_result = compiled.search(text_lower)
             if match_result:
                 matched_ordinals.add(ordinal)
                 regex_matches[ordinal] = match_result.group()
 
+        # 第三步：按声明顺序收集证据
         evidence_list: list[Evidence] = []
         for ordinal in sorted(matched_ordinals):
             rule = ordered_rules[ordinal]
