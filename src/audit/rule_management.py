@@ -1,4 +1,7 @@
-"""Append-only audit logging for successful rule-management operations."""
+"""规则管理审计 — 记录规则启用/禁用和重载操作的审计轨迹。
+
+写入独立的 JSONL 日志文件，用于追溯规则变更历史。
+"""
 
 import json
 import uuid
@@ -7,7 +10,12 @@ from pathlib import Path
 
 
 class RuleManagementAuditLogger:
-    """Write privacy-safe rule-management events to daily JSONL files."""
+    """记录规则管理操作的审计日志。
+
+    记录两类事件：
+    - 规则启用状态变更（谁在何时启用了/禁用了哪条规则）
+    - 规则重载操作（重载前后的版本号和规则数量）
+    """
 
     def __init__(self, log_dir: str = "data/logs"):
         self.log_dir = Path(log_dir)
@@ -23,7 +31,7 @@ class RuleManagementAuditLogger:
         version_before: str,
         version_after: str,
     ) -> None:
-        """Append one successful explicit enabled-state change event."""
+        """追加一条成功的显式启用状态变更事件。"""
         self._append(
             {
                 "action": "rule_enabled_changed",
@@ -44,7 +52,7 @@ class RuleManagementAuditLogger:
         total: int,
         enabled_total: int,
     ) -> None:
-        """Append one successful ruleset reload event."""
+        """追加一条成功的规则集重载事件。"""
         self._append(
             {
                 "action": "rules_reloaded",
@@ -56,7 +64,7 @@ class RuleManagementAuditLogger:
         )
 
     def _append(self, event: dict) -> None:
-        """Write one event without credentials or request-header data."""
+        """写入一条事件记录（不包含凭据或请求头数据）。"""
         timestamp = datetime.now().isoformat()
         payload = {"event_id": str(uuid.uuid4()), "timestamp": timestamp, **event}
         path = self.log_dir / f"rule-management-{timestamp[:10]}.jsonl"

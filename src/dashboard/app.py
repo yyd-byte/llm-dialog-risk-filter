@@ -1,9 +1,12 @@
-"""Streamlit dashboard for content moderation operations."""
+"""Streamlit 运营看板 — 内容风控数据可视化。
+
+展示请求量趋势、风险等级分布、类别占比、规则命中统计等。
+"""
 
 import sys
 from pathlib import Path
 
-# Add project root to path
+# 将项目根目录加入 sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 import streamlit as st
@@ -11,7 +14,14 @@ from src.audit.statistics import StatisticsEngine
 
 
 def main():
-    """Main dashboard entry point."""
+    """看板主入口。
+
+    布局：
+    1. 侧边栏 — 日期范围选择、刷新按钮
+    2. 指标卡片行 — 总请求数、拦截率、误判率、LLM 调用量
+    3. 图表区 — 日请求趋势图、风险类别饼图
+    4. 详情表 — 最近违规记录列表
+    """
     st.set_page_config(
         page_title="内容风控运营看板",
         page_icon="🛡️",
@@ -23,15 +33,15 @@ def main():
 
     stats_engine = StatisticsEngine()
 
-    # ---- Sidebar ----
+    # ---- 侧边栏 ----
     st.sidebar.header("⚙️ 筛选条件")
-    days = st.sidebar.slider("统计天数", 1, 30, 7)
+    days = st.sidebar.slider("统计天数", 1, 30, 7)  # 天数选择滑块
     st.sidebar.markdown("---")
     st.sidebar.info("数据来源: `data/logs/audit-*.jsonl`")
 
     overview = stats_engine.get_overview(days=days)
 
-    # ---- Key Metrics Row ----
+    # ---- 关键指标行 ----
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         st.metric("📊 总请求数", overview.total_requests)
@@ -44,7 +54,7 @@ def main():
     with col5:
         st.metric("🔁 输出复检拦截率", f"{overview.output_block_rate:.1%}")
 
-    # ---- Daily Trend ----
+    # ---- 每日趋势图 ----
     st.header("📈 每日请求趋势")
     if overview.daily_stats:
         daily_data = []
@@ -59,7 +69,7 @@ def main():
     else:
         st.info("暂无数据。系统运行后将自动生成统计。")
 
-    # ---- Category Breakdown ----
+    # ---- 类别分布 ----
     col_left, col_right = st.columns(2)
     with col_left:
         st.header("🏷️ 违规类型占比")
@@ -79,7 +89,7 @@ def main():
         else:
             st.info("暂无数据")
 
-    # ---- Footer ----
+    # ---- 页脚 ----
     st.markdown("---")
     st.caption("LLM Dialog Risk Filter v0.1.0 | 全国人工智能竞赛")
 

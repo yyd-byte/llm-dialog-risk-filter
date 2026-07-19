@@ -1,4 +1,4 @@
-"""Statistics engine — aggregates audit logs into dashboard-ready data."""
+"""统计引擎 — 将审计日志聚合为看板可用的统计数据。"""
 
 import json
 from collections import Counter, defaultdict
@@ -10,32 +10,32 @@ from typing import Optional
 
 @dataclass
 class DailyStats:
-    """Aggregated statistics for a single day."""
+    """单日的聚合统计数据。"""
 
     date: str
     total_requests: int = 0
-    # Input side
-    input_blocked: int = 0       # HIGH risk → blocked
-    input_desensitized: int = 0  # MEDIUM risk → desensitized
-    input_passed: int = 0        # LOW risk → passed
-    # Category breakdown
+    # 输入侧
+    input_blocked: int = 0       # HIGH 风险 → 拦截
+    input_desensitized: int = 0  # MEDIUM 风险 → 脱敏
+    input_passed: int = 0        # LOW 风险 → 放行
+    # 类别分布
     category_counts: dict[str, int] = field(default_factory=dict)
-    # Output side
+    # 输出侧
     output_checked: int = 0
     output_blocked: int = 0
     # LLM
     llm_calls: int = 0
-    # Performance
+    # 性能
     avg_duration_ms: float = 0.0
 
 
 @dataclass
 class StatsOverview:
-    """High-level statistics overview."""
+    """高层级统计概览。"""
 
     total_requests: int = 0
-    block_rate: float = 0.0          # 明显违规拦截率
-    false_positive_rate: float = 0.0  # 正常文本误判率
+    block_rate: float = 0.0
+    false_positive_rate: float = 0.0
     total_llm_calls: int = 0
     output_block_rate: float = 0.0
     top_categories: list[tuple[str, int]] = field(default_factory=list)
@@ -43,13 +43,13 @@ class StatsOverview:
 
 
 class StatisticsEngine:
-    """Aggregates audit log data into statistics for dashboard display."""
+    """将审计日志数据聚合并生成供看板显示的统计信息。"""
 
     def __init__(self, log_dir: str = "data/logs"):
         self.log_dir = Path(log_dir)
 
     def load_daily_stats(self, days: int = 7) -> list[DailyStats]:
-        """Load aggregated daily statistics for the last N days."""
+        """加载最近 N 天的聚合日统计。"""
         daily_map: dict[str, DailyStats] = {}
 
         for i in range(days):
@@ -63,7 +63,7 @@ class StatisticsEngine:
         return sorted(daily_map.values(), key=lambda d: d.date)
 
     def get_overview(self, days: int = 7) -> StatsOverview:
-        """Get high-level statistics overview."""
+        """获取高层级统计概览。"""
         daily_stats = self.load_daily_stats(days)
         overview = StatsOverview(daily_stats=daily_stats)
 
@@ -78,7 +78,7 @@ class StatisticsEngine:
             ) / overview.total_requests
             overview.false_positive_rate = 0.0  # Requires feedback data
 
-        # Aggregate category counts
+        # 聚合各类别计数
         cat_counter: Counter = Counter()
         for ds in daily_stats:
             for cat, count in ds.category_counts.items():
@@ -89,7 +89,7 @@ class StatisticsEngine:
 
     def _process_log_file(self, filepath: Path,
                           daily_map: dict[str, DailyStats]) -> None:
-        """Process a single JSONL log file and aggregate into daily stats."""
+        """处理单个 JSONL 日志文件并聚合成日统计数据。"""
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 for line in f:
@@ -97,18 +97,19 @@ class StatisticsEngine:
                     if not line:
                         continue
                     try:
-                        record = json.loads(line)
+                        record = json.loads(line)  # 解析 JSON 行
                     except json.JSONDecodeError:
-                        continue
+                        continue  # 跳过损坏的行
 
                     ts = record.get("timestamp", "")
-                    date = ts[:10] if ts else ""
+                    date = ts[:10] if ts else ""  # 取日期部分（YYYY-MM-DD）
                     if date not in daily_map:
                         continue
 
                     ds = daily_map[date]
                     ds.total_requests += 1
 
+                    # 按输入动作分类统计
                     inp = record.get("input", {})
                     action = inp.get("action", "pass")
                     if action == "block":
@@ -118,14 +119,17 @@ class StatisticsEngine:
                     else:
                         ds.input_passed += 1
 
+                    # 按风险类别统计
                     cat = inp.get("risk_category", "")
                     if cat:
                         ds.category_counts[cat] = ds.category_counts.get(cat, 0) + 1
 
+                    # LLM 调用统计
                     llm = record.get("llm", {})
                     if llm.get("called"):
                         ds.llm_calls += 1
 
+                    # 输出复检统计
                     out = record.get("output", {})
                     if out.get("checked"):
                         ds.output_checked += 1
@@ -133,4 +137,4 @@ class StatisticsEngine:
                         ds.output_blocked += 1
 
         except Exception:
-            pass  # Skip corrupted log files
+            pass  # 跳过损坏的日志文件

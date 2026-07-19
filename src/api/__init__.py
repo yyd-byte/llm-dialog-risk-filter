@@ -1,3 +1,9 @@
+"""API 服务模块 — FastAPI RESTful 接口。
+
+提供流水线检测、统计查询、规则管理、反馈提交和审计日志等端点。
+通过延迟导入避免循环依赖。
+"""
+
 from src.api.models import (
     PipelineRequest,
     PipelineResult,

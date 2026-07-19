@@ -1,6 +1,6 @@
-"""FastAPI server — exposes the content filtering pipeline as REST API.
+"""FastAPI 服务 — 以 REST API 形式提供内容风控流水线。
 
-Usage:
+用法:
     python -m uvicorn src.api.server:app --reload --port 8000
 """
 
@@ -48,7 +48,7 @@ from src.rules.manager import RuleManager, RuleVersionConflictError
 from src.rules.repository import RuleRepository
 
 # =============================================================================
-# App setup
+# 应用初始化
 # =============================================================================
 
 app = FastAPI(
@@ -57,7 +57,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# Allow frontend dev server (Vite default port 5173)
+# 允许前端开发服务器（Vite 默认端口 5173）
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -67,7 +67,7 @@ app.add_middleware(
 )
 
 # =============================================================================
-# Global state (initialized at startup)
+# 全局状态（启动时初始化）
 # =============================================================================
 
 _normalizer: Optional[TextNormalizer] = None
@@ -84,10 +84,10 @@ _stats_engine: Optional[StatisticsEngine] = None
 _llm_client: Optional[LLMClient] = None
 _config: dict = {}
 
-# In-memory feedback store (replace with file-based later)
+# 内存反馈存储（后续可改为文件持久化）
 _feedback_store: list[dict] = []
 
-# Category color map for frontend
+# 类别颜色映射（供前端使用）
 _CATEGORY_COLORS = {
     "sexual": "#ec4899",
     "violent": "#ef4444",
@@ -104,20 +104,20 @@ _CATEGORY_LABELS = {
 
 
 # =============================================================================
-# Lifecycle
+# 生命周期
 # =============================================================================
 
 
 @app.on_event("startup")
 def startup():
-    """Initialize all components."""
+    """初始化所有组件。"""
     global _normalizer, _rule_detector, _rule_manager, _semantic_detector
     global _fusion, _desensitizer, _output_checker, _audit_logger, _rule_management_audit
     global _stats_engine, _llm_client, _config, _rules_admin_token
 
     project_root = Path(__file__).resolve().parent.parent.parent
 
-    # Load config
+    # 加载配置
     config_path = project_root / "config" / "default.yaml"
     with open(config_path, "r", encoding="utf-8") as f:
         _config = yaml.safe_load(f)
@@ -141,7 +141,7 @@ def startup():
         _config["semantic_detection"]["api"]["api_key"] = _os.environ["SILICONFLOW_API_KEY"]
     _rules_admin_token = _os.environ.get("RULES_ADMIN_TOKEN", "")
 
-    # Normalizer
+    # Normalizer（文本规范化器）
     bypass_map: dict[str, str] = {}
     bypass_path = project_root / "config" / "bypass_variants.yaml"
     if bypass_path.exists():
@@ -189,7 +189,7 @@ def startup():
         )
     )
 
-    # Rules
+    # 规则组件
     rules_dir = project_root / _config["rule_detection"]["rules_dir"]
     _rule_manager = RuleManager(RuleRepository(str(rules_dir)))
     fusion_config = fusion_config_from_dict(_config.get("risk_fusion", {}))
@@ -198,7 +198,7 @@ def startup():
         level_confidence=fusion_config.rule_confidence,
     )
 
-    # Semantic
+    # 语义检测
     sem_cfg = _config["semantic_detection"]
     api_mode = sem_cfg.get("mode", "local") == "api"
     _semantic_detector = SemanticDetector(
@@ -209,7 +209,7 @@ def startup():
         api_mode=api_mode,
         api_config=sem_cfg.get("api") if api_mode else None,
     )
-    # Try to load the semantic model (non-fatal if unavailable)
+    # 尝试加载语义模型（加载失败不影响核心功能）
     try:
         # 国内网络环境使用 HuggingFace 镜像加速
         import os as _os
@@ -221,10 +221,10 @@ def startup():
     except Exception as e:
         print(f"语义模型未加载（回退到纯规则模式）: {e}")
 
-    # Fusion
+    # 融合决策
     _fusion = RiskFusion(fusion_config)
 
-    # Desensitizer
+    # 脱敏器
     ds_cfg = _config.get("desensitization", {})
     _desensitizer = Desensitizer(
         DesensitizeConfig(
@@ -236,7 +236,7 @@ def startup():
             rewrite_prompt=ds_cfg.get("rewrite_prompt", ""),
         )
     )
-    # Output checker
+    # 输出复检
     _output_checker = OutputChecker(
         _rule_detector,
         _semantic_detector,
@@ -245,7 +245,7 @@ def startup():
         desensitizer=_desensitizer,
     )
 
-    # Audit logger
+    # 审计日志
     audit_cfg = _config["audit"]
     _audit_logger = AuditLogger(
         log_dir=str(project_root / audit_cfg["log_dir"]),
@@ -254,12 +254,12 @@ def startup():
         log_dir=str(project_root / audit_cfg["log_dir"]),
     )
 
-    # Statistics engine
+    # 统计引擎
     _stats_engine = StatisticsEngine(
         log_dir=str(project_root / audit_cfg["log_dir"]),
     )
 
-    # LLM client (try to connect, non-fatal)
+    # LLM 客户端（尝试连接，连接失败不影响核心功能）
     llm_cfg = _config["llm"]
     try:
         _llm_client = LLMClient(
@@ -283,13 +283,13 @@ def startup():
 
 
 # =============================================================================
-# POST /api/pipeline/check
+# POST /api/pipeline/check — 流水线检测
 # =============================================================================
 
 
 @app.post("/api/pipeline/check", response_model=PipelineResult)
 def pipeline_check(req: PipelineRequest):
-    """Run the full content filtering pipeline on user input."""
+    """对用户输入执行完整的内容风控流水线检测。"""
     assert _normalizer is not None
     assert _rule_detector is not None
     assert _semantic_detector is not None
@@ -307,29 +307,29 @@ def pipeline_check(req: PipelineRequest):
         original_input=text,
     )
 
-    # Step 1: Normalize
+    # 步骤 1: 文本规范化
     normalized = _normalizer.normalize(text)
     record.normalized_input = normalized.normalized
-    # Build normalize evidence: detect what changed
+    # 构建规范化证据：检测变化内容
     normalize_changes = []
     if text != normalized.normalized:
         if text.lower() != normalized.normalized:
             normalize_changes.append("大小写转换")
         if len(text) != len(normalized.normalized):
             normalize_changes.append("分隔符剥离/空格合并")
-        # Check for confusable char changes
+        # 检查易混淆字符变化
         changed_chars = sum(1 for a, b in zip(text, normalized.normalized) if a != b)
         if changed_chars > 0:
             normalize_changes.append(f"{changed_chars}处字符已规范化")
     norm_explanation = "、".join(normalize_changes) if normalize_changes else "无需规范化"
 
-    # Step 2: Rule detection
+    # 步骤 2: 规则检测
     rule_evidence = _rule_detector.detect(normalized.normalized)
 
-    # Step 3: Semantic detection
+    # 步骤 3: 语义检测
     semantic_evidence = _semantic_detector.detect(normalized.normalized)
 
-    # Step 4: Risk fusion
+    # 步骤 4: 风险融合
     risk_result = _fusion.evaluate_input(rule_evidence, semantic_evidence)
     record.input_risk_level = risk_result.risk_level.value
     record.input_risk_category = (
@@ -338,10 +338,10 @@ def pipeline_check(req: PipelineRequest):
     record.input_confidence = risk_result.confidence
     record.input_action = risk_result.action
 
-    # Build evidence chain: normalize → rule matches → semantic matches → fusion decision
+    # 构建证据链：规范化 → 规则匹配 → 语义匹配 → 融合决策
     evidence_chain = []
 
-    # 1. Normalize evidence
+    # 1. 规范化证据
     evidence_chain.append(
         {
             "source": "rule",
@@ -361,7 +361,7 @@ def pipeline_check(req: PipelineRequest):
         }
     )
 
-    # 2. Detection evidence (rule + semantic)
+    # 2. 检测证据（规则 + 语义）
     for e in risk_result.evidence_chain:
         evidence_chain.append(
             {
@@ -376,7 +376,7 @@ def pipeline_check(req: PipelineRequest):
             }
         )
 
-    # 3. Fusion decision evidence
+    # 3. 融合决策证据
     evidence_chain.append(
         {
             "source": "semantic",
@@ -403,16 +403,16 @@ def pipeline_check(req: PipelineRequest):
 
     record.input_evidence = evidence_chain
 
-    # Step 5: Act on risk level
+    # 步骤 5: 按风险等级执行处置
     if risk_result.risk_level == RiskLevel.HIGH:
-        # Block directly
+        # 直接拦截
         record.final_output = "抱歉，您的请求包含不适宜内容，无法处理。"
         record.total_duration_ms = (time.time() - start_time) * 1000
         _audit_logger.log(record)
         return _build_pipeline_result(record)
 
     elif risk_result.risk_level == RiskLevel.MEDIUM:
-        # Desensitize (with LLM rewrite if mode="rewrite")
+        # 脱敏处理（模式为 rewrite 时调用 LLM 改写）
         llm_rewrite = None
         if _desensitizer.config.mode == "rewrite" and _llm_client:
 
@@ -426,7 +426,7 @@ def pipeline_check(req: PipelineRequest):
         )
         safe_input = des_result.desensitized
         record.desensitized_input = safe_input
-        # Add desensitization evidence
+        # 添加脱敏证据
         for frag in des_result.replaced_fragments:
             record.input_evidence.append(
                 {
@@ -447,7 +447,7 @@ def pipeline_check(req: PipelineRequest):
     else:
         safe_input = text
 
-    # Step 6: Call LLM
+    # 步骤 6: 调用大模型
     if _llm_client:
         llm_resp = _llm_client.chat(safe_input)
         record.llm_called = True
@@ -460,7 +460,7 @@ def pipeline_check(req: PipelineRequest):
 
     record.llm_output = llm_output
 
-    # Step 7: Output re-check
+    # 步骤 7: 输出复检
     output_result = _output_checker.check(llm_output)
     record.output_risk_level = (
         output_result.risk_result.risk_level.value if output_result.risk_result else "low"
@@ -475,7 +475,7 @@ def pipeline_check(req: PipelineRequest):
 
 
 def _build_pipeline_result(record: AuditRecord) -> PipelineResult:
-    """Convert AuditRecord to PipelineResult response."""
+    """将 AuditRecord 转换为 PipelineResult 响应。"""
     return PipelineResult(
         requestId=record.request_id,
         timestamp=record.timestamp,
@@ -509,13 +509,13 @@ def _build_pipeline_result(record: AuditRecord) -> PipelineResult:
 
 
 # =============================================================================
-# GET /api/stats/overview
+# GET /api/stats/overview — 统计概览
 # =============================================================================
 
 
 @app.get("/api/stats/overview", response_model=StatsOverview)
 def stats_overview(days: int = 7):
-    """Get aggregated statistics overview."""
+    """获取聚合统计概览。"""
     assert _stats_engine is not None
 
     overview = _stats_engine.get_overview(days=days)
@@ -553,12 +553,12 @@ def stats_overview(days: int = 7):
 
 
 # =============================================================================
-# Rule-management helpers
+# 规则管理辅助函数
 # =============================================================================
 
 
 def _rule_item(rule) -> RuleItem:
-    """Convert an internal rule to its public API representation."""
+    """将内部规则对象转换为公共 API 表示。"""
     return RuleItem(
         id=rule.id,
         pattern=rule.pattern,
@@ -573,7 +573,7 @@ def _rule_item(rule) -> RuleItem:
 
 
 def _rule_metadata() -> RuleMetadata:
-    """Build current rule metadata from the active manager snapshot."""
+    """从当前活跃的管理器快照构建规则元数据。"""
     assert _rule_manager is not None
     categories = [
         {
@@ -604,7 +604,7 @@ def _rule_metadata() -> RuleMetadata:
 
 
 def _require_rules_admin_token(x_admin_token: str | None = Header(default=None)) -> None:
-    """Reject rule-management writes without the configured local admin token."""
+    """未配置本地管理令牌时拒绝规则管理写入操作。"""
     if not _rules_admin_token:
         raise HTTPException(status_code=503, detail="Rule management unavailable")
     if x_admin_token is None or not secrets.compare_digest(x_admin_token, _rules_admin_token):
@@ -612,7 +612,7 @@ def _require_rules_admin_token(x_admin_token: str | None = Header(default=None))
 
 
 # =============================================================================
-# GET /api/rules
+# GET /api/rules — 规则列表
 # =============================================================================
 
 
@@ -624,7 +624,7 @@ def list_rules(
     source: str | None = None,
     enabled: bool | None = None,
 ):
-    """Get one stable filtered page of rules."""
+    """获取一页经过过滤的规则列表。"""
     assert _rule_manager is not None
     if page < 1 or not 1 <= page_size <= 200:
         raise HTTPException(status_code=422, detail="Invalid pagination")
@@ -644,7 +644,7 @@ def list_rules(
 
 @app.get("/api/rules/metadata", response_model=RuleMetadata)
 def rule_metadata():
-    """Get active ruleset version and provenance summaries."""
+    """获取当前规则集的版本和来源摘要。"""
     return _rule_metadata()
 
 
@@ -654,7 +654,7 @@ def set_rule_enabled(
     request: SetRuleEnabledRequest,
     x_admin_token: str | None = Header(default=None, alias="X-Admin-Token"),
 ):
-    """Persist an explicit enable state and immediately rebuild detector caches."""
+    """持久化显式启用状态并立即重建检测器缓存。"""
     _require_rules_admin_token(x_admin_token)
     assert _rule_manager is not None and _rule_detector is not None
     assert _rule_management_audit is not None
@@ -688,7 +688,7 @@ def reload_rules(
     request: ReloadRequest,
     _: str | None = Header(default=None, alias="X-Admin-Token"),
 ):
-    """Reload YAML rules and rebuild detection caches without restarting the API."""
+    """重载 YAML 规则并重建检测器缓存，无需重启 API 服务。"""
     _require_rules_admin_token(_)
     assert _rule_manager is not None and _rule_detector is not None
     assert _rule_management_audit is not None
@@ -711,13 +711,13 @@ def reload_rules(
 
 
 # =============================================================================
-# POST /api/feedback
+# POST /api/feedback — 意见反馈
 # =============================================================================
 
 
 @app.post("/api/feedback", response_model=FeedbackItem)
 def submit_feedback(req: FeedbackRequest):
-    """Submit misclassification feedback."""
+    """提交误判反馈。"""
     feedback_id = str(uuid.uuid4())[:8]
     record = {
         "id": feedback_id,
@@ -731,7 +731,7 @@ def submit_feedback(req: FeedbackRequest):
     }
     _feedback_store.append(record)
 
-    # Persist to feedback JSONL
+    # 持久化到反馈 JSONL 文件
     feedback_path = Path(__file__).resolve().parent.parent.parent / "data" / "feedback"
     feedback_path.mkdir(parents=True, exist_ok=True)
     with open(feedback_path / "feedback.jsonl", "a", encoding="utf-8") as f:
@@ -748,13 +748,13 @@ def submit_feedback(req: FeedbackRequest):
 
 
 # =============================================================================
-# GET /api/audit
+# GET /api/audit — 审计日志
 # =============================================================================
 
 
 @app.get("/api/audit", response_model=list[dict])
 def list_audit_logs(limit: int = 50):
-    """Get recent audit log entries."""
+    """获取最近的审计日志条目。"""
     assert _audit_logger is not None
 
     today = datetime.now().strftime("%Y-%m-%d")
@@ -789,19 +789,19 @@ def list_audit_logs(limit: int = 50):
                 except json.JSONDecodeError:
                     continue
 
-    # Return most recent first, limited
+    # 返回最新的记录，按 limit 截取
     records.reverse()
     return records[:limit]
 
 
 # =============================================================================
-# Health check
+# 健康检查
 # =============================================================================
 
 
 @app.get("/api/health")
 def health():
-    """Health check endpoint."""
+    """健康检查端点。"""
     assert _rule_manager is not None
     return {
         "status": "ok",

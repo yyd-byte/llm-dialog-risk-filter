@@ -1,10 +1,13 @@
-"""Pydantic models for API request/response — mirrors frontend types."""
+"""API 请求/响应数据模型（Pydantic）。
+
+所有模型与前端 frontend/src/types.ts 中的类型定义保持同步。
+"""
 
 from pydantic import BaseModel, Field
 
 
 # =============================================================================
-# Enums (mirrors frontend types.ts)
+# 枚举类型（与前端 types.ts 同步）
 # =============================================================================
 
 RiskLevel = str  # "high" | "medium" | "low"
@@ -14,18 +17,18 @@ RiskAction = str  # "block" | "desensitize" | "pass"
 
 
 # =============================================================================
-# Pipeline
+# 流水线检测
 # =============================================================================
 
 
 class PipelineRequest(BaseModel):
-    """Request body for POST /api/pipeline/check."""
+    """请求体：POST /api/pipeline/check。"""
 
     input: str = Field(..., min_length=1, description="用户输入文本")
 
 
 class EvidenceItem(BaseModel):
-    """A single piece of detection evidence."""
+    """一条检测证据。"""
 
     source: DetectionSource
     category: RiskCategory
@@ -38,7 +41,10 @@ class EvidenceItem(BaseModel):
 
 
 class PipelineResult(BaseModel):
-    """Response for POST /api/pipeline/check."""
+    """响应：POST /api/pipeline/check。
+
+    包含从输入规范化到最终输出的全链路信息。
+    """
 
     requestId: str
     timestamp: str
@@ -59,12 +65,12 @@ class PipelineResult(BaseModel):
 
 
 # =============================================================================
-# Statistics
+# 统计
 # =============================================================================
 
 
 class DailyStatItem(BaseModel):
-    """Daily statistics point."""
+    """每日统计数据点。"""
 
     date: str
     blocked: int = 0
@@ -74,7 +80,7 @@ class DailyStatItem(BaseModel):
 
 
 class CategoryStatItem(BaseModel):
-    """Per-category statistics."""
+    """按风险类别的统计。"""
 
     category: RiskCategory
     label: str
@@ -83,7 +89,7 @@ class CategoryStatItem(BaseModel):
 
 
 class StatsOverview(BaseModel):
-    """Response for GET /api/stats/overview."""
+    """响应：GET /api/stats/overview。"""
 
     totalRequests: int = 0
     blockRate: float = 0.0
@@ -95,12 +101,12 @@ class StatsOverview(BaseModel):
 
 
 # =============================================================================
-# Rules
+# 规则管理
 # =============================================================================
 
 
 class RuleItem(BaseModel):
-    """A single detection rule."""
+    """一条检测规则。"""
 
     id: str
     pattern: str
@@ -114,7 +120,7 @@ class RuleItem(BaseModel):
 
 
 class RulePage(BaseModel):
-    """A paginated rule-list response."""
+    """分页规则列表响应。"""
 
     items: list[RuleItem]
     page: int
@@ -124,7 +130,7 @@ class RulePage(BaseModel):
 
 
 class RuleSourceSummary(BaseModel):
-    """Rule provenance summary."""
+    """规则来源摘要。"""
 
     source: str
     ruleCount: int
@@ -132,7 +138,7 @@ class RuleSourceSummary(BaseModel):
 
 
 class RuleMetadata(BaseModel):
-    """Ruleset counts and current persisted version."""
+    """规则集统计及当前持久化版本号。"""
 
     version: str
     total: int
@@ -142,32 +148,32 @@ class RuleMetadata(BaseModel):
 
 
 class SetRuleEnabledRequest(BaseModel):
-    """Requested explicit enabled state guarded by a ruleset version."""
+    """请求显式设置启用状态，并附带规则集版本校验。"""
 
     enabled: bool
     expectedVersion: str
 
 
 class RuleMutationResponse(BaseModel):
-    """Response for a successful rule enable-state mutation."""
+    """操作成功的规则启用状态变更响应。"""
 
     item: RuleItem
     version: str
 
 
 class ReloadRequest(BaseModel):
-    """Optional current version supplied before explicit rule reload."""
+    """可选：重载前提交当前版本号以做冲突检测。"""
 
     expectedVersion: str | None = None
 
 
 # =============================================================================
-# Feedback
+# 反馈
 # =============================================================================
 
 
 class FeedbackRequest(BaseModel):
-    """Request body for POST /api/feedback."""
+    """请求体：POST /api/feedback。"""
 
     type: str = Field(..., description="误判类型: false_positive | false_negative | wrong_category")
     requestId: str = ""
@@ -177,7 +183,7 @@ class FeedbackRequest(BaseModel):
 
 
 class FeedbackItem(BaseModel):
-    """Stored feedback record."""
+    """已存储的反馈记录。"""
 
     id: str
     timestamp: str
