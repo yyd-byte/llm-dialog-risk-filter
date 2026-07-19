@@ -72,8 +72,8 @@ function App() {
             <ShieldCheck size={24} />
           </span>
           <div>
-            <strong>内容风控网关</strong>
-            <span>LLM Dialog Risk Filter</span>
+            <strong>内容审核中心</strong>
+            <span>Dialog Risk Operations</span>
           </div>
         </div>
 
@@ -98,8 +98,8 @@ function App() {
         <div className="backend-card">
           <span className="status-dot" />
           <div>
-            <strong>后端已连接</strong>
-            <span>API: localhost:8000</span>
+            <strong>审核策略可用</strong>
+            <span>规则库与审计链路正常</span>
           </div>
         </div>
       </aside>
@@ -120,8 +120,9 @@ function Topbar() {
   return (
     <header className="topbar">
       <div>
-        <p className="eyebrow">输入拦截 + 后置复检 + 可解释审计</p>
-        <h1>面向对话场景的大模型输入输出违规内容过滤系统</h1>
+        <p className="eyebrow">内容安全工作台</p>
+        <h1>对话内容风险审核</h1>
+        <p className="page-summary">覆盖输入拦截、输出复检与可追溯审计。</p>
       </div>
       <div className="topbar-actions">
         <button className="icon-button" title="刷新数据" type="button" onClick={() => window.location.reload()}>
@@ -193,8 +194,9 @@ function ConsoleView() {
               <strong>{actionLabels[result.action]}</strong>
               <span>{result.riskCategory ? categoryLabels[result.riskCategory] : "未发现风险类别"}</span>
             </div>
-            <div className="confidence-ring" style={{ "--value": `${result.confidence * 100}%` } as React.CSSProperties}>
-              <span>{Math.round(result.confidence * 100)}</span>
+            <div className="confidence-score" aria-label={`风险置信度 ${Math.round(result.confidence * 100)}%`}>
+              <small>置信度</small>
+              <span>{Math.round(result.confidence * 100)}%</span>
             </div>
           </div>
 
