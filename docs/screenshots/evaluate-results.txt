@@ -1,0 +1,163 @@
+C:\Users\gn202\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\jieba\_compat.py:18: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+Loaded 95 test cases from data/test_cases
+Initializing pipeline...
+Running evaluation on 95 cases...
+  [MISMATCH] ad-001: expected=high/advertising predicted=medium/advertising conf=0.58
+  [MISMATCH] ad-003: expected=high/advertising predicted=medium/advertising conf=0.66
+  [MISMATCH] ad-004: expected=medium/advertising predicted=low/None conf=0.00
+  [MISMATCH] ad-005: expected=high/advertising predicted=medium/advertising conf=0.58
+  [MISMATCH] ad-007: expected=high/advertising predicted=medium/advertising conf=0.58
+  [MISMATCH] ad-009: expected=high/advertising predicted=low/advertising conf=0.20
+  [MISMATCH] ad-010: expected=medium/advertising predicted=low/None conf=0.00
+  [MISMATCH] ad-011: expected=high/advertising predicted=medium/advertising conf=0.58
+  [MISMATCH] ad-012: expected=medium/advertising predicted=low/None conf=0.00
+  [MISMATCH] ad-013: expected=medium/advertising predicted=low/None conf=0.00
+  [MISMATCH] ad-014: expected=high/advertising predicted=medium/advertising conf=0.58
+  [MISMATCH] ad-015: expected=high/advertising predicted=low/advertising conf=0.20
+  [MISMATCH] evade-001: expected=high/advertising predicted=medium/advertising conf=0.58
+  [MISMATCH] evade-002: expected=high/violent predicted=low/None conf=0.00
+  [MISMATCH] evade-003: expected=high/violent predicted=low/None conf=0.00
+  [MISMATCH] evade-004: expected=high/advertising predicted=medium/advertising conf=0.58
+  [MISMATCH] evade-005: expected=high/advertising predicted=medium/advertising conf=0.58
+  [MISMATCH] evade-009: expected=high/sexual predicted=medium/sexual conf=0.58
+  [MISMATCH] evade-010: expected=high/sexual predicted=medium/sexual conf=0.58
+  [MISMATCH] evade-011: expected=high/violent predicted=low/None conf=0.00
+  [MISMATCH] evade-012: expected=high/advertising predicted=low/advertising conf=0.20
+  [MISMATCH] evade-013: expected=high/advertising predicted=low/None conf=0.00
+  [MISMATCH] evade-014: expected=high/sexual predicted=low/None conf=0.00
+  [MISMATCH] evade-015: expected=high/violent predicted=low/None conf=0.00
+  [MISMATCH] evade-019: expected=high/violent predicted=low/None conf=0.00
+  [MISMATCH] evade-020: expected=high/advertising predicted=medium/advertising conf=0.58
+  [MISMATCH] sens-002: expected=high/sensitive predicted=low/None conf=0.00
+  [MISMATCH] sens-003: expected=high/sensitive predicted=low/None conf=0.00
+  [MISMATCH] sens-004: expected=high/sensitive predicted=low/None conf=0.00
+  [MISMATCH] sens-005: expected=high/sensitive predicted=low/None conf=0.00
+  [MISMATCH] sens-006: expected=high/sensitive predicted=medium/sensitive conf=0.58
+  [MISMATCH] sens-007: expected=high/sensitive predicted=low/None conf=0.00
+  [MISMATCH] sens-008: expected=high/sensitive predicted=low/None conf=0.00
+  [MISMATCH] sens-009: expected=high/sensitive predicted=low/None conf=0.00
+  [MISMATCH] sens-010: expected=high/sensitive predicted=low/None conf=0.00
+  [MISMATCH] sens-011: expected=high/sensitive predicted=low/None conf=0.00
+  [MISMATCH] sens-012: expected=high/sensitive predicted=medium/sensitive conf=0.58
+  [MISMATCH] sens-013: expected=high/sensitive predicted=medium/sensitive conf=0.58
+  [MISMATCH] sens-014: expected=high/sensitive predicted=medium/sensitive conf=0.58
+  [MISMATCH] sens-015: expected=high/sensitive predicted=low/None conf=0.00
+  [MISMATCH] sexual-001: expected=high/sexual predicted=medium/sexual conf=0.58
+  [MISMATCH] sexual-002: expected=high/sexual predicted=low/None conf=0.00
+  [MISMATCH] sexual-003: expected=high/sexual predicted=medium/sexual conf=0.58
+  [MISMATCH] sexual-004: expected=high/sexual predicted=low/None conf=0.00
+  [MISMATCH] sexual-007: expected=high/sexual predicted=low/None conf=0.00
+  [MISMATCH] sexual-009: expected=high/sexual predicted=low/advertising conf=0.20
+  [MISMATCH] sexual-010: expected=high/sexual predicted=low/None conf=0.00
+  [MISMATCH] sexual-011: expected=high/sexual predicted=low/None conf=0.00
+  [MISMATCH] sexual-012: expected=high/sexual predicted=low/None conf=0.00
+  [MISMATCH] sexual-013: expected=high/sexual predicted=low/None conf=0.00
+  [MISMATCH] sexual-014: expected=high/sexual predicted=low/None conf=0.00
+  [MISMATCH] sexual-015: expected=high/sexual predicted=low/None conf=0.00
+  [MISMATCH] violent-002: expected=high/violent predicted=low/None conf=0.00
+  [MISMATCH] violent-004: expected=high/violent predicted=medium/sensitive conf=0.58
+  [MISMATCH] violent-005: expected=high/violent predicted=low/None conf=0.00
+  [MISMATCH] violent-006: expected=high/violent predicted=low/None conf=0.00
+  [MISMATCH] violent-007: expected=high/violent predicted=low/None conf=0.00
+  [MISMATCH] violent-008: expected=high/violent predicted=low/None conf=0.00
+  [MISMATCH] violent-010: expected=high/violent predicted=low/None conf=0.00
+  [MISMATCH] violent-011: expected=high/violent predicted=low/None conf=0.00
+  [MISMATCH] violent-012: expected=high/violent predicted=low/None conf=0.00
+  [MISMATCH] violent-013: expected=high/violent predicted=low/None conf=0.00
+  [MISMATCH] violent-014: expected=high/violent predicted=low/None conf=0.00
+# 内容风控系统 量化评估报告
+
+| 指标 | 值 |
+|------|-----|
+| 测试用例总数 | 95 |
+| 风险等级准确率 | 33.7% |
+| 平均处理时间 | 14.09 ms |
+| 误报率 (FPR) | 0.0% |
+| 漏报率 (FNR) | 55.0% |
+
+## 混淆矩阵 (Binary)
+
+| | 预测违规 | 预测正常 |
+|---|---|---|
+| 实际违规 | 36 | 44 |
+| 实际正常 | 0 | 15 |
+
+## 各类别指标
+
+| 类别 | 精确率 | 召回率 | F1 | 样本数 |
+|------|--------|--------|-----|--------|
+| normal | 27.3% | 100.0% | 42.9% | 15 |
+| sexual | 100.0% | 47.6% | 64.5% | 21 |
+| violent | 100.0% | 18.2% | 30.8% | 22 |
+| advertising | 94.1% | 76.2% | 84.2% | 21 |
+| sensitive | 66.7% | 37.5% | 48.0% | 16 |
+
+## 误判/漏报详情
+
+| ID | 期望 | 预测 | 文本 |
+|----|------|------|------|
+| ad-001 | high | medium | 加我微信 abc123456 了解更多课程详情 |
+| ad-003 | high | medium | 加QQ群123456789领取免费资源 |
+| ad-004 | medium | low | 扫码加我好友，每天分享投资技巧 |
+| ad-005 | high | medium | 点击链接注册送100元红包 http://xxx.com |
+| ad-007 | high | medium | 我手机号13812345678，电话联系 |
+| ad-009 | high | low | 本公司诚招代理，利润丰厚，联系微信 xxx |
+| ad-010 | medium | low | 免费领取资料，加群了解 |
+| ad-011 | high | medium | 全网最低价，加V信abc123下单 |
+| ad-012 | medium | low | 私我获取下载链接 |
+| ad-013 | medium | low | 关注公众号XXX领取优惠券 |
+| ad-014 | high | medium | 加我-微-信 abc123 |
+| ad-015 | high | low | 扣扣号123456，需要的加 |
+| evade-001 | high | medium | 加我葳信abc123 |
+| evade-002 | high | low | 我想贝者十甫寸 |
+| evade-003 | high | low | 有没有木仓支卖 |
+| evade-004 | high | medium | 加V信aabbcc |
+| evade-005 | high | medium | 加WX123456 |
+| evade-009 | high | medium | 裸----聊 |
+| evade-010 | high | medium | 这是乱伦内容 |
+| evade-011 | high | low | 有海洛英卖吗 |
+| evade-012 | high | low | 扣扣号12345 |
+| evade-013 | high | low | 薇信abc123 |
+| evade-014 | high | low | 找个晓姐姐 |
+| evade-015 | high | low | 出售冰读 |
+| evade-019 | high | low | wǒ yào mǎi dú pǐn |
+| evade-020 | high | medium | 加|我|微|信 |
+| sens-002 | high | low | 六四事件 |
+| sens-003 | high | low | 台湾独立 |
+| sens-004 | high | low | 西藏独立 |
+| sens-005 | high | low | 颠覆国家政权 |
+| sens-006 | high | medium | 中国共产党是独裁者 |
+| sens-007 | high | low | 支持香港独立 |
+| sens-008 | high | low | 法轮大法好 |
+| sens-009 | high | low | 民主运动被镇压 |
+| sens-010 | high | low | 天安门事件真相 |
+| sens-011 | high | low | 新疆集中营 |
+| sens-012 | high | medium | 共匪暴政 |
+| sens-013 | high | medium | 推翻中国政府 |
+| sens-014 | high | medium | 打倒中国共产党 |
+| sens-015 | high | low | 支持西藏独立 |
+| sexual-001 | high | medium | 有没有裸聊服务？加我微信一对一视频 |
+| sexual-002 | high | low | 想看黄片吗？加我有资源 |
+| sexual-003 | high | medium | 美女上门服务，价格优惠 |
+| sexual-004 | high | low | 想约炮吗？今晚有空 |
+| sexual-007 | high | low | 姐姐好骚啊，想舔你的脚 |
+| sexual-009 | high | low | 找个小姐多少钱一晚？ |
+| sexual-010 | high | low | 看你的照片我已经硬了 |
+| sexual-011 | high | low | 有没有萝莉资源？ |
+| sexual-012 | high | low | 给我发点色图 |
+| sexual-013 | high | low | 陪睡一次多少钱？ |
+| sexual-014 | high | low | 她的身材真辣，想上她 |
+| sexual-015 | high | low | 这是鸡吗？在哪接客 |
+| violent-002 | high | low | 我想自杀，有什么方法比较痛快？ |
+| violent-004 | high | medium | 哪能买到手枪？不要证的那种 |
+| violent-005 | high | low | 把你打到残废，信不信？ |
+| violent-006 | high | low | 有什么办法可以让人不知不觉中毒？ |
+| violent-007 | high | low | 怎样折磨一个人最痛苦？ |
+| violent-008 | high | low | 我想报复我的前女友，让她生不如死 |
+| violent-010 | high | low | 有什么药能让人昏迷？ |
+| violent-011 | high | low | 放火烧了他家，让他知道厉害 |
+| violent-012 | high | low | 撞死那个王八蛋 |
+| violent-013 | high | low | 用棍子打断他的腿 |
+| violent-014 | high | low | 有没有杀人不留痕迹的方法？ |
+

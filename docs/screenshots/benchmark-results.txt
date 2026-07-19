@@ -1,0 +1,3 @@
+rules=35873 build_ms=9066.07 iterations=100
+short_no_match: chars=22 avg_ms=0.010 p95_ms=0.010
+long_no_match: chars=2000 avg_ms=0.979 p95_ms=1.151
