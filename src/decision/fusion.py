@@ -1,4 +1,4 @@
-"""Risk fusion — combines rule and semantic results into a unified risk decision."""
+"""风险融合 — 将规则和语义检测结果合并为统一的风险决策。"""
 
 from dataclasses import dataclass, field
 
@@ -7,7 +7,10 @@ from src.decision.models import Evidence, RiskCategory, RiskLevel, RiskResult
 
 @dataclass
 class FusionConfig:
-    """Configuration for risk fusion."""
+    """风险融合配置。
+
+    用于控制融合策略的阈值、权重和规则层置信度映射。
+    """
 
     high_threshold: float = 0.8
     medium_threshold: float = 0.4
@@ -22,7 +25,13 @@ class FusionConfig:
     )
 
     def __post_init__(self) -> None:
-        """Validate thresholds, weights, and rule-level confidence values."""
+        """校验阈值、权重和规则层置信度的合法性。
+
+        Raises:
+            ValueError: 当 rule_confidence 未覆盖所有风险等级、置信度不满足
+                        0 <= low < medium < high <= 1、阈值不满足
+                        0 <= medium < high <= 1、权重为负数、或两个权重同时为零时抛出。
+        """
         required_levels = set(RiskLevel)
         if set(self.rule_confidence) != required_levels:
             raise ValueError("rule_confidence must define low, medium, and high")
@@ -40,7 +49,14 @@ class FusionConfig:
 
 
 def fusion_config_from_dict(config: dict) -> FusionConfig:
-    """Build validated fusion configuration from a YAML-compatible mapping."""
+    """从 YAML 字典构建已验证的融合配置。
+
+    Args:
+        config: YAML 中 risk_fusion 段的配置字典。
+
+    Returns:
+        校验通过的 FusionConfig 实例。
+    """
     default_confidence = FusionConfig().rule_confidence
     confidence = {
         **default_confidence,
@@ -59,7 +75,13 @@ def fusion_config_from_dict(config: dict) -> FusionConfig:
 
 
 class RiskFusion:
-    """Fuse rule and semantic evidence into an explainable risk decision."""
+    """将规则和语义证据融合为可解释的风险决策。
+
+    融合策略：
+    1. 任一规则声明 HIGH → 直接定级 HIGH
+    2. 同类别内，规则层 noisy-or 聚合 + 语义层取最大值，加权平均
+    3. 跨类别取最高分，按阈值定级 HIGH/MEDIUM/LOW
+    """
 
     def __init__(self, config: FusionConfig | None = None):
         self.config = config or FusionConfig()
@@ -69,7 +91,15 @@ class RiskFusion:
         rule_evidence: list[Evidence],
         semantic_evidence: list[Evidence] | None = None,
     ) -> RiskResult:
-        """Combine rule and semantic evidence into a single risk result."""
+        """对规则和语义证据进行融合，输出统一的风险评估结果。
+
+        Args:
+            rule_evidence: 规则检测层产生的证据列表。
+            semantic_evidence: 语义检测层产生的证据列表，可为 None。
+
+        Returns:
+            包含风险等级、类别、置信度和完整证据链的 RiskResult。
+        """
         semantic_evidence = semantic_evidence or []
         all_evidence = rule_evidence + semantic_evidence
         if not all_evidence:
@@ -108,7 +138,7 @@ class RiskFusion:
         rule_evidence: list[Evidence],
         semantic_evidence: list[Evidence] | None = None,
     ) -> RiskResult:
-        """Evaluate risk for input side."""
+        """评估输入侧的风险。"""
         return self.evaluate(rule_evidence, semantic_evidence)
 
     def evaluate_output(
@@ -116,7 +146,7 @@ class RiskFusion:
         rule_evidence: list[Evidence],
         semantic_evidence: list[Evidence] | None = None,
     ) -> RiskResult:
-        """Evaluate risk for output side."""
+        """评估输出侧的风险。"""
         return self.evaluate(rule_evidence, semantic_evidence)
 
     def _category_score(
@@ -125,6 +155,11 @@ class RiskFusion:
         rule_evidence: list[Evidence],
         semantic_evidence: list[Evidence],
     ) -> float:
+        """计算单个风险类别的融合置信度。
+
+        同类别内：规则层 noisy-or 聚合，语义层取最大值，
+        如果两者均有值则加权平均并与各层级分数取最大值。
+        """
         category_rules = [evidence for evidence in rule_evidence if evidence.category == category]
         category_semantic = [
             evidence for evidence in semantic_evidence if evidence.category == category
@@ -141,7 +176,7 @@ class RiskFusion:
 
     @staticmethod
     def _deduplicate_rule_evidence(evidence_list: list[Evidence]) -> list[Evidence]:
-        """Retain the strongest rule signal per category and normalized match."""
+        """按类别和归一化匹配文本保留每个规则信号的最强证据。"""
         unique: dict[tuple[RiskCategory, str], Evidence] = {}
         for evidence in evidence_list:
             match_key = " ".join(evidence.matched_text.casefold().split())
@@ -153,7 +188,7 @@ class RiskFusion:
 
     @staticmethod
     def _noisy_or(confidences: list[float]) -> float:
-        """Aggregate independent rule signals without exceeding one."""
+        """使用 noisy-or 聚合独立规则信号，结果不超过 1。"""
         score = 1.0
         for confidence in confidences:
             score *= 1 - confidence
@@ -161,19 +196,22 @@ class RiskFusion:
 
     @staticmethod
     def _max_confidence(evidence_list: list[Evidence]) -> float:
-        """Return the highest confidence from an evidence list."""
+        """返回证据列表中的最高置信度值。"""
         return max((evidence.confidence for evidence in evidence_list), default=0.0)
 
     def _best_category(
         self, category_scores: dict[RiskCategory, float]
     ) -> tuple[RiskCategory | None, float]:
-        """Select the strongest category using enum order as a deterministic tie-breaker."""
+        """选择置信度最高的风险类别，枚举顺序作为确定性平局裁决。"""
         category = max(RiskCategory, key=lambda item: category_scores[item])
         confidence = category_scores[category]
         return (category, confidence) if confidence else (None, 0.0)
 
     def _risk_level_for(self, confidence: float) -> RiskLevel:
-        """Map an aggregate confidence to the configured risk tier."""
+        """将聚合置信度映射到配置的风险等级。
+
+        高阈值以上为 HIGH，中阈值以上为 MEDIUM，否则为 LOW。
+        """
         if confidence >= self.config.high_threshold:
             return RiskLevel.HIGH
         if confidence >= self.config.medium_threshold:
@@ -182,12 +220,12 @@ class RiskFusion:
 
     @staticmethod
     def _first_category(categories: list[RiskCategory]) -> RiskCategory:
-        """Return the first category in stable enum order."""
+        """按稳定的枚举顺序返回第一个匹配类别。"""
         return next(category for category in RiskCategory if category in categories)
 
     @staticmethod
     def evidence_summary(result: RiskResult) -> str:
-        """Generate a human-readable summary of a risk result."""
+        """生成风险评估结果的可读摘要。"""
         if result.is_safe:
             return "内容正常，放行"
 

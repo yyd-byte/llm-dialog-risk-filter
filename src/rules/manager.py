@@ -1,4 +1,7 @@
-"""Rule management — queries, persistence, and enable-state operations."""
+"""规则管理 — 查询、持久化及启用状态操作。
+
+采用乐观锁版本控制，确保并发规则变更的安全性。
+"""
 
 from datetime import datetime
 from threading import RLock
@@ -9,11 +12,18 @@ from src.rules.repository import RuleRepository
 
 
 class RuleVersionConflictError(Exception):
-    """Raised when a rule mutation targets an outdated ruleset version."""
+    """规则变更操作的目标版本与当前版本不一致时抛出。
+
+    调用方应获取最新版本后重试。
+    """
 
 
 class RuleManager:
-    """Manage one in-memory rule snapshot backed by category YAML files."""
+    """管理一份以 YAML 文件为后端的规则内存快照。
+
+    提供规则的增删查改、启用/禁用、分页过滤及批量导入导出功能。
+    所有写操作通过乐观锁（expected_version）防止并发冲突。
+    """
 
     def __init__(self, repository: RuleRepository):
         self._repo = repository
@@ -22,36 +32,36 @@ class RuleManager:
         self.reload()
 
     def reload(self) -> None:
-        """Replace the current snapshot only after all files load successfully."""
+        """仅在全部文件加载成功后替换当前内存快照。"""
         candidate = self._repo.load_all()
         with self._lock:
             self._rules = candidate
 
     def rebuild_version(self) -> str:
-        """Return the current persisted ruleset version."""
+        """返回当前持久化规则的版本。"""
         return self._repo.version()
 
     def get_enabled_rules(self, category: RiskCategory | None = None) -> list[Rule]:
-        """Get enabled rules, optionally scoped to one category."""
+        """获取已启用的规则，可按类别筛选。"""
         with self._lock:
             if category:
                 return [rule for rule in self._rules.get(category, []) if rule.enabled]
             return [rule for rules in self._rules.values() for rule in rules if rule.enabled]
 
     def get_all_rules(self, category: RiskCategory | None = None) -> list[Rule]:
-        """Get all rules, optionally scoped to one category."""
+        """获取全部规则，可按类别筛选。"""
         with self._lock:
             if category:
                 return list(self._rules.get(category, []))
             return [rule for rules in self._rules.values() for rule in rules]
 
     def add_rule(self, rule: Rule) -> None:
-        """Add one rule to the current in-memory snapshot."""
+        """向当前内存快照中添加一条规则。"""
         with self._lock:
             self._rules.setdefault(rule.category, []).append(rule)
 
     def get_rule_by_id(self, rule_id: str) -> Rule | None:
-        """Find one rule by ID."""
+        """根据 ID 查找规则。"""
         with self._lock:
             for rules in self._rules.values():
                 for rule in rules:
@@ -67,7 +77,7 @@ class RuleManager:
         page: int = 1,
         page_size: int = 50,
     ) -> tuple[list[Rule], int]:
-        """Return a stable filtered page of rules and its total count."""
+        """返回稳定的过滤后规则分页及总数。"""
         rules = self.get_all_rules(category)
         if source is not None:
             rules = [rule for rule in rules if rule.source == source]
@@ -83,18 +93,25 @@ class RuleManager:
         enabled: bool,
         expected_version: str,
     ) -> tuple[Rule, str, bool]:
-        """Persist an explicit enabled state and return rule, version, and prior state."""
+        """持久化规则的启用状态并返回更新后的规则、新版本和旧状态。
+
+        使用乐观锁：expected_version 必须与当前版本一致，否则拒绝操作。
+        同一规则重复设置为相同状态时直接返回（幂等）。
+        """
         with self._lock:
+            # 1. 版本检查 — 不匹配则拒绝
             current_version = self._repo.version()
             if expected_version != current_version:
                 raise RuleVersionConflictError(current_version)
+            # 2. 查找规则
             rule = self.get_rule_by_id(rule_id)
             if rule is None:
                 raise KeyError(rule_id)
+            # 3. 幂等检查 — 状态未变化则直接返回
             previous_enabled = rule.enabled
             if previous_enabled == enabled:
                 return rule, current_version, previous_enabled
-
+            # 4. 持久化整个类别的规则快照
             now = datetime.now().isoformat()
             category = rule.category
             saved_rules = [
@@ -120,7 +137,7 @@ class RuleManager:
             return rule, self._repo.version(), previous_enabled
 
     def get_category_meta(self) -> list[RuleCategoryMeta]:
-        """Get rule counts and labels for every category."""
+        """获取所有类别的规则统计与标签信息。"""
         labels = {
             RiskCategory.SEXUAL: "色情低俗",
             RiskCategory.VIOLENT: "暴力危险",
@@ -146,7 +163,7 @@ class RuleManager:
             ]
 
     def source_counts(self) -> list[dict]:
-        """Return deterministic provenance counts for loaded rules."""
+        """返回已加载规则的确定性来源计数。"""
         counts: dict[str, list[Rule]] = {}
         for rule in self.get_all_rules():
             counts.setdefault(rule.source, []).append(rule)
@@ -160,7 +177,7 @@ class RuleManager:
         ]
 
     def export_rules(self, category: RiskCategory) -> list[dict]:
-        """Export rules as serializable dictionaries."""
+        """将规则导出为可序列化的字典列表。"""
         return [
             {
                 "id": rule.id,
@@ -176,7 +193,7 @@ class RuleManager:
         ]
 
     def import_rules(self, category: RiskCategory, rules_data: list[dict]) -> int:
-        """Add supplied rules to memory for compatibility with existing callers."""
+        """向内存中添加导入的规则，兼容现有调用者。"""
         with self._lock:
             for item in rules_data:
                 self._rules.setdefault(category, []).append(

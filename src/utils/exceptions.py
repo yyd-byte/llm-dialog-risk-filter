@@ -1,29 +1,29 @@
-"""Custom exceptions for the risk filtering system."""
+"""风险过滤系统自定义异常。"""
 
 
 class RiskFilterError(Exception):
-    """Base exception for all risk filter errors."""
+    """所有风险过滤异常的基类。"""
 
 
 class ConfigurationError(RiskFilterError):
-    """Raised when configuration is invalid or missing."""
+    """配置无效或缺失时抛出。"""
 
 
 class RuleLoadError(RiskFilterError):
-    """Raised when rule files cannot be loaded or parsed."""
+    """规则文件加载或解析失败时抛出。"""
 
 
 class DetectionError(RiskFilterError):
-    """Raised when detection pipeline encounters an error."""
+    """检测流水线遇到错误时抛出。"""
 
 
 class ModelNotAvailableError(RiskFilterError):
-    """Raised when semantic model is not loaded or available."""
+    """语义模型未加载或不可用时抛出。"""
 
 
 class LLMServiceError(RiskFilterError):
-    """Raised when LLM service call fails."""
+    """大模型服务调用失败时抛出。"""
 
 
 class AuditLogError(RiskFilterError):
-    """Raised when audit logging fails."""
+    """审计日志写入失败时抛出。"""
