@@ -8,6 +8,64 @@ llm-dialog-risk-filter/
 
 > 标记说明：**[全员]** 表示任何成员可执行；**[维护者]** 表示仅持有本地 `RULES_ADMIN_TOKEN` 的规则维护者执行；**[会修改共享规则]** 表示必须在分支和 PR 中审查。
 
+## 系统架构
+
+```
+用户输入
+  │
+  ▼
+┌─────────────────────────────────────────────────────┐
+│ 1. 文本规范化 (TextNormalizer)                        │
+│    全半角转换 → 繁简转换 → 缩写展开 → 拆字还原         │
+│    → 谐音/形近字替换 → 拼音感知 → 分隔符剥离            │
+└──────────────────┬──────────────────────────────────┘
+                   ▼
+┌─────────────────────────────────────────────────────┐
+│ 2. 双层过滤                                           │
+│  ┌──────────────────┐  ┌──────────────────┐        │
+│  │ 规则检测 (第一层)  │  │ 语义检测 (第二层)  │        │
+│  │ AC自动机 + 正则   │  │ BGE Embedding    │        │
+│  │ 快速拦截明显违规   │  │ 二次语义判断      │        │
+│  └────────┬─────────┘  └────────┬─────────┘        │
+│           └──────────┬──────────┘                   │
+│                      ▼                              │
+│  ┌──────────────────────────────────┐              │
+│  │ 3. 风险融合 (RiskFusion)          │              │
+│  │    规则+语义加权融合 → 风险等级    │              │
+│  └──────────────┬───────────────────┘              │
+└─────────────────┼──────────────────────────────────┘
+                  ▼
+    ┌─────────────┼─────────────┐
+    ▼             ▼             ▼
+┌──────┐   ┌──────────┐   ┌──────┐
+│ HIGH │   │ MEDIUM   │   │ LOW  │
+│ 拦截 │   │ 脱敏后    │   │ 放行 │
+│      │   │ 继续处理  │   │      │
+└──────┘   └────┬─────┘   └──┬───┘
+                │             │
+                ▼             │
+         ┌──────────┐        │
+         │4. 脱敏    │        │
+         │ 片段替换  │        │
+         └────┬─────┘        │
+              │              │
+              ▼              ▼
+         ┌──────────────────────┐
+         │ 5. LLM 调用           │
+         │    DeepSeek / Ollama  │
+         └──────────┬───────────┘
+                    ▼
+         ┌──────────────────────┐
+         │ 6. 输出复检            │
+         │    LLM 回复二次校验    │
+         └──────────┬───────────┘
+                    ▼
+         ┌──────────────────────┐
+         │ 7. 审计日志            │
+         │    JSONL 全链路记录    │
+         └──────────────────────┘
+```
+
 ---
 
 ## 1. 系统与运行模式
@@ -85,9 +143,48 @@ cd ..
 
 ---
 
-## 3. 本地环境变量与安全
+## 3. 快速体验（5 分钟）
 
-### 3.1 创建 `.env` [全员]
+### 1. 安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. 配置 API Key（可选，不配置则使用模拟模式）
+
+```bash
+# 在项目根目录创建 .env 文件
+echo "DEEPSEEK_API_KEY=your-key-here" > .env
+```
+
+### 3. 运行命令行演示
+
+```bash
+# 模拟模式（不需要 API Key）
+python demo/cli_demo.py --no-llm
+
+# 交互模式（输入文本实时检测）
+python demo/cli_demo.py --interactive --no-llm
+```
+
+### 4. 启动 API + 前端（完整体验）
+
+```bash
+# 终端 1：启动后端
+python -m uvicorn src.api.server:app --reload --port 8000
+
+# 终端 2：启动前端
+cd frontend && pnpm install && pnpm dev
+```
+
+浏览器打开 http://localhost:5173 即可使用完整界面。
+
+---
+
+## 4. 本地环境变量与安全
+
+### 4.1 创建 `.env` [全员]
 
 ```bash
 cp .env.example .env
@@ -108,7 +205,7 @@ cp .env.example .env
 - Key/token 暴露后立即在服务商或维护者本地撤销并重新生成。
 - `data/logs/`、`data/feedback/` 可能包含敏感运行数据，禁止提交。
 
-### 3.2 管理令牌示例 [维护者]
+### 4.2 管理令牌示例 [维护者]
 
 在维护者本地 `.env` 中填写随机长字符串：
 
@@ -120,9 +217,9 @@ RULES_ADMIN_TOKEN=replace-with-a-long-random-local-value
 
 ---
 
-## 4. 启动与停止
+## 5. 启动与停止
 
-### 4.1 启动后端 [全员]
+### 5.1 启动后端 [全员]
 
 ```bash
 python -m uvicorn src.api.server:app --reload --port 8000
@@ -137,7 +234,7 @@ curl http://127.0.0.1:8000/api/health
 - API 文档：<http://127.0.0.1:8000/docs>
 - 后端地址：`http://127.0.0.1:8000`
 
-### 4.2 启动前端 [全员]
+### 5.2 启动前端 [全员]
 
 另开一个终端：
 
@@ -150,7 +247,7 @@ pnpm dev
 
 前端 API 地址当前固定为 `http://localhost:8000`。开发时应保持后端运行在 8000 端口；后端 CORS 只允许 Vite 的本地 5173 地址。
 
-### 4.3 启动 Streamlit 看板 [全员]
+### 5.3 启动 Streamlit 看板 [全员]
 
 ```bash
 streamlit run src/dashboard/app.py
@@ -158,13 +255,13 @@ streamlit run src/dashboard/app.py
 
 端口与标题可在 `config/default.yaml` 的 dashboard 配置中调整。
 
-### 4.4 停止服务
+### 5.4 停止服务
 
-在启动服务的终端按 `Ctrl+C`。不要通过删除 `data/` 目录来“停止”服务。
+在启动服务的终端按 `Ctrl+C`。不要通过删除 `data/` 目录来"停止"服务。
 
 ---
 
-## 5. CLI 演示
+## 6. CLI 演示
 
 | 目标 | 命令 |
 |---|---|
@@ -180,11 +277,11 @@ streamlit run src/dashboard/app.py
 
 ---
 
-## 6. 配置参考
+## 7. 配置参考
 
 主要配置位于 `config/default.yaml`。
 
-### 6.1 规则检测
+### 7.1 规则检测
 
 ```yaml
 rule_detection:
@@ -194,7 +291,7 @@ rule_detection:
 
 运行时只读取 `config/rules/` 的四个活动文件；`config/rules.bak/` 是备份/参考，不会被检测器加载。
 
-### 6.2 语义检测
+### 7.2 语义检测
 
 ```yaml
 semantic_detection:
@@ -205,7 +302,7 @@ semantic_detection:
 - `api`：云端 embedding；需要 `SILICONFLOW_API_KEY`。
 - 模型不可用时系统会回退到规则层；日志会说明回退原因。
 
-### 6.3 风险融合
+### 7.3 风险融合
 
 `risk_fusion` 控制 high/medium 阈值、规则/语义权重和规则等级强度：
 
@@ -218,7 +315,7 @@ rule_confidence:
 
 同一类别多个低风险独立信号会累积；high 规则为直接高风险信号。修改后必须重启应用或重新运行 CLI/评估脚本。
 
-### 6.4 脱敏与输出检查
+### 7.4 脱敏与输出检查
 
 - `mask`：字符掩码。
 - `semantic`：替换为类别标签。
@@ -228,9 +325,9 @@ rule_confidence:
 
 ---
 
-## 7. 前端与 API 操作
+## 8. 前端与 API 操作
 
-### 7.1 普通功能 [全员]
+### 8.1 普通功能 [全员]
 
 前端提供：
 
@@ -240,9 +337,9 @@ rule_confidence:
 - 误判反馈：提交到 `data/feedback/feedback.jsonl`。
 - 规则中心：分页、类别、来源、启停状态筛选。
 
-### 7.2 规则管理 [维护者]
+### 8.2 规则管理 [维护者]
 
-规则中心中的启停和“重新加载规则”需要输入 `RULES_ADMIN_TOKEN`。
+规则中心中的启停和"重新加载规则"需要输入 `RULES_ADMIN_TOKEN`。
 
 | API | 说明 |
 |---|---|
@@ -275,20 +372,20 @@ data/logs/rule-management-YYYY-MM-DD.jsonl
 
 追加管理审计事件。
 
-### 7.3 手动编辑 YAML 后 reload [会修改共享规则]
+### 8.3 手动编辑 YAML 后 reload [会修改共享规则]
 
 1. 在 feature branch 修改活动类别 YAML。
 2. 执行测试、评估并在 PR 中审查 diff。
-3. 合并/部署后，维护者在规则中心点击“重新加载规则”，或调用受保护 reload API。
+3. 合并/部署后，维护者在规则中心点击"重新加载规则"，或调用受保护 reload API。
 4. 对比 metadata version 与启用数量；检查管理审计日志。
 
 不要直接在生产运行目录随意编辑 YAML；回滚应优先通过 Git revert/恢复经审查版本，再 reload。
 
 ---
 
-## 8. 规则库与第三方词库导入
+## 9. 规则库与第三方词库导入
 
-### 8.1 活动规则文件
+### 9.1 活动规则文件
 
 ```text
 config/rules/sexual.yaml
@@ -313,7 +410,7 @@ updated_at: ISO-8601
 
 keyword 使用批量自动机匹配；regex 使用 Python `re`。新增 regex 应简短、可审查，避免灾难性回溯。
 
-### 8.2 houbb 标签词库导入 [会修改共享规则]
+### 9.2 houbb 标签词库导入 [会修改共享规则]
 
 相关文件：
 
@@ -339,15 +436,15 @@ python scripts/import_sensitive_words.py --input <reviewed-tags-file> --check
 
 `--prune-owned` 只能与 `--apply` 一起使用，会删除该导入器自己生成的陈旧规则；不得用于清理手工规则。导入必须在 feature branch 上完成，并同时提交规则 YAML、mapping、manifest 和第三方声明的必要更新。
 
-### 8.3 其他生成脚本 [会修改共享规则]
+### 9.3 其他生成脚本 [会修改共享规则]
 
 `python scripts/init_rules.py` 和 `python scripts/generate_decomposition_rules.py` 都会修改类别 YAML。运行前创建分支、检查 Git diff、运行测试与评估；它们不是普通用户命令。
 
 ---
 
-## 9. 质量、评估与性能
+## 10. 质量、评估与性能
 
-### 9.1 必跑检查 [全员]
+### 10.1 必跑检查 [全员]
 
 ```bash
 python -m pytest tests/ -v
@@ -356,7 +453,7 @@ ruff format --check src/ tests/ demo/ scripts/
 cd frontend && pnpm build
 ```
 
-### 9.2 评估
+### 10.2 评估
 
 ```bash
 # 全流程评估
@@ -373,7 +470,7 @@ python scripts/evaluate.py --no-semantic --output json
 
 评估数据位于 `data/test_cases/`。脚本只要存在误判就返回 exit code `1`；这表示质量报告中存在不匹配，不一定是脚本崩溃。PR 中应记录使用的分支/commit、模式和关键指标。
 
-### 9.3 关键词匹配基准
+### 10.3 关键词匹配基准
 
 ```bash
 python scripts/benchmark_rule_detector.py --iterations 100
@@ -383,9 +480,9 @@ python scripts/benchmark_rule_detector.py --iterations 100
 
 ---
 
-## 10. 三人 GitHub 协作流程
+## 11. 三人 GitHub 协作流程
 
-### 10.1 分工建议
+### 11.1 分工建议
 
 | 角色 | 责任 |
 |---|---|
@@ -395,7 +492,7 @@ python scripts/benchmark_rule_detector.py --iterations 100
 
 实际成员可交叉协作，但规则/配置导入至少需要两人审查。
 
-### 10.2 分支与 PR
+### 11.2 分支与 PR
 
 ```bash
 git checkout main
@@ -409,7 +506,7 @@ git checkout -b feature/short-description
 - `config/rules/`、mapping、manifest、风险阈值变更需要规则维护者和至少一位其他成员审查。
 - 合并前同步 main、解决冲突并重新运行检查。
 
-### 10.3 发布与回滚
+### 11.3 发布与回滚
 
 - 记录发布 commit/tag 与 ruleset version。
 - 代码/配置回滚使用 Git revert 或恢复经审查 commit。
@@ -418,9 +515,47 @@ git checkout -b feature/short-description
 
 ---
 
-## 11. 常见问题
+## 12. 常见问题 FAQ
 
-### 后端无法启动
+### Q: 语义模型下载失败怎么办？
+
+国内网络使用 HuggingFace 镜像。在环境变量中设置：
+
+```bash
+export HF_ENDPOINT=https://hf-mirror.com
+```
+
+或在代码中已自动设置。若仍失败，系统自动回退到纯规则模式。
+
+### Q: 如何添加新的敏感词？
+
+1. 编辑 `config/rules/<类别>.yaml`，按现有格式添加规则条目
+2. 通过 API 触发重载：`POST /api/rules/reload`
+3. 或通过前端"规则中心"→"重载规则"按钮操作
+
+### Q: 如何切换 LLM 提供商？
+
+编辑 `config/default.yaml` 的 `llm` 段：
+
+```yaml
+llm:
+  provider: "openai"  # 或 "ollama"
+  base_url: "https://api.deepseek.com"  # 替换为目标 API 地址
+  model: "deepseek-chat"
+```
+
+### Q: 误拦截了正常内容怎么办？
+
+1. 通过前端"反馈"页提交误判反馈
+2. 在 `config/rules/` 中调整对应规则的 `risk_level` 或 `enabled` 状态
+3. 调整 `config/default.yaml` 中 `risk_fusion` 的阈值
+
+### Q: 审计日志存储在哪里？
+
+`data/logs/audit-YYYY-MM-DD.jsonl`，按天滚动。
+原始文本经过 SHA-256 哈希化处理，保护用户隐私。
+
+### Q: 后端无法启动？
 
 确认虚拟环境和依赖：
 
@@ -429,37 +564,37 @@ pip install -r requirements.txt
 python -m uvicorn src.api.server:app --reload --port 8000
 ```
 
-端口被占用时更换端口，同时要注意前端 API 地址默认固定为 8000。
+端口被占用时更换端口，同时注意前端 API 地址默认固定为 8000。
 
-### 前端无法连接后端 / CORS 错误
+### Q: 前端无法连接后端 / CORS 错误？
 
 确认后端在 8000、前端在 5173。当前开发 CORS 仅允许 `localhost:5173` 和 `127.0.0.1:5173`。不要为了排错将 CORS 改为 `*` 并提交。
 
-### 语义模型加载失败
+### Q: 语义模型加载失败？
 
 系统会回退到规则层。检查网络、模型缓存、磁盘空间和 `semantic_detection.mode`；演示时可使用 `--no-llm` 或规则-only 评估。
 
-### 没有真实 API Key
+### Q: 没有真实 API Key？
 
 使用 CLI `--no-llm` 模拟模式。不要把临时/他人的 Key 写入代码。
 
-### 规则管理返回 401 / 409 / 503
+### Q: 规则管理返回 401 / 409 / 503？
 
 - `401`：维护者检查本地 token 是否正确。
 - `409`：刷新规则 metadata 后检查并重试。
 - `503`：后端维护者尚未在本地 `.env` 配置 token。
 
-### 手动修改 YAML 后未生效
+### Q: 手动修改 YAML 后未生效？
 
-运行中的服务保留旧 snapshot。由维护者执行“重新加载规则”或重启后端；若 reload 失败，先修复 YAML 并保持旧规则继续运行。
+运行中的服务保留旧 snapshot。由维护者执行"重新加载规则"或重启后端；若 reload 失败，先修复 YAML 并保持旧规则继续运行。
 
-### 审计/反馈页面为空
+### Q: 审计/反馈页面为空？
 
 先执行一次链路检测或提交反馈；运行数据写入 `data/logs/`、`data/feedback/`，这些目录默认不提交 Git。
 
 ---
 
-## 12. 安全与隐私检查表
+## 13. 安全与隐私检查表
 
 提交或发起 PR 前确认：
 
