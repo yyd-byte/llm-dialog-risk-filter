@@ -1,4 +1,4 @@
-"""Output re-check — secondary content verification for LLM-generated responses."""
+"""输出复检 — 对 LLM 生成的回复进行二次内容安全校验。"""
 
 from dataclasses import dataclass
 from typing import Optional
@@ -12,7 +12,7 @@ from src.desensitization.desensitizer import Desensitizer
 
 @dataclass
 class OutputCheckResult:
-    """Result of output-side content verification."""
+    """输出复检结果 — 安全判定、风险详情和替换文本。"""
 
     original_output: str
     is_safe: bool
@@ -21,7 +21,7 @@ class OutputCheckResult:
 
     @property
     def final_output(self) -> str:
-        """Return content safe for display, never the raw output when blocked."""
+        """返回可安全展示的内容，被拦截时绝不返回原始输出。"""
         if self.safe_output:
             return self.safe_output
         if self.is_safe:
@@ -30,15 +30,14 @@ class OutputCheckResult:
 
 
 class OutputChecker:
-    """Re-checks LLM-generated content for safety before returning to user.
+    """对 LLM 输出进行二次安全校验，作为整个过滤链路的"安全网"。
 
-    This is the "safety net" layer — even if input was clean, the model
-    might generate inappropriate content.
+    即使输入侧通过了检测，模型仍可能生成违规内容。
+    本模块在输出返回用户之前再次扫描，按风险等级分三级处置：
 
-    Risk-level handling:
-    - HIGH:   Block entirely, return block_message.
-    - MEDIUM: Desensitize fragments, return cleaned output.
-    - LOW:    Pass through unchanged.
+    - HIGH:   完全拦截，返回合规提示话术
+    - MEDIUM: 片段脱敏后放行
+    - LOW:    直接放行
     """
 
     DEFAULT_BLOCK_MESSAGE = "抱歉，系统在处理您的请求时生成了不适宜内容，已被安全拦截。"
@@ -58,13 +57,13 @@ class OutputChecker:
         self._desensitizer = desensitizer
 
     def check(self, llm_output: str) -> OutputCheckResult:
-        """Run output-side content verification.
+        """执行输出侧内容安全校验。
 
         Args:
-            llm_output: The raw output from the LLM.
+            llm_output: LLM 生成的原始输出文本。
 
         Returns:
-            OutputCheckResult with safety verdict and (if needed) safe replacement.
+            包含安全判定结果和（如有必要）安全替换文本的 OutputCheckResult。
         """
         rule_evidence = self._rule_detector.detect(llm_output)
         semantic_evidence = self._semantic_detector.detect(llm_output)

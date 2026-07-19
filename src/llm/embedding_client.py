@@ -1,7 +1,7 @@
-"""Embedding API Client — OpenAI-compatible embedding service wrapper.
+"""云端 Embedding API 客户端 — 将文本转换为向量表示。
 
-Supports cloud embedding APIs (SiliconFlow, OpenAI, etc.) as an alternative
-to local sentence-transformers models.
+支持 OpenAI 兼容的 Embedding API（如 SiliconFlow），
+用于语义检测层的文本向量化和相似度计算。
 """
 
 from dataclasses import dataclass
@@ -12,7 +12,7 @@ import numpy as np
 
 @dataclass
 class EmbeddingConfig:
-    """Configuration for embedding API client."""
+    """Embedding API 客户端配置 — 提供商、地址、模型和密钥。"""
 
     provider: str = "siliconflow"
     base_url: str = "https://api.siliconflow.cn/v1"
@@ -22,9 +22,9 @@ class EmbeddingConfig:
 
 
 class EmbeddingAPIClient:
-    """Lightweight client for OpenAI-compatible embedding APIs.
+    """OpenAI 兼容 Embedding API 的轻量级客户端。
 
-    Usage:
+    用法:
         client = EmbeddingAPIClient(EmbeddingConfig(
             base_url="https://api.siliconflow.cn/v1",
             model="BAAI/bge-large-zh-v1.5",
@@ -39,14 +39,14 @@ class EmbeddingAPIClient:
         self._client = httpx.Client(timeout=self.config.timeout)
 
     def encode(self, text: str, normalize: bool = True) -> np.ndarray:
-        """Encode a single text to an embedding vector.
+        """将单条文本编码为嵌入向量。
 
         Args:
-            text: Input text to encode.
-            normalize: If True, L2-normalize the output vector.
+            text: 待编码的输入文本。
+            normalize: 若为 True，对输出向量进行 L2 归一化。
 
         Returns:
-            numpy array of shape (dim,).
+            shape 为 (dim,) 的 numpy 数组。
         """
         embeddings = self.encode_batch([text], normalize=normalize)
         return embeddings[0]
@@ -54,14 +54,14 @@ class EmbeddingAPIClient:
     def encode_batch(
         self, texts: list[str], normalize: bool = True
     ) -> list[np.ndarray]:
-        """Encode multiple texts to embedding vectors.
+        """批量编码多条文本为嵌入向量。
 
         Args:
-            texts: List of input texts.
-            normalize: If True, L2-normalize the output vectors.
+            texts: 待编码的文本列表。
+            normalize: 若为 True，对输出向量进行 L2 归一化。
 
         Returns:
-            List of numpy arrays, each of shape (dim,).
+            numpy 数组列表，每个数组 shape 为 (dim,)。
         """
         headers = {"Content-Type": "application/json"}
         if self.config.api_key:
@@ -96,10 +96,10 @@ class EmbeddingAPIClient:
             ) from e
 
     def close(self) -> None:
-        """Close the HTTP client."""
+        """关闭 HTTP 客户端，释放连接资源。"""
         self._client.close()
 
     @property
     def is_available(self) -> bool:
-        """Check if the API client is configured with credentials."""
+        """检查 API 客户端是否已配置有效凭证。"""
         return bool(self.config.api_key)

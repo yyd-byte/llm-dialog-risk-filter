@@ -1,4 +1,4 @@
-"""LLM Client — wrapper for Ollama / OpenAI-compatible API."""
+"""大模型客户端 — 统一的对话补全接口，支持 Ollama 和 OpenAI 兼容 API。"""
 
 import time
 from dataclasses import dataclass
@@ -11,7 +11,7 @@ from src.utils.exceptions import LLMServiceError
 
 @dataclass
 class LLMConfig:
-    """Configuration for LLM client."""
+    """LLM 客户端配置 — 提供商、地址、模型、密钥和调用参数。"""
 
     provider: str = "openai"  # "openai" | "ollama"
     base_url: str = "https://api.deepseek.com"
@@ -24,7 +24,7 @@ class LLMConfig:
 
 @dataclass
 class LLMResponse:
-    """Response from LLM call."""
+    """LLM 调用响应 — 生成文本、模型名称、耗时和状态信息。"""
 
     text: str
     model: str
@@ -34,21 +34,26 @@ class LLMResponse:
 
 
 class LLMClient:
-    """Unified LLM client supporting Ollama and OpenAI-compatible APIs."""
+    """统一的大模型对话客户端。
+
+    支持两种后端：
+    - ollama: 本地 Ollama 服务
+    - openai: 任意 OpenAI 兼容 API（DeepSeek / 通义千问 / 智谱等）
+    """
 
     def __init__(self, config: LLMConfig | None = None):
         self.config = config or LLMConfig()
         self._client = httpx.Client(timeout=self.config.timeout)
 
     def chat(self, prompt: str, system_prompt: str = "") -> LLMResponse:
-        """Send a chat completion request.
+        """发送对话补全请求。
 
         Args:
-            prompt: The user message.
-            system_prompt: Optional system instruction.
+            prompt: 用户输入的提示文本。
+            system_prompt: 可选的系统指令。
 
         Returns:
-            LLMResponse with the generated text.
+            包含生成文本的 LLMResponse。
         """
         start = time.time()
 
@@ -61,7 +66,16 @@ class LLMClient:
 
     def _ollama_chat(self, prompt: str, system_prompt: str,
                      start: float) -> LLMResponse:
-        """Call Ollama API."""
+        """通过 Ollama 本地 API 发送对话请求。
+
+        Args:
+            prompt: 用户输入的提示文本。
+            system_prompt: 可选的系统指令。
+            start: 请求开始时间戳（用于计算耗时）。
+
+        Returns:
+            包含生成文本或错误信息的 LLMResponse。
+        """
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
@@ -98,7 +112,18 @@ class LLMClient:
 
     def _openai_chat(self, prompt: str, system_prompt: str,
                      start: float) -> LLMResponse:
-        """Call OpenAI-compatible API."""
+        """通过 OpenAI 兼容 API（DeepSeek 等）发送对话请求。
+
+        使用 httpx 发送 POST 请求，自动处理超时和错误响应。
+
+        Args:
+            prompt: 用户输入的提示文本。
+            system_prompt: 可选的系统指令。
+            start: 请求开始时间戳（用于计算耗时）。
+
+        Returns:
+            包含生成文本或错误信息的 LLMResponse。
+        """
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
@@ -136,5 +161,5 @@ class LLMClient:
             )
 
     def close(self) -> None:
-        """Close the HTTP client."""
+        """关闭 HTTP 客户端，释放连接资源。"""
         self._client.close()
