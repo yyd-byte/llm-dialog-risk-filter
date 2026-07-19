@@ -1,17 +1,21 @@
 """End-to-end pipeline integration tests."""
 
-import pytest
-from src.detection.normalizer import TextNormalizer
 from src.decision.models import RiskLevel
 
 
 class TestPipeline:
     """Integration tests for the full pipeline."""
 
-    def test_normal_text_full_pipeline(self, normalizer, rule_detector,
-                                       semantic_detector, fusion,
-                                       desensitizer, output_checker,
-                                       audit_logger):
+    def test_normal_text_full_pipeline(
+        self,
+        normalizer,
+        rule_detector,
+        semantic_detector,
+        fusion,
+        desensitizer,
+        output_checker,
+        audit_logger,
+    ):
         """Normal text should pass through the entire pipeline."""
         text = "今天天气真好，适合出去散步"
 
@@ -38,6 +42,7 @@ class TestPipeline:
 
         # Step 6: Audit log
         from src.audit.logger import AuditRecord
+
         record = AuditRecord(
             original_input=text,
             normalized_input=norm.normalized,
@@ -49,9 +54,9 @@ class TestPipeline:
         )
         audit_logger.log(record)  # Should not raise
 
-    def test_risk_text_pipeline(self, normalizer, rule_detector,
-                                semantic_detector, fusion, output_checker,
-                                audit_logger):
+    def test_risk_text_pipeline(
+        self, normalizer, rule_detector, semantic_detector, fusion, output_checker, audit_logger
+    ):
         """Risk text should be detected by the pipeline."""
         text = "违规词测试内容"
 
@@ -64,13 +69,11 @@ class TestPipeline:
         assert risk.risk_level != RiskLevel.LOW
         assert len(risk.evidence_chain) > 0
 
-    def test_audit_log_written(self, normalizer, rule_detector,
-                               semantic_detector, fusion, output_checker,
-                               audit_logger):
+    def test_audit_log_written(
+        self, normalizer, rule_detector, semantic_detector, fusion, output_checker, audit_logger
+    ):
         """Audit log should be written to file."""
         from src.audit.logger import AuditRecord
-        import json
-        from pathlib import Path
 
         record = AuditRecord(
             original_input="test",

@@ -3,7 +3,8 @@
 import pytest
 from src.decision.models import RiskLevel, RiskResult, Evidence, DetectionSource, RiskCategory
 from src.desensitization.desensitizer import (
-    Desensitizer, DesensitizeConfig, DesensitizeResult, DEFAULT_SEMANTIC_LABELS,
+    Desensitizer,
+    DesensitizeConfig,
 )
 
 
@@ -35,7 +36,7 @@ class TestDesensitizerMaskMode:
                     matched_text="敏感词",
                     explanation="命中敏感词",
                 )
-            ]
+            ],
         )
         result = desensitizer.desensitize("这是敏感词的测试", risk)
         assert "敏感词" not in result.desensitized
@@ -55,7 +56,7 @@ class TestDesensitizerMaskMode:
                     matched_text="敏感词",
                     explanation="test",
                 )
-            ]
+            ],
         )
         result = desensitizer.desensitize("敏感词", risk)
         # With keep_first_last=True, "敏感词" (3 chars) → "敏*词" (3 chars)
@@ -82,7 +83,7 @@ class TestDesensitizerMaskMode:
                     matched_text="B",
                     explanation="test",
                 ),
-            ]
+            ],
         )
         result = desensitizer.desensitize("A和B", risk)
         assert "A" not in result.desensitized and "B" not in result.desensitized
@@ -110,7 +111,7 @@ class TestDesensitizerSemanticMode:
                     matched_text="裸聊",
                     explanation="命中色情词",
                 )
-            ]
+            ],
         )
         result = desensitizer.desensitize("加我QQ裸聊", risk)
         assert "[不雅用语]" in result.desensitized
@@ -130,7 +131,7 @@ class TestDesensitizerSemanticMode:
                     matched_text="微信号abc123",
                     explanation="命中广告词",
                 )
-            ]
+            ],
         )
         result = desensitizer.desensitize("请加我微信号abc123谢谢", risk)
         assert "[联系方式]" in result.desensitized
@@ -150,7 +151,7 @@ class TestDesensitizerSemanticMode:
                     matched_text="加微信",
                     explanation="命中广告词",
                 )
-            ]
+            ],
         )
         result = desensitizer.desensitize("有问题可以加微信联系我", risk)
         # Should be: "有问题可以[联系方式]联系我" — LLM can understand this
@@ -171,7 +172,7 @@ class TestDesensitizerSemanticMode:
                     matched_text="杀了你",
                     explanation="命中暴力词",
                 )
-            ]
+            ],
         )
         result = desensitizer.desensitize("我要杀了你", risk)
         assert "[暴力用语]" in result.desensitized
@@ -194,7 +195,7 @@ class TestDesensitizerSemanticMode:
                     matched_text="something",
                     explanation="test",
                 )
-            ]
+            ],
         )
         result = d.desensitize("something bad", risk)
         assert "[违规内容]" in result.desensitized
@@ -224,7 +225,7 @@ class TestDesensitizerSemanticMode:
                     matched_text="bad",
                     explanation="test",
                 )
-            ]
+            ],
         )
         result = d.desensitize("bad word", risk)
         assert "[色情]" in result.desensitized
@@ -264,10 +265,11 @@ class TestDesensitizerRewriteMode:
                     source=DetectionSource.RULE,
                     category=RiskCategory.ADVERTISING,
                     confidence=0.8,
-                    matched_pattern="加微信", matched_text="加微信",
+                    matched_pattern="加微信",
+                    matched_text="加微信",
                     explanation="命中广告词",
                 )
-            ]
+            ],
         )
         result = desensitizer.desensitize("加微信聊聊", risk)  # no llm_call
         assert "[联系方式]" in result.desensitized
@@ -283,10 +285,11 @@ class TestDesensitizerRewriteMode:
                     source=DetectionSource.RULE,
                     category=RiskCategory.ADVERTISING,
                     confidence=0.8,
-                    matched_pattern="加微信", matched_text="加微信",
+                    matched_pattern="加微信",
+                    matched_text="加微信",
                     explanation="命中广告词",
                 )
-            ]
+            ],
         )
 
         def mock_llm(prompt: str) -> str:
@@ -307,10 +310,11 @@ class TestDesensitizerRewriteMode:
                     source=DetectionSource.RULE,
                     category=RiskCategory.SEXUAL,
                     confidence=0.8,
-                    matched_pattern="裸聊", matched_text="裸聊",
+                    matched_pattern="裸聊",
+                    matched_text="裸聊",
                     explanation="命中色情词",
                 )
-            ]
+            ],
         )
 
         captured_prompt = []
@@ -336,10 +340,11 @@ class TestDesensitizerRewriteMode:
                     source=DetectionSource.RULE,
                     category=RiskCategory.ADVERTISING,
                     confidence=0.8,
-                    matched_pattern="加微信", matched_text="加微信",
+                    matched_pattern="加微信",
+                    matched_text="加微信",
                     explanation="命中广告词",
                 )
-            ]
+            ],
         )
 
         def failing_llm(prompt: str) -> str:
@@ -366,10 +371,12 @@ class TestDesensitizeAfterNormalization:
         from src.desensitization.desensitizer import Desensitizer, DesensitizeConfig
 
         # Simulate a bypass variant: "葳信" → "微信"
-        normalizer = TextNormalizer(NormalizerConfig(
-            normalize_bypass=True,
-            bypass_map={"葳信": "微信"},
-        ))
+        normalizer = TextNormalizer(
+            NormalizerConfig(
+                normalize_bypass=True,
+                bypass_map={"葳信": "微信"},
+            )
+        )
 
         original = "加我葳信abc123"
         normalized = normalizer.normalize(original)
@@ -400,15 +407,18 @@ class TestDesensitizeAfterNormalization:
         result_original = desensitizer_sem.desensitize(original, risk_result)
         # matched_text "微信" does NOT exist in original "加我葳信abc123",
         # so the old code silently skipped desensitization — "葳信" remains
-        assert "葳信" in result_original.desensitized, \
+        assert "葳信" in result_original.desensitized, (
             "BUG CONFIRMED: '葳信' not desensitized (can't find '微信' in original text)"
+        )
 
         # --- The fix: desensitize on NORMALIZED text ---
         result_fixed = desensitizer_sem.desensitize(normalized.normalized, risk_result)
-        assert "微信" not in result_fixed.desensitized, \
+        assert "微信" not in result_fixed.desensitized, (
             f"Expected '微信' to be desensitized, got: {result_fixed.desensitized}"
-        assert "[联系方式]" in result_fixed.desensitized, \
+        )
+        assert "[联系方式]" in result_fixed.desensitized, (
             f"Expected [联系方式] replacement, got: {result_fixed.desensitized}"
+        )
         assert len(result_fixed.replaced_fragments) >= 1
 
     def test_mask_mode_also_works_on_normalized(self):
@@ -416,10 +426,12 @@ class TestDesensitizeAfterNormalization:
         from src.detection.normalizer import TextNormalizer, NormalizerConfig
         from src.desensitization.desensitizer import Desensitizer, DesensitizeConfig
 
-        normalizer = TextNormalizer(NormalizerConfig(
-            normalize_bypass=True,
-            bypass_map={"葳信": "微信"},
-        ))
+        normalizer = TextNormalizer(
+            NormalizerConfig(
+                normalize_bypass=True,
+                bypass_map={"葳信": "微信"},
+            )
+        )
 
         original = "加我葳信abc123"
         normalized = normalizer.normalize(original)
@@ -443,5 +455,6 @@ class TestDesensitizeAfterNormalization:
         desensitizer_mask = Desensitizer(DesensitizeConfig(mode="mask"))
         result = desensitizer_mask.desensitize(normalized.normalized, risk_result)
         # "微信" should be masked (e.g. "微*信" or "***")
-        assert "微信" not in result.desensitized, \
+        assert "微信" not in result.desensitized, (
             f"Expected '微信' to be masked, got: {result.desensitized}"
+        )

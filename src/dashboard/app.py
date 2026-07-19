@@ -59,12 +59,14 @@ def main():
     if overview.daily_stats:
         daily_data = []
         for ds in overview.daily_stats:
-            daily_data.append({
-                "日期": ds.date,
-                "拦截": ds.input_blocked,
-                "脱敏": ds.input_desensitized,
-                "放行": ds.input_passed,
-            })
+            daily_data.append(
+                {
+                    "日期": ds.date,
+                    "拦截": ds.input_blocked,
+                    "脱敏": ds.input_desensitized,
+                    "放行": ds.input_passed,
+                }
+            )
         st.bar_chart(daily_data, x="日期", y=["拦截", "脱敏", "放行"])
     else:
         st.info("暂无数据。系统运行后将自动生成统计。")

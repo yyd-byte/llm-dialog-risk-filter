@@ -1,7 +1,6 @@
 """Tests for semantic detector."""
 
-import pytest
-from src.detection.semantic_detector import SemanticDetector, DEFAULT_CATEGORY_REFERENCES
+from src.detection.semantic_detector import SemanticDetector
 from src.decision.models import DetectionSource
 
 

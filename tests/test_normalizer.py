@@ -182,10 +182,12 @@ class TestConfusableChars:
             "尼": "你",
             "玛": "妈",
         }
-        return TextNormalizer(NormalizerConfig(
-            normalize_confusable_chars=True,
-            confusable_map=test_map,
-        ))
+        return TextNormalizer(
+            NormalizerConfig(
+                normalize_confusable_chars=True,
+                confusable_map=test_map,
+            )
+        )
 
     def test_homophone_replacement(self, normalizer):
         """Homophone character should be replaced with standard form."""
@@ -215,10 +217,12 @@ class TestConfusableChars:
 
     def test_empty_confusable_map(self):
         """Empty confusable map should not crash or modify text."""
-        n = TextNormalizer(NormalizerConfig(
-            normalize_confusable_chars=True,
-            confusable_map={},
-        ))
+        n = TextNormalizer(
+            NormalizerConfig(
+                normalize_confusable_chars=True,
+                confusable_map={},
+            )
+        )
         result = n.normalize("尼玛")
         assert "尼" in result.normalized
         assert "玛" in result.normalized
@@ -236,10 +240,12 @@ class TestTraditionalChinese:
             "倉": "仓",
             "庫": "库",
         }
-        return TextNormalizer(NormalizerConfig(
-            normalize_traditional=True,
-            traditional_simplified_map=test_map,
-        ))
+        return TextNormalizer(
+            NormalizerConfig(
+                normalize_traditional=True,
+                traditional_simplified_map=test_map,
+            )
+        )
 
     def test_traditional_to_simplified(self, normalizer):
         """Traditional characters should be converted to simplified."""
@@ -270,10 +276,12 @@ class TestTraditionalChinese:
 
     def test_empty_map(self):
         """Empty traditional map should not crash."""
-        n = TextNormalizer(NormalizerConfig(
-            normalize_traditional=True,
-            traditional_simplified_map={},
-        ))
+        n = TextNormalizer(
+            NormalizerConfig(
+                normalize_traditional=True,
+                traditional_simplified_map={},
+            )
+        )
         result = n.normalize("亂倫")
         assert "亂" in result.normalized
 
@@ -289,18 +297,22 @@ class TestAbbreviationExpansion:
             "参赌": "参加赌博",
             "禁毒": "禁止毒品",
         }
-        return TextNormalizer(NormalizerConfig(
-            normalize_abbreviations=True,
-            abbreviation_map=test_map,
-        ))
+        return TextNormalizer(
+            NormalizerConfig(
+                normalize_abbreviations=True,
+                abbreviation_map=test_map,
+            )
+        )
 
     def test_abbreviation_expansion(self):
         """Known abbreviation should be expanded to full form."""
         test_map = {"高院": "高级人民法院"}
-        n = TextNormalizer(NormalizerConfig(
-            normalize_abbreviations=True,
-            abbreviation_map=test_map,
-        ))
+        n = TextNormalizer(
+            NormalizerConfig(
+                normalize_abbreviations=True,
+                abbreviation_map=test_map,
+            )
+        )
         result = n.normalize("高院判决")
         assert "高级人民法院" in result.normalized
         assert "高院" not in result.normalized
@@ -329,10 +341,12 @@ class TestAbbreviationExpansion:
 
     def test_empty_map(self):
         """Empty abbreviation map should not crash."""
-        n = TextNormalizer(NormalizerConfig(
-            normalize_abbreviations=True,
-            abbreviation_map={},
-        ))
+        n = TextNormalizer(
+            NormalizerConfig(
+                normalize_abbreviations=True,
+                abbreviation_map={},
+            )
+        )
         result = n.normalize("禁毒办通报")
         assert "禁毒办" in result.normalized
 
@@ -348,10 +362,12 @@ class TestDecompositionRestore:
             "木仓": "枪",
             "丰母": "毒",
         }
-        return TextNormalizer(NormalizerConfig(
-            normalize_decomposition=True,
-            decomposition_map=test_map,
-        ))
+        return TextNormalizer(
+            NormalizerConfig(
+                normalize_decomposition=True,
+                decomposition_map=test_map,
+            )
+        )
 
     def test_decomposition_restored(self, normalizer):
         """Non-word component combination should be restored."""
@@ -378,10 +394,12 @@ class TestDecompositionRestore:
 
     def test_empty_map(self):
         """Empty decomposition map should not crash."""
-        n = TextNormalizer(NormalizerConfig(
-            normalize_decomposition=True,
-            decomposition_map={},
-        ))
+        n = TextNormalizer(
+            NormalizerConfig(
+                normalize_decomposition=True,
+                decomposition_map={},
+            )
+        )
         result = n.normalize("贝者博")
         assert "贝者" in result.normalized
 

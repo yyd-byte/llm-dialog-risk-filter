@@ -8,7 +8,7 @@
 """
 
 from dataclasses import dataclass, field
-from typing import Callable, Optional
+from typing import Callable
 
 from src.decision.models import Evidence, RiskCategory, RiskResult
 
@@ -64,7 +64,7 @@ class DesensitizeResult:
     original: str
     desensitized: str
     replaced_fragments: list[dict]  # [{original, replacement, category, reason}]
-    was_rewritten: bool = False    # True if LLM rewrite was applied
+    was_rewritten: bool = False  # True if LLM rewrite was applied
 
 
 class Desensitizer:
@@ -81,9 +81,12 @@ class Desensitizer:
     def __init__(self, config: DesensitizeConfig | None = None):
         self.config = config or DesensitizeConfig()
 
-    def desensitize(self, text: str, risk_result: RiskResult,
-                    llm_call: Callable[[str], str] | None = None,
-                    ) -> DesensitizeResult:
+    def desensitize(
+        self,
+        text: str,
+        risk_result: RiskResult,
+        llm_call: Callable[[str], str] | None = None,
+    ) -> DesensitizeResult:
         """根据风险检测结果对文本执行脱敏处理。
 
         Args:
@@ -114,12 +117,14 @@ class Desensitizer:
 
             replacement = self._make_replacement(fragment, evidence)
             result_text = result_text.replace(fragment, replacement, 1)
-            replaced.append({
-                "original": fragment,
-                "replacement": replacement,
-                "category": evidence.category.value if evidence.category else "unknown",
-                "reason": evidence.explanation,
-            })
+            replaced.append(
+                {
+                    "original": fragment,
+                    "replacement": replacement,
+                    "category": evidence.category.value if evidence.category else "unknown",
+                    "reason": evidence.explanation,
+                }
+            )
 
         # In rewrite mode, naturalize the labeled text via LLM
         was_rewritten = False
@@ -141,8 +146,7 @@ class Desensitizer:
             was_rewritten=was_rewritten,
         )
 
-    def _make_replacement(self, text: str,
-                          evidence: Evidence | None = None) -> str:
+    def _make_replacement(self, text: str, evidence: Evidence | None = None) -> str:
         """为敏感片段生成替换字符串。
 
         在 "mask" 模式下：微信号 → 微**号

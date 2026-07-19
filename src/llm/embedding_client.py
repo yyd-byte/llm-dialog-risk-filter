@@ -51,9 +51,7 @@ class EmbeddingAPIClient:
         embeddings = self.encode_batch([text], normalize=normalize)
         return embeddings[0]
 
-    def encode_batch(
-        self, texts: list[str], normalize: bool = True
-    ) -> list[np.ndarray]:
+    def encode_batch(self, texts: list[str], normalize: bool = True) -> list[np.ndarray]:
         """批量编码多条文本为嵌入向量。
 
         Args:
@@ -91,9 +89,7 @@ class EmbeddingAPIClient:
             return vectors
 
         except Exception as e:
-            raise RuntimeError(
-                f"Embedding API 调用失败 ({self.config.provider}): {e}"
-            ) from e
+            raise RuntimeError(f"Embedding API 调用失败 ({self.config.provider}): {e}") from e
 
     def close(self) -> None:
         """关闭 HTTP 客户端，释放连接资源。"""

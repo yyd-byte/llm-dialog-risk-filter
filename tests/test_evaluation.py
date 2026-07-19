@@ -1,14 +1,13 @@
 """Tests for the evaluation system itself."""
 
 import json
-import tempfile
 from pathlib import Path
 
 import pytest
-import yaml
 
 # Import evaluation components
 import sys
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.evaluate import (
@@ -66,14 +65,19 @@ class TestLoadTestCases:
 class TestComputeMetrics:
     """Test metric computation."""
 
-    def _make_result(self, case_id: str, text: str,
-                     expected_risk: str, predicted_risk: str,
-                     expected_cat: str | None = None,
-                     predicted_cat: str | None = None) -> EvalResult:
+    def _make_result(
+        self,
+        case_id: str,
+        text: str,
+        expected_risk: str,
+        predicted_risk: str,
+        expected_cat: str | None = None,
+        predicted_cat: str | None = None,
+    ) -> EvalResult:
         return EvalResult(
-            case=TestCase(id=case_id, text=text,
-                          expected_risk=expected_risk,
-                          expected_category=expected_cat),
+            case=TestCase(
+                id=case_id, text=text, expected_risk=expected_risk, expected_category=expected_cat
+            ),
             predicted_risk=predicted_risk,
             predicted_category=predicted_cat,
             confidence=0.8,
@@ -125,7 +129,7 @@ class TestComputeMetrics:
         m = compute_metrics(results)
         sex = m.per_category.get("sexual", {})
         assert sex["precision"] == pytest.approx(0.6667, abs=0.001)  # 2 TP, 1 FP
-        assert sex["recall"] == 1.0     # 2 TP, 0 FN
+        assert sex["recall"] == 1.0  # 2 TP, 0 FN
 
     def test_empty_results(self):
         """Empty results should not crash."""
@@ -149,11 +153,20 @@ class TestReporters:
 
     def _sample_metrics(self) -> Metrics:
         return Metrics(
-            total=10, correct_risk=8, correct_category=7, accuracy=0.8,
+            total=10,
+            correct_risk=8,
+            correct_category=7,
+            accuracy=0.8,
             per_category={},
-            true_positives=7, false_positives=1, true_negatives=1, false_negatives=1,
-            fpr=0.5, fnr=0.125, avg_duration_ms=12.5,
-            misclassified=[], per_bypass_type={},
+            true_positives=7,
+            false_positives=1,
+            true_negatives=1,
+            false_negatives=1,
+            fpr=0.5,
+            fnr=0.125,
+            avg_duration_ms=12.5,
+            misclassified=[],
+            per_bypass_type={},
         )
 
     def test_json_report_is_valid(self):

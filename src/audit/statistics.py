@@ -1,11 +1,10 @@
 """统计引擎 — 将审计日志聚合为看板可用的统计数据。"""
 
 import json
-from collections import Counter, defaultdict
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
@@ -15,9 +14,9 @@ class DailyStats:
     date: str
     total_requests: int = 0
     # 输入侧
-    input_blocked: int = 0       # HIGH 风险 → 拦截
+    input_blocked: int = 0  # HIGH 风险 → 拦截
     input_desensitized: int = 0  # MEDIUM 风险 → 脱敏
-    input_passed: int = 0        # LOW 风险 → 放行
+    input_passed: int = 0  # LOW 风险 → 放行
     # 类别分布
     category_counts: dict[str, int] = field(default_factory=dict)
     # 输出侧
@@ -73,9 +72,9 @@ class StatisticsEngine:
             overview.output_block_rate += ds.output_blocked
 
         if overview.total_requests > 0:
-            overview.block_rate = sum(
-                ds.input_blocked for ds in daily_stats
-            ) / overview.total_requests
+            overview.block_rate = (
+                sum(ds.input_blocked for ds in daily_stats) / overview.total_requests
+            )
             overview.false_positive_rate = 0.0  # Requires feedback data
 
         # 聚合各类别计数
@@ -87,8 +86,7 @@ class StatisticsEngine:
 
         return overview
 
-    def _process_log_file(self, filepath: Path,
-                          daily_map: dict[str, DailyStats]) -> None:
+    def _process_log_file(self, filepath: Path, daily_map: dict[str, DailyStats]) -> None:
         """处理单个 JSONL 日志文件并聚合成日统计数据。"""
         try:
             with open(filepath, "r", encoding="utf-8") as f:

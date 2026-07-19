@@ -57,7 +57,9 @@ class Evidence:
     matched_pattern: str = ""  # 命中的关键词/正则
     matched_text: str = ""  # 命中的原文片段
     explanation: str = ""  # 可解释的说明
-    step: str = ""  # 产生证据的流水线步骤: "normalize" | "rule" | "semantic" | "fusion" | "desensitize"
+    step: str = (
+        ""  # 产生证据的流水线步骤: "normalize" | "rule" | "semantic" | "fusion" | "desensitize"
+    )
     declared_risk_level: RiskLevel | None = None  # 规则配置声明的风险等级；语义证据保持为空
     metadata: dict = field(default_factory=dict)  # 附加结构化数据，用于前端可视化
 

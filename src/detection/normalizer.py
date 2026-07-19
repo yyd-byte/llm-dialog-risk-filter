@@ -271,7 +271,6 @@ class TextNormalizer:
             for end in range(start + 1, min(start + 8, len(cjk_positions) + 1)):
                 span_start = cjk_positions[start]
                 span_end = cjk_positions[end - 1] + 1
-                cjk_span = text[span_start:span_end]
                 # 获取该子串中各 CJK 字符的拼音索引
                 pinyin_indices = [
                     pos_to_pinyin[i]

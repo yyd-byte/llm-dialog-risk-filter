@@ -2,7 +2,6 @@
 
 import time
 from dataclasses import dataclass
-from typing import Optional
 
 import httpx
 
@@ -64,8 +63,7 @@ class LLMClient:
         else:
             raise LLMServiceError(f"Unknown LLM provider: {self.config.provider}")
 
-    def _ollama_chat(self, prompt: str, system_prompt: str,
-                     start: float) -> LLMResponse:
+    def _ollama_chat(self, prompt: str, system_prompt: str, start: float) -> LLMResponse:
         """通过 Ollama 本地 API 发送对话请求。
 
         Args:
@@ -110,8 +108,7 @@ class LLMClient:
                 error=str(e),
             )
 
-    def _openai_chat(self, prompt: str, system_prompt: str,
-                     start: float) -> LLMResponse:
+    def _openai_chat(self, prompt: str, system_prompt: str, start: float) -> LLMResponse:
         """通过 OpenAI 兼容 API（DeepSeek 等）发送对话请求。
 
         使用 httpx 发送 POST 请求，自动处理超时和错误响应。

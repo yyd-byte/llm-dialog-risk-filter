@@ -12,7 +12,7 @@ from typing import Optional
 
 import numpy as np
 
-from src.decision.models import Evidence, DetectionSource, RiskCategory, RiskLevel
+from src.decision.models import Evidence, DetectionSource, RiskCategory
 from src.utils.exceptions import ModelNotAvailableError
 
 
@@ -58,8 +58,8 @@ class SemanticDetector:
         self._api_config = api_config or {}
 
         # Loaded state
-        self._st_model = None       # local: SentenceTransformer instance
-        self._api_client = None     # api: EmbeddingAPIClient instance
+        self._st_model = None  # local: SentenceTransformer instance
+        self._api_client = None  # api: EmbeddingAPIClient instance
         self._category_embeddings: dict[str, np.ndarray] = {}
         self._is_loaded = False
 
@@ -95,9 +95,7 @@ class SemanticDetector:
                 device=self.device,
             )
         except Exception as e:
-            raise ModelNotAvailableError(
-                f"Failed to load model '{self.model_name}': {e}"
-            )
+            raise ModelNotAvailableError(f"Failed to load model '{self.model_name}': {e}")
 
         # Pre-compute embeddings for each risk category reference
         self._category_embeddings = {}
@@ -136,9 +134,7 @@ class SemanticDetector:
         try:
             embeddings = self._api_client.encode_batch(ref_texts, normalize=True)
         except Exception as e:
-            raise ModelNotAvailableError(
-                f"Embedding API 调用失败: {e}"
-            )
+            raise ModelNotAvailableError(f"Embedding API 调用失败: {e}")
 
         self._category_embeddings = dict(zip(ref_keys, embeddings))
         self._is_loaded = True
@@ -178,17 +174,19 @@ class SemanticDetector:
                 if risk_category is None:
                     continue
 
-                evidence_list.append(Evidence(
-                    source=DetectionSource.SEMANTIC,
-                    category=risk_category,
-                    confidence=round(similarity, 4),
-                    matched_pattern=self._category_references.get(category_key, ""),
-                    matched_text=text[:100],
-                    explanation=(
-                        f"语义相似度 {similarity:.2%}，"
-                        f"与'{risk_category.value}'类别参考描述高度相似"
-                    ),
-                ))
+                evidence_list.append(
+                    Evidence(
+                        source=DetectionSource.SEMANTIC,
+                        category=risk_category,
+                        confidence=round(similarity, 4),
+                        matched_pattern=self._category_references.get(category_key, ""),
+                        matched_text=text[:100],
+                        explanation=(
+                            f"语义相似度 {similarity:.2%}，"
+                            f"与'{risk_category.value}'类别参考描述高度相似"
+                        ),
+                    )
+                )
 
         return evidence_list
 

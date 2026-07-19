@@ -1,8 +1,5 @@
 """Tests for output checker."""
 
-import pytest
-from src.decision.models import RiskLevel
-
 
 class TestOutputChecker:
     """Tests for OutputChecker."""
@@ -17,7 +14,9 @@ class TestOutputChecker:
         """Output containing blocked keywords should be intercepted."""
         result = output_checker.check("违规词出现在大模型回复中")
         assert result.is_safe is False
-        assert "违规词" not in result.final_output or result.final_output != "违规词出现在大模型回复中"
+        assert (
+            "违规词" not in result.final_output or result.final_output != "违规词出现在大模型回复中"
+        )
 
     def test_block_message_used(self, output_checker):
         """Blocked output should use the configured block message."""

@@ -1,14 +1,13 @@
 """审计日志 — 以结构化 JSONL 格式记录每次请求的处理全链路。"""
 
 import json
-import os
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from src.decision.models import RiskLevel, RiskCategory
+from src.decision.models import RiskLevel
 
 
 @dataclass
@@ -49,9 +48,9 @@ class AuditLogger:
     - 原始文本哈希化存储以保护隐私
     """
 
-    def __init__(self, log_dir: str = "data/logs",
-                 max_file_size_mb: int = 10,
-                 backup_count: int = 5):
+    def __init__(
+        self, log_dir: str = "data/logs", max_file_size_mb: int = 10, backup_count: int = 5
+    ):
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.max_file_size = max_file_size_mb * 1024 * 1024
@@ -87,7 +86,7 @@ class AuditLogger:
     def _cleanup_old_logs(self) -> None:
         """删除超出备份数量上限的旧日志文件。"""
         log_files = sorted(self.log_dir.glob("audit-*.jsonl"), reverse=True)
-        for f in log_files[self.backup_count:]:
+        for f in log_files[self.backup_count :]:
             f.unlink()
 
     def _record_to_dict(self, r: AuditRecord) -> dict:
@@ -97,9 +96,10 @@ class AuditLogger:
         原始输入文本经哈希处理以保护隐私；完整文本可在需要审计时从安全存储恢复。
         """
         import hashlib
-        text_hash = hashlib.sha256(
-            r.original_input.encode("utf-8", errors="replace")
-        ).hexdigest()[:16]
+
+        text_hash = hashlib.sha256(r.original_input.encode("utf-8", errors="replace")).hexdigest()[
+            :16
+        ]
         return {
             "request_id": r.request_id,
             "timestamp": r.timestamp,
